@@ -5,8 +5,7 @@ FROM wangxinjie/embodiedgen:v0.1.x
 WORKDIR /app
 
 # Копируем наши файлы
-COPY simple_image_to_3d.py .
-COPY runpod_simple_api.py .
+COPY runpod_embodiedgen_api.py .
 COPY 4879854.jpg .
 
 # Устанавливаем runpod библиотеку
@@ -23,4 +22,4 @@ ENV CUDA_VISIBLE_DEVICES=0
 EXPOSE 8000
 
 # Команда запуска
-CMD ["python", "runpod_simple_api.py"]
+CMD ["python", "runpod_embodiedgen_api.py"]
