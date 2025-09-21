@@ -122,15 +122,14 @@ def main():
         result = handler(test_event)
         print(json.dumps(result, indent=2, ensure_ascii=False))
     else:
-        # Режим RunPod
+        # Режим RunPod - используем стандартный RunPod handler
+        from runpod import serverless
+        
         print("Запуск RunPod сервера...")
         print("Сервер готов к обработке запросов")
         
-        # В реальном RunPod окружении здесь будет код для обработки HTTP запросов
-        # Для локального тестирования просто ждем
-        import time
-        while True:
-            time.sleep(1)
+        # Запускаем RunPod serverless handler
+        serverless.start({"handler": handler})
 
 if __name__ == "__main__":
     main()
