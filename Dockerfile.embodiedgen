@@ -1,0 +1,26 @@
+# Используем официальный образ EmbodiedGen
+FROM wangxinjie/embodiedgen:v0.1.x
+
+# Устанавливаем рабочую директорию
+WORKDIR /app
+
+# Копируем наши файлы
+COPY simple_image_to_3d.py .
+COPY runpod_simple_api.py .
+COPY 4879854.jpg .
+
+# Устанавливаем runpod библиотеку
+RUN pip install runpod
+
+# Создаем директории для логов и выходных файлов
+RUN mkdir -p /app/logs /app/outputs
+
+# Настраиваем переменные окружения
+ENV PYTHONPATH=/app
+ENV CUDA_VISIBLE_DEVICES=0
+
+# Открываем порт для API
+EXPOSE 8000
+
+# Команда запуска
+CMD ["python", "runpod_simple_api.py"]
