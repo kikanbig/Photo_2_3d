@@ -1,0 +1,45 @@
+FROM python:3.10-slim
+
+LABEL maintainer="Photo_to_3D" \
+    version="1.0" \
+    description="Simple Image-to-3D service for RunPod"
+
+# Установка системных зависимостей
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    wget \
+    curl \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Создание рабочей директории
+WORKDIR /app
+
+# Копирование файлов проекта
+COPY simple_image_to_3d.py .
+COPY runpod_simple_api.py .
+
+# Установка Python зависимостей
+RUN pip install --no-cache-dir \
+    torch \
+    torchvision \
+    numpy \
+    pillow \
+    opencv-python
+
+# Создание директории для выходных файлов
+RUN mkdir -p /app/outputs
+
+# Создание пользователя
+RUN useradd -m -s /bin/bash app_user && \
+    chown -R app_user:app_user /app
+USER app_user
+
+# Настройка переменных окружения
+ENV PYTHONPATH=/app
+
+# Открытие порта для API
+EXPOSE 8000
+
+# Команда по умолчанию
+CMD ["python", "runpod_simple_api.py"]

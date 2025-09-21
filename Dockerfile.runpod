@@ -1,0 +1,61 @@
+FROM pytorch/pytorch:2.4.0-cuda11.8-cudnn9-devel
+
+LABEL maintainer="Photo_to_3D" \
+    version="1.0" \
+    description="Image-to-3D service for RunPod"
+
+# Установка системных зависимостей
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    bash \
+    build-essential \
+    ninja-build \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender1 \
+    wget \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Настройка CUDA окружения
+ENV CUDA_HOME=/usr/local/cuda-11.8 \
+    PATH=/usr/local/cuda-11.8/bin:$PATH \
+    LD_LIBRARY_PATH=/usr/local/cuda-11.8/lib64:$LD_LIBRARY_PATH \
+    DEBIAN_FRONTEND=noninteractive \
+    TORCH_CUDA_ARCH_LIST="8.0;8.9;9.0" \
+    TCNN_CUDA_ARCHITECTURES=80,89,90
+
+# Создание рабочей директории
+WORKDIR /app
+
+# Копирование файлов проекта
+COPY . .
+
+# Установка Python зависимостей
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Установка проекта
+RUN pip install -e .
+
+# Создание директории для выходных файлов
+RUN mkdir -p /app/outputs
+
+# Создание пользователя
+RUN useradd -m -s /bin/bash app_user && \
+    chown -R app_user:app_user /app
+USER app_user
+
+# Настройка переменных окружения
+ENV PYTHONPATH=/app
+ENV CUDA_VISIBLE_DEVICES=0
+
+# Открытие порта для API
+EXPOSE 8000
+
+# Создание простого API сервера
+COPY runpod_api.py /app/runpod_api.py
+
+# Команда по умолчанию
+CMD ["python", "runpod_api.py"]
