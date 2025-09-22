@@ -1,0 +1,101 @@
+# Используем официальный образ EmbodiedGen
+FROM wangxinjie/embodiedgen:v0.1.x
+
+# Устанавливаем рабочую директорию
+WORKDIR /app
+
+# Устанавливаем runpod библиотеку
+RUN pip install runpod
+
+# Создаем директории для логов и выходных файлов
+RUN mkdir -p /app/logs /app/outputs
+
+# Настраиваем переменные окружения
+ENV PYTHONPATH=/app
+ENV CUDA_VISIBLE_DEVICES=0
+
+# Открываем порт для API
+EXPOSE 8000
+
+# Создаем простой API сервер прямо в контейнере
+RUN echo '#!/usr/bin/env python3' > /app/runpod_api.py && \
+    echo 'import os, json, base64, tempfile, subprocess, time' >> /app/runpod_api.py && \
+    echo 'from pathlib import Path' >> /app/runpod_api.py && \
+    echo 'from typing import Dict, Any' >> /app/runpod_api.py && \
+    echo 'import logging' >> /app/runpod_api.py && \
+    echo 'from datetime import datetime' >> /app/runpod_api.py && \
+    echo '' >> /app/runpod_api.py && \
+    echo '# Настройка логирования' >> /app/runpod_api.py && \
+    echo 'logging.basicConfig(level=logging.INFO)' >> /app/runpod_api.py && \
+    echo 'logger = logging.getLogger("runpod_api")' >> /app/runpod_api.py && \
+    echo '' >> /app/runpod_api.py && \
+    echo 'def handler(event: Dict[str, Any]) -> Dict[str, Any]:' >> /app/runpod_api.py && \
+    echo '    try:' >> /app/runpod_api.py && \
+    echo '        input_data = event.get("input", {})' >> /app/runpod_api.py && \
+    echo '        if "image" not in input_data:' >> /app/runpod_api.py && \
+    echo '            return {"error": "No image provided"}' >> /app/runpod_api.py && \
+    echo '        ' >> /app/runpod_api.py && \
+    echo '        # Декодирование изображения' >> /app/runpod_api.py && \
+    echo '        image_data = input_data["image"]' >> /app/runpod_api.py && \
+    echo '        if image_data.startswith("data:image"):' >> /app/runpod_api.py && \
+    echo '            image_data = image_data.split(",")[1]' >> /app/runpod_api.py && \
+    echo '        ' >> /app/runpod_api.py && \
+    echo '        image_bytes = base64.b64decode(image_data)' >> /app/runpod_api.py && \
+    echo '        ' >> /app/runpod_api.py && \
+    echo '        # Создание временного файла' >> /app/runpod_api.py && \
+    echo '        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:' >> /app/runpod_api.py && \
+    echo '            temp_file.write(image_bytes)' >> /app/runpod_api.py && \
+    echo '            temp_image_path = temp_file.name' >> /app/runpod_api.py && \
+    echo '        ' >> /app/runpod_api.py && \
+    echo '        # Создание выходной директории' >> /app/runpod_api.py && \
+    echo '        output_dir = Path("/app/outputs")' >> /app/runpod_api.py && \
+    echo '        output_dir.mkdir(parents=True, exist_ok=True)' >> /app/runpod_api.py && \
+    echo '        ' >> /app/runpod_api.py && \
+    echo '        # Запуск EmbodiedGen' >> /app/runpod_api.py && \
+    echo '        cmd = ["img3d-cli", "--image_path", temp_image_path, "--output_root", str(output_dir)]' >> /app/runpod_api.py && \
+    echo '        logger.info(f"Running: {\" \".join(cmd)}")' >> /app/runpod_api.py && \
+    echo '        ' >> /app/runpod_api.py && \
+    echo '        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)' >> /app/runpod_api.py && \
+    echo '        ' >> /app/runpod_api.py && \
+    echo '        # Очистка' >> /app/runpod_api.py && \
+    echo '        os.unlink(temp_image_path)' >> /app/runpod_api.py && \
+    echo '        ' >> /app/runpod_api.py && \
+    echo '        if result.returncode != 0:' >> /app/runpod_api.py && \
+    echo '            return {"error": f"EmbodiedGen failed: {result.stderr}"}' >> /app/runpod_api.py && \
+    echo '        ' >> /app/runpod_api.py && \
+    echo '        # Поиск сгенерированных файлов' >> /app/runpod_api.py && \
+    echo '        output_files = {}' >> /app/runpod_api.py && \
+    echo '        for ext in [".obj", ".glb", ".ply", ".urdf"]:' >> /app/runpod_api.py && \
+    echo '            files = list(output_dir.glob(f"**/*{ext}"))' >> /app/runpod_api.py && \
+    echo '            if files:' >> /app/runpod_api.py && \
+    echo '                output_files[ext[1:]] = str(files[0])' >> /app/runpod_api.py && \
+    echo '        ' >> /app/runpod_api.py && \
+    echo '        return {' >> /app/runpod_api.py && \
+    echo '            "success": True,' >> /app/runpod_api.py && \
+    echo '            "message": "3D model generated successfully",' >> /app/runpod_api.py && \
+    echo '            "output_files": output_files,' >> /app/runpod_api.py && \
+    echo '            "logs": result.stdout' >> /app/runpod_api.py && \
+    echo '        }' >> /app/runpod_api.py && \
+    echo '    except Exception as e:' >> /app/runpod_api.py && \
+    echo '        return {"error": f"Server error: {str(e)}"}' >> /app/runpod_api.py && \
+    echo '' >> /app/runpod_api.py && \
+    echo 'def main():' >> /app/runpod_api.py && \
+    echo '    try:' >> /app/runpod_api.py && \
+    echo '        from runpod import serverless' >> /app/runpod_api.py && \
+    echo '        print("Starting RunPod server...")' >> /app/runpod_api.py && \
+    echo '        serverless.start({"handler": handler})' >> /app/runpod_api.py && \
+    echo '    except ImportError:' >> /app/runpod_api.py && \
+    echo '        print("RunPod library not found")' >> /app/runpod_api.py && \
+    echo '        print("Testing handler...")' >> /app/runpod_api.py && \
+    echo '        test_event = {"input": {"image": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="}}' >> /app/runpod_api.py && \
+    echo '        result = handler(test_event)' >> /app/runpod_api.py && \
+    echo '        print(json.dumps(result, indent=2))' >> /app/runpod_api.py && \
+    echo '' >> /app/runpod_api.py && \
+    echo 'if __name__ == "__main__":' >> /app/runpod_api.py && \
+    echo '    main()' >> /app/runpod_api.py
+
+# Делаем файл исполняемым
+RUN chmod +x /app/runpod_api.py
+
+# Команда запуска
+CMD ["python", "/app/runpod_api.py"]
