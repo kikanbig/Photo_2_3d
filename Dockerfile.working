@@ -1,0 +1,101 @@
+# Используем стандартный Python образ с CUDA
+FROM nvidia/cuda:11.8-devel-ubuntu20.04
+
+# Устанавливаем системные зависимости
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    git \
+    wget \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Создаем символическую ссылку для python
+RUN ln -s /usr/bin/python3 /usr/bin/python
+
+# Устанавливаем рабочую директорию
+WORKDIR /app
+
+# Устанавливаем базовые Python библиотеки
+RUN pip install --no-cache-dir \
+    torch \
+    torchvision \
+    numpy \
+    pillow \
+    requests \
+    runpod
+
+# Создаем простой API сервер
+RUN echo '#!/usr/bin/env python3' > /app/api.py && \
+    echo 'import json, base64, tempfile, os' >> /app/api.py && \
+    echo 'from pathlib import Path' >> /app/api.py && \
+    echo '' >> /app/api.py && \
+    echo 'def handler(event):' >> /app/api.py && \
+    echo '    try:' >> /app/api.py && \
+    echo '        input_data = event.get("input", {})' >> /app/api.py && \
+    echo '        if "image" not in input_data:' >> /app/api.py && \
+    echo '            return {"error": "No image provided"}' >> /app/api.py && \
+    echo '        ' >> /app/api.py && \
+    echo '        # Декодирование изображения' >> /app/api.py && \
+    echo '        image_data = input_data["image"]' >> /app/api.py && \
+    echo '        if image_data.startswith("data:image"):' >> /app/api.py && \
+    echo '            image_data = image_data.split(",")[1]' >> /app/api.py && \
+    echo '        ' >> /app/api.py && \
+    echo '        image_bytes = base64.b64decode(image_data)' >> /app/api.py && \
+    echo '        ' >> /app/api.py && \
+    echo '        # Создание временного файла' >> /app/api.py && \
+    echo '        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:' >> /app/api.py && \
+    echo '            temp_file.write(image_bytes)' >> /app/api.py && \
+    echo '            temp_image_path = temp_file.name' >> /app/api.py && \
+    echo '        ' >> /app/api.py && \
+    echo '        # Создание выходной директории' >> /app/api.py && \
+    echo '        output_dir = Path("/app/outputs")' >> /app/api.py && \
+    echo '        output_dir.mkdir(parents=True, exist_ok=True)' >> /app/api.py && \
+    echo '        ' >> /app/api.py && \
+    echo '        # Простая заглушка для 3D генерации' >> /app/api.py && \
+    echo '        # В реальности здесь будет вызов AI модели' >> /app/api.py && \
+    echo '        print(f"Processing image: {temp_image_path}")' >> /app/api.py && \
+    echo '        print(f"Output directory: {output_dir}")' >> /app/api.py && \
+    echo '        ' >> /app/api.py && \
+    echo '        # Создаем заглушку GLB файла' >> /app/api.py && \
+    echo '        glb_path = output_dir / "model.glb"' >> /app/api.py && \
+    echo '        with open(glb_path, "w") as f:' >> /app/api.py && \
+    echo '            f.write("# Placeholder GLB file\\n")' >> /app/api.py && \
+    echo '            f.write(f"# Generated from: {temp_image_path}\\n")' >> /app/api.py && \
+    echo '            f.write("# This is a placeholder for 3D model\\n")' >> /app/api.py && \
+    echo '        ' >> /app/api.py && \
+    echo '        # Очистка' >> /app/api.py && \
+    echo '        os.unlink(temp_image_path)' >> /app/api.py && \
+    echo '        ' >> /app/api.py && \
+    echo '        return {' >> /app/api.py && \
+    echo '            "success": True,' >> /app/api.py && \
+    echo '            "message": "3D model generated (placeholder)",' >> /app/api.py && \
+    echo '            "output_files": {"glb": str(glb_path)},' >> /app/api.py && \
+    echo '            "note": "This is a placeholder. Real 3D generation requires AI models."' >> /app/api.py && \
+    echo '        }' >> /app/api.py && \
+    echo '    except Exception as e:' >> /app/api.py && \
+    echo '        return {"error": f"Server error: {str(e)}"}' >> /app/api.py && \
+    echo '' >> /app/api.py && \
+    echo 'def main():' >> /app/api.py && \
+    echo '    try:' >> /app/api.py && \
+    echo '        from runpod import serverless' >> /app/api.py && \
+    echo '        print("Starting RunPod server...")' >> /app/api.py && \
+    echo '        serverless.start({"handler": handler})' >> /app/api.py && \
+    echo '    except ImportError:' >> /app/api.py && \
+    echo '        print("RunPod library not found")' >> /app/api.py && \
+    echo '        print("Testing handler...")' >> /app/api.py && \
+    echo '        test_event = {"input": {"image": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="}}' >> /app/api.py && \
+    echo '        result = handler(test_event)' >> /app/api.py && \
+    echo '        print(json.dumps(result, indent=2))' >> /app/api.py && \
+    echo '' >> /app/api.py && \
+    echo 'if __name__ == "__main__":' >> /app/api.py && \
+    echo '    main()' >> /app/api.py
+
+# Делаем файл исполняемым
+RUN chmod +x /app/api.py
+
+# Открываем порт
+EXPOSE 8000
+
+# Команда запуска
+CMD ["python", "/app/api.py"]
