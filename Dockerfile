@@ -1,11 +1,15 @@
 # Используем готовый образ EmbodiedGen
 FROM wangxinjie/embodiedgen:v0.1.x
 
+# Переключаемся на root для создания директорий
+USER root
+
 # Устанавливаем runpod библиотеку
 RUN pip install runpod
 
-# Создаем директории
-RUN mkdir -p /app/outputs /app/logs
+# Создаем директории с правильными правами
+RUN mkdir -p /app/outputs /app/logs && \
+    chmod 755 /app/outputs /app/logs
 
 # Настраиваем переменные окружения
 ENV PYTHONPATH=/app
@@ -156,8 +160,11 @@ if __name__ == "__main__":
     main()
 EOF
 
-# Делаем файл исполняемым
+# Устанавливаем правильные права на файл
 RUN chmod +x /app/api.py
+
+# Переключаемся обратно на пользователя из базового образа
+USER e_user
 
 # Команда запуска
 CMD ["python", "/app/api.py"]
