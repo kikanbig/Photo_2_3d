@@ -7,9 +7,10 @@ USER root
 # Устанавливаем runpod библиотеку
 RUN pip install runpod
 
-# Создаем директории
+# Создаем директории с правильными правами
 RUN mkdir -p /app/outputs /app/logs && \
-    chmod 755 /app/outputs /app/logs
+    chmod 777 /app/outputs /app/logs && \
+    chown -R e_user:e_user /app
 
 # Настраиваем переменные окружения
 ENV PYTHONPATH=/app
@@ -42,8 +43,8 @@ RUN echo '#!/usr/bin/env python3' > /app/api.py && \
     echo '        # Простая заглушка для тестирования' >> /app/api.py && \
     echo '        logger.info("Processing image...")' >> /app/api.py && \
     echo '        ' >> /app/api.py && \
-    echo '        # Создаем заглушку GLB файла' >> /app/api.py && \
-    echo '        output_dir = Path("/app/outputs")' >> /app/api.py && \
+    echo '        # Создаем заглушку GLB файла в /tmp' >> /app/api.py && \
+    echo '        output_dir = Path("/tmp/outputs")' >> /app/api.py && \
     echo '        output_dir.mkdir(parents=True, exist_ok=True)' >> /app/api.py && \
     echo '        ' >> /app/api.py && \
     echo '        glb_path = output_dir / "test_model.glb"' >> /app/api.py && \
