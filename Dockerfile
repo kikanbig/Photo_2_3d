@@ -1,13 +1,13 @@
 # Используем готовый образ EmbodiedGen
 FROM wangxinjie/embodiedgen:v0.1.x
 
-# Переключаемся на root для создания директорий
+# Переключаемся на root для установки
 USER root
 
 # Устанавливаем runpod библиотеку
 RUN pip install runpod
 
-# Создаем директории с правильными правами
+# Создаем директории
 RUN mkdir -p /app/outputs /app/logs && \
     chmod 755 /app/outputs /app/logs
 
@@ -19,151 +19,87 @@ ENV PYTHONUNBUFFERED=1
 # Открываем порт
 EXPOSE 8000
 
-# Создаем простой API сервер
-COPY <<EOF /app/api.py
-#!/usr/bin/env python3
-import os, json, base64, tempfile, subprocess, time
-from pathlib import Path
-import logging
+# Создаем простой тестовый API сервер
+RUN echo '#!/usr/bin/env python3' > /app/api.py && \
+    echo 'import os, json, base64, tempfile, subprocess, time' >> /app/api.py && \
+    echo 'from pathlib import Path' >> /app/api.py && \
+    echo 'import logging' >> /app/api.py && \
+    echo '' >> /app/api.py && \
+    echo '# Настройка логирования' >> /app/api.py && \
+    echo 'logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")' >> /app/api.py && \
+    echo 'logger = logging.getLogger("embodiedgen_api")' >> /app/api.py && \
+    echo '' >> /app/api.py && \
+    echo 'def handler(event):' >> /app/api.py && \
+    echo '    logger.info("=== NEW REQUEST ===")' >> /app/api.py && \
+    echo '    logger.info(f"Event: {event}")' >> /app/api.py && \
+    echo '    ' >> /app/api.py && \
+    echo '    try:' >> /app/api.py && \
+    echo '        input_data = event.get("input", {})' >> /app/api.py && \
+    echo '        ' >> /app/api.py && \
+    echo '        if "image" not in input_data:' >> /app/api.py && \
+    echo '            return {"error": "No image provided"}' >> /app/api.py && \
+    echo '        ' >> /app/api.py && \
+    echo '        # Простая заглушка для тестирования' >> /app/api.py && \
+    echo '        logger.info("Processing image...")' >> /app/api.py && \
+    echo '        ' >> /app/api.py && \
+    echo '        # Создаем заглушку GLB файла' >> /app/api.py && \
+    echo '        output_dir = Path("/app/outputs")' >> /app/api.py && \
+    echo '        output_dir.mkdir(parents=True, exist_ok=True)' >> /app/api.py && \
+    echo '        ' >> /app/api.py && \
+    echo '        glb_path = output_dir / "test_model.glb"' >> /app/api.py && \
+    echo '        with open(glb_path, "w") as f:' >> /app/api.py && \
+    echo '            f.write("# Test GLB file\\n")' >> /app/api.py && \
+    echo '            f.write("# Generated from image\\n")' >> /app/api.py && \
+    echo '        ' >> /app/api.py && \
+    echo '        logger.info(f"Created test file: {glb_path}")' >> /app/api.py && \
+    echo '        ' >> /app/api.py && \
+    echo '        return {' >> /app/api.py && \
+    echo '            "success": True,' >> /app/api.py && \
+    echo '            "message": "Test 3D model generated",' >> /app/api.py && \
+    echo '            "output_files": {"glb": str(glb_path)},' >> /app/api.py && \
+    echo '            "note": "This is a test placeholder"' >> /app/api.py && \
+    echo '        }' >> /app/api.py && \
+    echo '    ' >> /app/api.py && \
+    echo '    except Exception as e:' >> /app/api.py && \
+    echo '        logger.error(f"Error: {str(e)}")' >> /app/api.py && \
+    echo '        return {"error": f"Server error: {str(e)}"}' >> /app/api.py && \
+    echo '' >> /app/api.py && \
+    echo 'def main():' >> /app/api.py && \
+    echo '    logger.info("Starting EmbodiedGen RunPod API Server")' >> /app/api.py && \
+    echo '    logger.info(f"Python version: {os.sys.version}")' >> /app/api.py && \
+    echo '    logger.info(f"Working directory: {os.getcwd()}")' >> /app/api.py && \
+    echo '    ' >> /app/api.py && \
+    echo '    try:' >> /app/api.py && \
+    echo '        from runpod import serverless' >> /app/api.py && \
+    echo '        logger.info("RunPod library imported successfully")' >> /app/api.py && \
+    echo '        logger.info("Starting RunPod serverless handler...")' >> /app/api.py && \
+    echo '        print("🚀 EmbodiedGen RunPod Server Starting...")' >> /app/api.py && \
+    echo '        print("✅ Server ready to process requests")' >> /app/api.py && \
+    echo '        serverless.start({"handler": handler})' >> /app/api.py && \
+    echo '    ' >> /app/api.py && \
+    echo '    except ImportError as e:' >> /app/api.py && \
+    echo '        logger.error(f"Failed to import runpod library: {e}")' >> /app/api.py && \
+    echo '        print("❌ Error: RunPod library not installed")' >> /app/api.py && \
+    echo '        print("Installing runpod...")' >> /app/api.py && \
+    echo '        subprocess.run(["pip", "install", "runpod"], check=True)' >> /app/api.py && \
+    echo '        print("Retrying...")' >> /app/api.py && \
+    echo '        from runpod import serverless' >> /app/api.py && \
+    echo '        serverless.start({"handler": handler})' >> /app/api.py && \
+    echo '    ' >> /app/api.py && \
+    echo '    except Exception as e:' >> /app/api.py && \
+    echo '        logger.error(f"Failed to start RunPod handler: {e}")' >> /app/api.py && \
+    echo '        print(f"❌ Error starting server: {e}")' >> /app/api.py && \
+    echo '        import traceback' >> /app/api.py && \
+    echo '        print(f"Traceback: {traceback.format_exc()}")' >> /app/api.py && \
+    echo '        os.sys.exit(1)' >> /app/api.py && \
+    echo '' >> /app/api.py && \
+    echo 'if __name__ == "__main__":' >> /app/api.py && \
+    echo '    main()' >> /app/api.py
 
-# Настройка логирования
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-logger = logging.getLogger("embodiedgen_api")
-
-def handler(event):
-    logger.info("=== NEW REQUEST ===")
-    logger.info(f"Event keys: {list(event.keys())}")
-    
-    try:
-        input_data = event.get("input", {})
-        logger.info(f"Input keys: {list(input_data.keys())}")
-        
-        if "image" not in input_data:
-            logger.error("No image provided")
-            return {"error": "No image provided. Use field \"image\" with base64 data."}
-        
-        # Декодирование изображения
-        image_data = input_data["image"]
-        logger.info(f"Image data length: {len(image_data)} characters")
-        
-        if image_data.startswith("data:image"):
-            image_data = image_data.split(",")[1]
-            logger.info("Removed data URL prefix")
-        
-        logger.info("Decoding base64 image data...")
-        image_bytes = base64.b64decode(image_data)
-        logger.info(f"Decoded image size: {len(image_bytes)} bytes")
-        
-        # Создание временного файла
-        logger.info("Creating temporary image file...")
-        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-            temp_file.write(image_bytes)
-            temp_image_path = temp_file.name
-        logger.info(f"Temporary image file: {temp_image_path}")
-        logger.info(f"File size: {os.path.getsize(temp_image_path)} bytes")
-        
-        # Создание выходной директории
-        output_dir = Path("/app/outputs")
-        logger.info(f"Output directory: {output_dir}")
-        output_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Запуск EmbodiedGen
-        logger.info("Starting EmbodiedGen Image-to-3D process...")
-        cmd = ["img3d-cli", "--image_path", temp_image_path, "--output_root", str(output_dir)]
-        logger.info(f"Command: {' '.join(cmd)}")
-        
-        start_time = time.time()
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-        execution_time = time.time() - start_time
-        
-        logger.info(f"Subprocess completed with return code: {result.returncode}")
-        logger.info(f"Execution time: {execution_time:.2f} seconds")
-        logger.info(f"STDOUT: {result.stdout}")
-        logger.info(f"STDERR: {result.stderr}")
-        
-        # Очистка временного файла
-        logger.info("Cleaning up temporary file...")
-        os.unlink(temp_image_path)
-        
-        if result.returncode != 0:
-            logger.error(f"EmbodiedGen failed with return code: {result.returncode}")
-            logger.error(f"Error output: {result.stderr}")
-            return {
-                "error": f"EmbodiedGen generation failed: {result.stderr}",
-                "stdout": result.stdout,
-                "execution_time": execution_time
-            }
-        
-        # Поиск сгенерированных файлов
-        logger.info("Searching for generated files...")
-        output_files = {}
-        for ext in [".obj", ".glb", ".ply", ".urdf"]:
-            files = list(output_dir.glob(f"**/*{ext}"))
-            logger.info(f"Found {len(files)} {ext} files: {[str(f) for f in files]}")
-            if files:
-                output_files[ext[1:]] = str(files[0])
-                logger.info(f"Added {ext[1:].upper()} file: {files[0]} (size: {files[0].stat().st_size} bytes)")
-        
-        logger.info(f"Generated files: {list(output_files.keys())}")
-        logger.info("Request completed successfully")
-        
-        return {
-            "success": True,
-            "message": "3D model generated successfully with EmbodiedGen",
-            "output_files": output_files,
-            "logs": result.stdout,
-            "output_directory": str(output_dir),
-            "execution_time": execution_time,
-            "model": "EmbodiedGen v0.1.x"
-        }
-    
-    except subprocess.TimeoutExpired:
-        logger.error("Subprocess timeout after 5 minutes")
-        return {"error": "Generation timeout (5 minutes)", "execution_time": 300}
-    
-    except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
-        import traceback
-        logger.error(f"Traceback: {traceback.format_exc()}")
-        return {"error": f"Server error: {str(e)}"}
-
-def main():
-    logger.info("Starting EmbodiedGen RunPod API Server")
-    logger.info(f"Python version: {os.sys.version}")
-    logger.info(f"Working directory: {os.getcwd()}")
-    
-    try:
-        from runpod import serverless
-        logger.info("RunPod library imported successfully")
-        logger.info("Starting RunPod serverless handler...")
-        print("🚀 EmbodiedGen RunPod Server Starting...")
-        print("✅ Server ready to process requests")
-        serverless.start({"handler": handler})
-    
-    except ImportError as e:
-        logger.error(f"Failed to import runpod library: {e}")
-        print("❌ Error: RunPod library not installed")
-        print("Installing runpod...")
-        subprocess.run(["pip", "install", "runpod"], check=True)
-        print("Retrying...")
-        from runpod import serverless
-        serverless.start({"handler": handler})
-    
-    except Exception as e:
-        logger.error(f"Failed to start RunPod handler: {e}")
-        print(f"❌ Error starting server: {e}")
-        import traceback
-        print(f"Traceback: {traceback.format_exc()}")
-        os.sys.exit(1)
-
-if __name__ == "__main__":
-    main()
-EOF
-
-# Устанавливаем правильные права на файл
+# Устанавливаем права на файл
 RUN chmod +x /app/api.py
 
-# Переключаемся обратно на пользователя из базового образа
+# Переключаемся обратно на пользователя
 USER e_user
 
 # Команда запуска
