@@ -59,19 +59,46 @@ def handler(event):
             ["img3d-cli", "--image_path", temp_image_path, "--output_root", str(output_dir)],
             ["python", "-m", "embodied_gen.img3d_cli", "--image_path", temp_image_path, "--output_root", str(output_dir)],
             ["python", "img3d_cli.py", "--image_path", temp_image_path, "--output_root", str(output_dir)],
-            ["python", "/app/img3d_cli.py", "--image_path", temp_image_path, "--output_root", str(output_dir)]
+            ["python", "/app/img3d_cli.py", "--image_path", temp_image_path, "--output_root", str(output_dir)],
+            ["python", "-c", f"import sys; sys.path.append('/opt/conda/lib/python3.8/site-packages'); from embodied_gen.img3d_cli import main; main()", "--image_path", temp_image_path, "--output_root", str(output_dir)],
+            ["python", "-c", f"import sys; sys.path.append('/opt/conda/lib/python3.9/site-packages'); from embodied_gen.img3d_cli import main; main()", "--image_path", temp_image_path, "--output_root", str(output_dir)],
+            ["python", "-c", f"import sys; sys.path.append('/opt/conda/lib/python3.10/site-packages'); from embodied_gen.img3d_cli import main; main()", "--image_path", temp_image_path, "--output_root", str(output_dir)]
         ]
+        
+        # Сначала попробуем найти EmbodiedGen в системе
+        logger.info("Searching for EmbodiedGen installation...")
+        try:
+            # Проверим, что доступно в Python
+            result = subprocess.run(["python", "-c", "import sys; print('\\n'.join(sys.path))"], capture_output=True, text=True, timeout=10)
+            logger.info(f"Python paths: {result.stdout}")
+            
+            # Попробуем найти embodied_gen
+            result = subprocess.run(["python", "-c", "import embodied_gen; print(embodied_gen.__file__)"], capture_output=True, text=True, timeout=10)
+            if result.returncode == 0:
+                logger.info(f"Found embodied_gen at: {result.stdout}")
+            else:
+                logger.info(f"embodied_gen not found: {result.stderr}")
+        except Exception as e:
+            logger.info(f"Error checking Python paths: {e}")
         
         cmd = None
         for i, test_cmd in enumerate(possible_commands):
             logger.info(f"Trying command {i+1}: {' '.join(test_cmd)}")
             # Проверим, существует ли команда
             try:
-                result = subprocess.run(["which", test_cmd[0]], capture_output=True, text=True, timeout=5)
-                if result.returncode == 0:
-                    cmd = test_cmd
-                    logger.info(f"Found command: {test_cmd[0]}")
-                    break
+                if test_cmd[0] == "python":
+                    # Для Python команд проверим, что Python доступен
+                    result = subprocess.run(["which", "python"], capture_output=True, text=True, timeout=5)
+                    if result.returncode == 0:
+                        cmd = test_cmd
+                        logger.info(f"Found Python command: {test_cmd[0]}")
+                        break
+                else:
+                    result = subprocess.run(["which", test_cmd[0]], capture_output=True, text=True, timeout=5)
+                    if result.returncode == 0:
+                        cmd = test_cmd
+                        logger.info(f"Found command: {test_cmd[0]}")
+                        break
             except:
                 pass
         
