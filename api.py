@@ -113,7 +113,21 @@ def handler(event):
         
         if cmd is None:
             logger.error("No valid EmbodiedGen command found")
-            return {"error": "EmbodiedGen command not found in container"}
+            # Попробуем простой тест - что доступно в системе
+            try:
+                result = subprocess.run(["python", "-c", "import sys; print('Python version:', sys.version); print('Python paths:'); [print(p) for p in sys.path]"], capture_output=True, text=True, timeout=10)
+                logger.info(f"Python info: {result.stdout}")
+                
+                result = subprocess.run(["ls", "-la", "/"], capture_output=True, text=True, timeout=10)
+                logger.info(f"Root directory: {result.stdout}")
+                
+                result = subprocess.run(["find", "/", "-name", "*embodied*", "-type", "d", "2>/dev/null"], capture_output=True, text=True, timeout=30)
+                logger.info(f"Found embodied directories: {result.stdout}")
+                
+            except Exception as e:
+                logger.info(f"Error in diagnostic: {e}")
+            
+            return {"error": "EmbodiedGen command not found in container", "diagnostic": "Check logs for system information"}
         
         logger.info(f"Using command: {' '.join(cmd)}")
         
