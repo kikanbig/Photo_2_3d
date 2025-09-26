@@ -72,12 +72,21 @@ def handler(event):
             result = subprocess.run(["python", "-c", "import sys; print('\\n'.join(sys.path))"], capture_output=True, text=True, timeout=10)
             logger.info(f"Python paths: {result.stdout}")
             
+            # Проверим, что установлено
+            result = subprocess.run(["python", "-c", "import pkg_resources; print([d.project_name for d in pkg_resources.working_set if 'embodied' in d.project_name.lower()])"], capture_output=True, text=True, timeout=10)
+            logger.info(f"Installed packages with 'embodied': {result.stdout}")
+            
             # Попробуем найти embodied_gen
             result = subprocess.run(["python", "-c", "import embodied_gen; print(embodied_gen.__file__)"], capture_output=True, text=True, timeout=10)
             if result.returncode == 0:
                 logger.info(f"Found embodied_gen at: {result.stdout}")
             else:
                 logger.info(f"embodied_gen not found: {result.stderr}")
+                
+            # Проверим, есть ли файлы в /app
+            result = subprocess.run(["ls", "-la", "/app"], capture_output=True, text=True, timeout=10)
+            logger.info(f"Files in /app: {result.stdout}")
+            
         except Exception as e:
             logger.info(f"Error checking Python paths: {e}")
         
