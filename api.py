@@ -51,10 +51,10 @@ def handler(event):
         logger.info(f"Output directory: {output_dir}")
         output_dir.mkdir(parents=True, exist_ok=True)
         
-    # Запуск EmbodiedGen
-    logger.info("Starting EmbodiedGen Image-to-3D process...")
-    cmd = ["img3d-cli", "--image_path", temp_image_path, "--output_root", str(output_dir)]
-    logger.info(f"Command: {' '.join(cmd)}")
+        # Запуск EmbodiedGen
+        logger.info("Starting EmbodiedGen Image-to-3D process...")
+        cmd = ["img3d-cli", "--image_path", temp_image_path, "--output_root", str(output_dir)]
+        logger.info(f"Command: {' '.join(cmd)}")
         
         start_time = time.time()
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
