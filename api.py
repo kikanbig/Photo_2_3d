@@ -53,8 +53,33 @@ def handler(event):
         
         # Запуск EmbodiedGen
         logger.info("Starting EmbodiedGen Image-to-3D process...")
-        cmd = ["img3d-cli", "--image_path", temp_image_path, "--output_root", str(output_dir)]
-        logger.info(f"Command: {' '.join(cmd)}")
+        
+        # Попробуем разные варианты команды
+        possible_commands = [
+            ["img3d-cli", "--image_path", temp_image_path, "--output_root", str(output_dir)],
+            ["python", "-m", "embodied_gen.img3d_cli", "--image_path", temp_image_path, "--output_root", str(output_dir)],
+            ["python", "img3d_cli.py", "--image_path", temp_image_path, "--output_root", str(output_dir)],
+            ["python", "/app/img3d_cli.py", "--image_path", temp_image_path, "--output_root", str(output_dir)]
+        ]
+        
+        cmd = None
+        for i, test_cmd in enumerate(possible_commands):
+            logger.info(f"Trying command {i+1}: {' '.join(test_cmd)}")
+            # Проверим, существует ли команда
+            try:
+                result = subprocess.run(["which", test_cmd[0]], capture_output=True, text=True, timeout=5)
+                if result.returncode == 0:
+                    cmd = test_cmd
+                    logger.info(f"Found command: {test_cmd[0]}")
+                    break
+            except:
+                pass
+        
+        if cmd is None:
+            logger.error("No valid EmbodiedGen command found")
+            return {"error": "EmbodiedGen command not found in container"}
+        
+        logger.info(f"Using command: {' '.join(cmd)}")
         
         start_time = time.time()
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
