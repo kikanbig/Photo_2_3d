@@ -125,6 +125,14 @@ def handler(event):
                 result = subprocess.run(["find", "/", "-name", "*embodied*", "-type", "d", "2>/dev/null"], capture_output=True, text=True, timeout=30)
                 logger.info(f"Found embodied directories: {result.stdout}")
                 
+                # Попробуем найти файлы с img3d
+                result = subprocess.run(["find", "/", "-name", "*img3d*", "2>/dev/null"], capture_output=True, text=True, timeout=30)
+                logger.info(f"Found img3d files: {result.stdout}")
+                
+                # Попробуем найти Python пакеты
+                result = subprocess.run(["python", "-c", "import pkg_resources; print([d.project_name for d in pkg_resources.working_set])"], capture_output=True, text=True, timeout=10)
+                logger.info(f"Installed packages: {result.stdout}")
+                
             except Exception as e:
                 logger.info(f"Error in diagnostic: {e}")
             
