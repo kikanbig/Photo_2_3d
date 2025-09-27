@@ -58,12 +58,13 @@ def handler(event):
         possible_commands = [
             ["img3d-cli", "--image_path", temp_image_path, "--output_root", str(output_dir)],
             ["python", "-m", "embodied_gen.img3d_cli", "--image_path", temp_image_path, "--output_root", str(output_dir)],
+            ["python", "-m", "embodied_gen", "--image_path", temp_image_path, "--output_root", str(output_dir)],
+            ["python", "-m", "embodied_gen.cli", "--image_path", temp_image_path, "--output_root", str(output_dir)],
+            ["python", "-m", "embodied_gen.tools", "--image_path", temp_image_path, "--output_root", str(output_dir)],
             ["python", "img3d_cli.py", "--image_path", temp_image_path, "--output_root", str(output_dir)],
             ["python", "/app/img3d_cli.py", "--image_path", temp_image_path, "--output_root", str(output_dir)],
-            ["python", "-c", f"import sys; sys.path.append('/opt/conda/lib/python3.11/site-packages'); from embodied_gen.img3d_cli import main; main()", "--image_path", temp_image_path, "--output_root", str(output_dir)],
-            ["python", "-c", f"import sys; sys.path.append('/opt/conda/lib/python3.8/site-packages'); from embodied_gen.img3d_cli import main; main()", "--image_path", temp_image_path, "--output_root", str(output_dir)],
-            ["python", "-c", f"import sys; sys.path.append('/opt/conda/lib/python3.9/site-packages'); from embodied_gen.img3d_cli import main; main()", "--image_path", temp_image_path, "--output_root", str(output_dir)],
-            ["python", "-c", f"import sys; sys.path.append('/opt/conda/lib/python3.10/site-packages'); from embodied_gen.img3d_cli import main; main()", "--image_path", temp_image_path, "--output_root", str(output_dir)]
+            ["python", "-c", f"import sys; sys.path.append('/opt/conda/lib/python3.11/site-packages'); from embodied_gen import img3d_cli; img3d_cli.main()", "--image_path", temp_image_path, "--output_root", str(output_dir)],
+            ["python", "-c", f"import sys; sys.path.append('/opt/conda/lib/python3.11/site-packages'); from embodied_gen import cli; cli.main()", "--image_path", temp_image_path, "--output_root", str(output_dir)]
         ]
         
         # Сначала попробуем найти EmbodiedGen в системе
