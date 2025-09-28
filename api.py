@@ -54,8 +54,16 @@ def handler(event):
         # Запуск EmbodiedGen
         logger.info("Starting EmbodiedGen Image-to-3D process...")
         
-        # Попробуем разные варианты команды
+        # Попробуем разные варианты команды - исправленные пути
         possible_commands = [
+            # Прямые пути к скриптам (основные)
+            ["python", "/EmbodiedGen/embodied_gen/scripts/imageto3d.py", "--image_path", temp_image_path, "--output_root", str(output_dir)],
+            ["python", "/EmbodiedGen/scripts/imageto3d.py", "--image_path", temp_image_path, "--output_root", str(output_dir)],
+            
+            # С PYTHONPATH и правильным вызовом
+            ["python", "-c", "import sys; sys.path.append('/EmbodiedGen'); import os; os.chdir('/EmbodiedGen'); from embodied_gen.scripts.imageto3d import entrypoint; entrypoint(image_path='" + temp_image_path + "', output_root='" + str(output_dir) + "')"],
+            
+            # Старые варианты (для совместимости)
             ["img3d-cli", "--image_path", temp_image_path, "--output_root", str(output_dir)],
             ["python", "-m", "embodied_gen.img3d_cli", "--image_path", temp_image_path, "--output_root", str(output_dir)],
             ["python", "-m", "embodied_gen", "--image_path", temp_image_path, "--output_root", str(output_dir)],
@@ -63,15 +71,8 @@ def handler(event):
             ["python", "-m", "embodied_gen.tools", "--image_path", temp_image_path, "--output_root", str(output_dir)],
             ["python", "img3d_cli.py", "--image_path", temp_image_path, "--output_root", str(output_dir)],
             ["python", "/app/img3d_cli.py", "--image_path", temp_image_path, "--output_root", str(output_dir)],
-            # Попробуем запустить напрямую из папки /EmbodiedGen
-            ["python", "/EmbodiedGen/scripts/imageto3d.py", "--image_path", temp_image_path, "--output_root", str(output_dir)],
-            ["python", "/EmbodiedGen/scripts/img3d_cli.py", "--image_path", temp_image_path, "--output_root", str(output_dir)],
-            ["python", "/EmbodiedGen/embodied_gen/scripts/imageto3d.py", "--image_path", temp_image_path, "--output_root", str(output_dir)],
-            ["python", "/EmbodiedGen/embodied_gen/scripts/img3d_cli.py", "--image_path", temp_image_path, "--output_root", str(output_dir)],
-            # Попробуем с PYTHONPATH
-            ["python", "-c", "import sys; sys.path.append('/EmbodiedGen'); from embodied_gen.scripts import imageto3d; imageto3d.main()", "--image_path", temp_image_path, "--output_root", str(output_dir)],
-            ["python", "-c", "import sys; sys.path.append('/EmbodiedGen'); from embodied_gen.scripts import img3d_cli; img3d_cli.main()", "--image_path", temp_image_path, "--output_root", str(output_dir)],
-            # Попробуем найти и запустить скрипты
+            
+            # Диагностические команды
             ["find", "/EmbodiedGen", "-name", "*imageto3d*", "-o", "-name", "*img3d*"],
             ["ls", "-la", "/EmbodiedGen/scripts/"],
             ["ls", "-la", "/EmbodiedGen/embodied_gen/scripts/"]
@@ -104,18 +105,22 @@ def handler(event):
         
         # Сначала выполним диагностические команды
         diagnostic_commands = [
-            ["python", "-c", "import embodied_gen; print('embodied_gen location:', embodied_gen.__file__); import os; print('Contents:', os.listdir(os.path.dirname(embodied_gen.__file__)))"],
-            ["python", "-c", "import pkg_resources; print('Package locations:', [d.location for d in pkg_resources.working_set if 'embodied' in d.project_name.lower()])"],
-            ["python", "-c", "import pkg_resources; print('Entry points:'); [print(f'{ep.name}: {ep.module_name}') for ep in pkg_resources.get_entry_map('embodied-gen').values()]"],
-            ["find", "/opt/conda/bin", "-name", "*img3d*", "-o", "-name", "*embodied*"],
-            ["ls", "-la", "/opt/conda/bin/"],
-            ["find", "/opt/conda/lib/python3.11/site-packages/embodied_gen", "-name", "*.py", "2>/dev/null"],
-            # Ищем в папке /EmbodiedGen
+            # Проверяем структуру /EmbodiedGen
             ["ls", "-la", "/EmbodiedGen/"],
             ["find", "/EmbodiedGen", "-name", "*.py", "2>/dev/null"],
             ["find", "/EmbodiedGen", "-name", "*imageto3d*", "-o", "-name", "*img3d*", "2>/dev/null"],
             ["ls", "-la", "/EmbodiedGen/scripts/", "2>/dev/null"],
-            ["ls", "-la", "/EmbodiedGen/embodied_gen/scripts/", "2>/dev/null"]
+            ["ls", "-la", "/EmbodiedGen/embodied_gen/scripts/", "2>/dev/null"],
+            
+            # Проверяем Python модули
+            ["python", "-c", "import sys; sys.path.append('/EmbodiedGen'); import embodied_gen; print('embodied_gen location:', embodied_gen.__file__); import os; print('Contents:', os.listdir(os.path.dirname(embodied_gen.__file__)))"],
+            ["python", "-c", "import pkg_resources; print('Package locations:', [d.location for d in pkg_resources.working_set if 'embodied' in d.project_name.lower()])"],
+            ["python", "-c", "import pkg_resources; print('Entry points:'); [print(f'{ep.name}: {ep.module_name}') for ep in pkg_resources.get_entry_map('embodied-gen').values()]"],
+            
+            # Ищем CLI команды
+            ["find", "/opt/conda/bin", "-name", "*img3d*", "-o", "-name", "*embodied*"],
+            ["ls", "-la", "/opt/conda/bin/"],
+            ["find", "/opt/conda/lib/python3.11/site-packages/embodied_gen", "-name", "*.py", "2>/dev/null"]
         ]
         
         for i, diag_cmd in enumerate(diagnostic_commands):
