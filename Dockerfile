@@ -13,6 +13,11 @@ COPY api.py /app/api.py
 # Делаем исполняемым
 RUN chmod +x /app/api.py
 
+# Устанавливаем переменные окружения
+ENV PYTHONPATH=/app:/EmbodiedGen
+ENV CUDA_VISIBLE_DEVICES=0
+ENV PYTHONUNBUFFERED=1
+
 # Переключаемся обратно
 USER e_user
 
