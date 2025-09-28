@@ -136,10 +136,8 @@ def handler(event):
         cmd = None
         for i, test_cmd in enumerate(possible_commands):
             logger.info(f"Trying command {i+1}: {' '.join(test_cmd)}")
-            # Пропустим диагностические команды
-            if test_cmd[0] in ["python", "find", "ls"] and len(test_cmd) > 2 and "import" in " ".join(test_cmd):
-                continue
-            if test_cmd[0] in ["find", "ls"]:
+            # Пропустим только диагностические команды (find, ls без python)
+            if test_cmd[0] in ["find", "ls"] and test_cmd[0] != "python":
                 continue
                 
             # Проверим, существует ли команда
