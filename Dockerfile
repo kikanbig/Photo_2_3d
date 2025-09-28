@@ -5,7 +5,7 @@ FROM wangxinjie/embodiedgen:v0.1.x
 USER root
 
 # Устанавливаем runpod
-RUN pip install runpod
+RUN pip install runpod trimesh
 
 # Копируем API файл
 COPY api.py /app/api.py
