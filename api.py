@@ -8,12 +8,12 @@ import time
 from pathlib import Path
 import logging
 
-# Применяем torchvision fixes
+# Применяем torchvision fixes (опционально)
 try:
     from torchvision_fix import apply_torchvision_fixes
     apply_torchvision_fixes()
 except ImportError:
-    print("Warning: torchvision_fix not available")
+    print("Info: torchvision_fix not available, continuing without it")
 
 # EmbodiedGen API для RunPod
 

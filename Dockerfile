@@ -11,22 +11,19 @@ RUN pip install runpod
 WORKDIR /EmbodiedGen
 RUN pip install -e .
 
-# Устанавливаем зависимости из requirements.txt
-RUN pip install -r requirements.txt
+# Устанавливаем только основные зависимости (без проблемных)
+RUN pip install trimesh opencv-python
 
-# Устанавливаем кастомный растеризатор (как в Hugging Face Space)
-RUN pip install https://huggingface.co/spaces/imagine-io-webinar/image-to-3d/resolve/main/custom_rasterizer-0.1-cp310-cp310-linux_x86_64.whl
+# Проверяем, что доступно в базовом образе
+RUN python -c "import sys; print('Python version:', sys.version)"
+RUN python -c "import torch; print('PyTorch version:', torch.__version__)"
+RUN python -c "try: import nvdiffrast.torch as dr; print('nvdiffrast available'); except: print('nvdiffrast not available')"
 
-# Проверяем установку
-RUN python -c "import custom_rasterizer; print('Custom rasterizer installed successfully')"
-
-# Копируем API файл и torchvision fix
+# Копируем API файл
 COPY api.py /app/api.py
-COPY torchvision_fix.py /app/torchvision_fix.py
 
-# Делаем исполняемыми
+# Делаем исполняемым
 RUN chmod +x /app/api.py
-RUN chmod +x /app/torchvision_fix.py
 
 # Устанавливаем переменные окружения
 ENV PYTHONPATH=/app:/EmbodiedGen
