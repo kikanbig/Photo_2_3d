@@ -4,12 +4,15 @@ FROM wangxinjie/embodiedgen:v0.1.x
 # Переключаемся на root
 USER root
 
-# Устанавливаем runpod, trimesh, opencv-python и nvdiffrast
-RUN pip install runpod trimesh opencv-python nvdiffrast
+# Устанавливаем runpod
+RUN pip install runpod
 
 # Устанавливаем EmbodiedGen в development mode
 WORKDIR /EmbodiedGen
 RUN pip install -e .
+
+# Устанавливаем зависимости из requirements.txt
+RUN pip install -r requirements.txt
 
 # Копируем API файл
 COPY api.py /app/api.py
