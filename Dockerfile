@@ -14,6 +14,9 @@ RUN pip install -e .
 # Устанавливаем зависимости из requirements.txt
 RUN pip install -r requirements.txt
 
+# Устанавливаем nvdiffrast из Git (как в оригинальном install_basic.sh)
+RUN pip install nvdiffrast@git+https://github.com/NVlabs/nvdiffrast.git@729261d
+
 # Копируем API файл
 COPY api.py /app/api.py
 
