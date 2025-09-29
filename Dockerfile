@@ -4,8 +4,12 @@ FROM wangxinjie/embodiedgen:v0.1.x
 # Переключаемся на root
 USER root
 
-# Устанавливаем runpod
+# Устанавливаем runpod и trimesh
 RUN pip install runpod trimesh
+
+# Устанавливаем EmbodiedGen в development mode
+WORKDIR /EmbodiedGen
+RUN pip install -e .
 
 # Копируем API файл
 COPY api.py /app/api.py
