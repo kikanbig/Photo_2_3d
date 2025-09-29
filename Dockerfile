@@ -14,14 +14,19 @@ RUN pip install -e .
 # Устанавливаем зависимости из requirements.txt
 RUN pip install -r requirements.txt
 
-# Проверяем, есть ли nvdiffrast в базовом образе
-RUN python -c "import nvdiffrast.torch as dr; print('nvdiffrast already installed')" || echo "nvdiffrast not found"
+# Устанавливаем кастомный растеризатор (как в Hugging Face Space)
+RUN pip install https://huggingface.co/spaces/imagine-io-webinar/image-to-3d/resolve/main/custom_rasterizer-0.1-cp310-cp310-linux_x86_64.whl
 
-# Копируем API файл
+# Проверяем установку
+RUN python -c "import custom_rasterizer; print('Custom rasterizer installed successfully')"
+
+# Копируем API файл и torchvision fix
 COPY api.py /app/api.py
+COPY torchvision_fix.py /app/torchvision_fix.py
 
-# Делаем исполняемым
+# Делаем исполняемыми
 RUN chmod +x /app/api.py
+RUN chmod +x /app/torchvision_fix.py
 
 # Устанавливаем переменные окружения
 ENV PYTHONPATH=/app:/EmbodiedGen
