@@ -4,8 +4,8 @@ FROM wangxinjie/embodiedgen:v0.1.x
 # Переключаемся на root
 USER root
 
-# Устанавливаем runpod, trimesh и opencv-python
-RUN pip install runpod trimesh opencv-python
+# Устанавливаем runpod, trimesh, opencv-python и nvdiffrast
+RUN pip install runpod trimesh opencv-python nvdiffrast
 
 # Устанавливаем EmbodiedGen в development mode
 WORKDIR /EmbodiedGen
