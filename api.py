@@ -61,168 +61,99 @@ def handler(event):
         # Запуск EmbodiedGen
         logger.info("Starting EmbodiedGen Image-to-3D process...")
         
-        # Простые команды для тестирования
+        # Команды для EmbodiedGen
         possible_commands = [
-            # Проверяем, что доступно в системе
-            ["python", "-c", "import sys; print('Python paths:', sys.path)"],
-            ["python", "-c", "import torch; print('PyTorch version:', torch.__version__)"],
-            ["python", "-c", "import os; print('Current dir:', os.getcwd()); print('Files:', os.listdir('.'))"],
-            ["ls", "-la", "/"],
-            ["find", "/", "-name", "*embodied*", "-type", "d", "2>/dev/null"],
+            # Прямые пути к скриптам
+            ["python", "/EmbodiedGen/embodied_gen/scripts/imageto3d.py", "--image_path", temp_image_path, "--output_root", str(output_dir)],
+            ["python", "/EmbodiedGen/scripts/imageto3d.py", "--image_path", temp_image_path, "--output_root", str(output_dir)],
+            
+            # CLI команды
+            ["img3d-cli", "--image_path", temp_image_path, "--output_root", str(output_dir)],
+            ["python", "-m", "embodied_gen.img3d_cli", "--image_path", temp_image_path, "--output_root", str(output_dir)],
         ]
         
-        # Сначала попробуем найти EmbodiedGen в системе
-        logger.info("Searching for EmbodiedGen installation...")
-        try:
-            # Проверим, что доступно в Python
-            result = subprocess.run(["python", "-c", "import sys; print('\\n'.join(sys.path))"], capture_output=True, text=True, timeout=10)
-            logger.info(f"Python paths: {result.stdout}")
-            
-            # Проверим, что установлено
-            result = subprocess.run(["python", "-c", "import pkg_resources; print([d.project_name for d in pkg_resources.working_set if 'embodied' in d.project_name.lower()])"], capture_output=True, text=True, timeout=10)
-            logger.info(f"Installed packages with 'embodied': {result.stdout}")
-            
-            # Попробуем найти embodied_gen
-            result = subprocess.run(["python", "-c", "import embodied_gen; print(embodied_gen.__file__)"], capture_output=True, text=True, timeout=10)
-            if result.returncode == 0:
-                logger.info(f"Found embodied_gen at: {result.stdout}")
-            else:
-                logger.info(f"embodied_gen not found: {result.stderr}")
-                
-            # Проверим, есть ли файлы в /app
-            result = subprocess.run(["ls", "-la", "/app"], capture_output=True, text=True, timeout=10)
-            logger.info(f"Files in /app: {result.stdout}")
-            
-        except Exception as e:
-            logger.info(f"Error checking Python paths: {e}")
-        
-        # Сначала выполним диагностические команды
-        diagnostic_commands = [
-            # Проверяем структуру /EmbodiedGen
-            ["ls", "-la", "/EmbodiedGen/"],
-            ["find", "/EmbodiedGen", "-name", "*.py", "2>/dev/null"],
-            ["find", "/EmbodiedGen", "-name", "*imageto3d*", "-o", "-name", "*img3d*", "2>/dev/null"],
-            ["ls", "-la", "/EmbodiedGen/scripts/", "2>/dev/null"],
-            ["ls", "-la", "/EmbodiedGen/embodied_gen/scripts/", "2>/dev/null"],
-            
-            # Проверяем Python модули
-            ["python", "-c", "import sys; sys.path.append('/EmbodiedGen'); import embodied_gen; print('embodied_gen location:', embodied_gen.__file__); import os; print('Contents:', os.listdir(os.path.dirname(embodied_gen.__file__)))"],
-            ["python", "-c", "import pkg_resources; print('Package locations:', [d.location for d in pkg_resources.working_set if 'embodied' in d.project_name.lower()])"],
-            ["python", "-c", "import pkg_resources; print('Entry points:'); [print(f'{ep.name}: {ep.module_name}') for ep in pkg_resources.get_entry_map('embodied-gen').values()]"],
-            
-            # Ищем CLI команды
-            ["find", "/opt/conda/bin", "-name", "*img3d*", "-o", "-name", "*embodied*"],
-            ["ls", "-la", "/opt/conda/bin/"],
-            ["find", "/opt/conda/lib/python3.11/site-packages/embodied_gen", "-name", "*.py", "2>/dev/null"]
-        ]
-        
-        for i, diag_cmd in enumerate(diagnostic_commands):
-            logger.info(f"Running diagnostic {i+1}: {' '.join(diag_cmd)}")
+        # Попробуем выполнить команды по порядку
+        success = False
+        for i, cmd in enumerate(possible_commands):
+            logger.info(f"Trying command {i+1}: {' '.join(cmd)}")
             try:
-                result = subprocess.run(diag_cmd, capture_output=True, text=True, timeout=10)
-                logger.info(f"Diagnostic {i+1} stdout: {result.stdout}")
-                if result.stderr:
-                    logger.info(f"Diagnostic {i+1} stderr: {result.stderr}")
-            except Exception as e:
-                logger.info(f"Diagnostic {i+1} error: {e}")
-        
-        cmd = None
-        for i, test_cmd in enumerate(possible_commands):
-            logger.info(f"Trying command {i+1}: {' '.join(test_cmd)}")
-            # Пропустим только диагностические команды (find, ls без python)
-            if test_cmd[0] in ["find", "ls"] and test_cmd[0] != "python":
-                continue
+                result = subprocess.run(
+                    cmd,
+                    capture_output=True,
+                    text=True,
+                    timeout=300,  # 5 минут таймаут
+                    cwd="/EmbodiedGen"
+                )
                 
-            # Проверим, существует ли команда
-            try:
-                if test_cmd[0] == "python":
-                    # Для Python команд проверим, что Python доступен
-                    result = subprocess.run(["which", "python"], capture_output=True, text=True, timeout=5)
-                    if result.returncode == 0:
-                        cmd = test_cmd
-                        logger.info(f"Found Python command: {test_cmd[0]}")
-                        break
+                if result.returncode == 0:
+                    logger.info(f"Command {i+1} succeeded!")
+                    logger.info(f"STDOUT: {result.stdout}")
+                    success = True
+                    break
                 else:
-                    result = subprocess.run(["which", test_cmd[0]], capture_output=True, text=True, timeout=5)
-                    if result.returncode == 0:
-                        cmd = test_cmd
-                        logger.info(f"Found command: {test_cmd[0]}")
-                        break
-            except:
-                pass
-        
-        if cmd is None:
-            logger.error("No valid EmbodiedGen command found")
-            # Попробуем простой тест - что доступно в системе
-            try:
-                result = subprocess.run(["python", "-c", "import sys; print('Python version:', sys.version); print('Python paths:'); [print(p) for p in sys.path]"], capture_output=True, text=True, timeout=10)
-                logger.info(f"Python info: {result.stdout}")
-                
-                result = subprocess.run(["ls", "-la", "/"], capture_output=True, text=True, timeout=10)
-                logger.info(f"Root directory: {result.stdout}")
-                
-                result = subprocess.run(["find", "/", "-name", "*embodied*", "-type", "d", "2>/dev/null"], capture_output=True, text=True, timeout=30)
-                logger.info(f"Found embodied directories: {result.stdout}")
-                
-                # Попробуем найти файлы с img3d
-                result = subprocess.run(["find", "/", "-name", "*img3d*", "2>/dev/null"], capture_output=True, text=True, timeout=30)
-                logger.info(f"Found img3d files: {result.stdout}")
-                
-                # Попробуем найти Python пакеты
-                result = subprocess.run(["python", "-c", "import pkg_resources; print([d.project_name for d in pkg_resources.working_set])"], capture_output=True, text=True, timeout=10)
-                logger.info(f"Installed packages: {result.stdout}")
-                
+                    logger.warning(f"Command {i+1} failed with return code {result.returncode}")
+                    logger.warning(f"STDERR: {result.stderr}")
+                    
+            except subprocess.TimeoutExpired:
+                logger.error(f"Command {i+1} timed out")
             except Exception as e:
-                logger.info(f"Error in diagnostic: {e}")
+                logger.error(f"Command {i+1} failed with exception: {e}")
+        
+        # Если все команды не сработали, запустим диагностику
+        if not success:
+            logger.info("All main commands failed, running diagnostics...")
+            diagnostic_commands = [
+                ["python", "-c", "import sys; print('Python paths:', sys.path)"],
+                ["python", "-c", "import torch; print('PyTorch version:', torch.__version__)"],
+                ["find", "/EmbodiedGen", "-name", "*imageto3d*", "-o", "-name", "*img3d*"],
+                ["ls", "-la", "/EmbodiedGen/scripts/"],
+                ["ls", "-la", "/EmbodiedGen/embodied_gen/scripts/"],
+            ]
             
-            return {"error": "EmbodiedGen command not found in container", "diagnostic": "Check logs for system information"}
+            for cmd in diagnostic_commands:
+                try:
+                    result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+                    logger.info(f"Diagnostic {' '.join(cmd)}: {result.stdout}")
+                except Exception as e:
+                    logger.error(f"Diagnostic failed: {e}")
         
-        logger.info(f"Using command: {' '.join(cmd)}")
-        
-        start_time = time.time()
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-        execution_time = time.time() - start_time
-        
-        logger.info(f"Subprocess completed with return code: {result.returncode}")
-        logger.info(f"Execution time: {execution_time:.2f} seconds")
-        logger.info(f"STDOUT: {result.stdout}")
-        logger.info(f"STDERR: {result.stderr}")
-        
-        # Очистка временного файла
-        logger.info("Cleaning up temporary file...")
-        os.unlink(temp_image_path)
-        
-        if result.returncode != 0:
-            logger.error(f"EmbodiedGen failed with return code: {result.returncode}")
-            logger.error(f"Error output: {result.stderr}")
+        # Проверим, что сгенерировалось
+        if success:
+            logger.info("Checking generated files...")
+            try:
+                # Ищем сгенерированные файлы
+                output_files = {}
+                for ext in ['.glb', '.obj', '.ply', '.urdf']:
+                    files = list(output_dir.glob(f"*{ext}"))
+                    if files:
+                        output_files[ext[1:]] = str(files[0])
+                        logger.info(f"Found {ext} file: {files[0]}")
+                
+                if output_files:
+                    return {
+                        "success": True,
+                        "message": "3D model generated successfully",
+                        "output_files": output_files
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "message": "No 3D files generated",
+                        "output_files": {}
+                    }
+            except Exception as e:
+                logger.error(f"Error checking output files: {e}")
+                return {
+                    "success": False,
+                    "message": f"Error checking output files: {e}",
+                    "output_files": {}
+                }
+        else:
             return {
-                "error": f"EmbodiedGen generation failed: {result.stderr}",
-                "stdout": result.stdout,
-                "execution_time": execution_time
+                "success": False,
+                "message": "EmbodiedGen generation failed",
+                "output_files": {}
             }
-        
-        # Поиск сгенерированных файлов
-        logger.info("Searching for generated files...")
-        output_files = {}
-        for ext in [".obj", ".glb", ".ply", ".urdf"]:
-            files = list(output_dir.glob(f"**/*{ext}"))
-            logger.info(f"Found {len(files)} {ext} files: {[str(f) for f in files]}")
-            if files:
-                output_files[ext[1:]] = str(files[0])
-                logger.info(f"Added {ext[1:].upper()} file: {files[0]} (size: {files[0].stat().st_size} bytes)")
-        
-        logger.info(f"Generated files: {list(output_files.keys())}")
-        logger.info("Request completed successfully")
-        
-        return {
-            "success": True,
-            "message": "3D model generated successfully with EmbodiedGen",
-            "output_files": output_files,
-            "logs": result.stdout,
-            "output_directory": str(output_dir),
-            "execution_time": execution_time,
-            "model": "EmbodiedGen v0.1.x"
-        }
     
     except subprocess.TimeoutExpired:
         logger.error("Subprocess timeout after 5 minutes")

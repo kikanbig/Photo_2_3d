@@ -7,6 +7,10 @@ USER root
 # Устанавливаем runpod
 RUN pip install runpod
 
+# Устанавливаем EmbodiedGen в development mode (без дополнительных зависимостей)
+WORKDIR /EmbodiedGen
+RUN pip install -e .
+
 # Копируем API файл
 COPY api.py /app/api.py
 
@@ -14,7 +18,7 @@ COPY api.py /app/api.py
 RUN chmod +x /app/api.py
 
 # Устанавливаем переменные окружения
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app:/EmbodiedGen
 ENV CUDA_VISIBLE_DEVICES=0
 ENV PYTHONUNBUFFERED=1
 
