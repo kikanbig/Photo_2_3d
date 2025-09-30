@@ -7,6 +7,9 @@ USER root
 # Устанавливаем runpod
 RUN pip install runpod
 
+# Устанавливаем недостающие зависимости
+RUN pip install trimesh opencv-python
+
 # Устанавливаем EmbodiedGen в development mode (без дополнительных зависимостей)
 WORKDIR /EmbodiedGen
 RUN pip install -e .
