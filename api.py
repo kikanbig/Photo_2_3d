@@ -61,28 +61,14 @@ def handler(event):
         # Запуск EmbodiedGen
         logger.info("Starting EmbodiedGen Image-to-3D process...")
         
-        # Попробуем разные варианты команды - исправленные пути
+        # Простые команды для тестирования
         possible_commands = [
-            # Прямые пути к скриптам (основные)
-            ["python", "/EmbodiedGen/embodied_gen/scripts/imageto3d.py", "--image_path", temp_image_path, "--output_root", str(output_dir)],
-            ["python", "/EmbodiedGen/scripts/imageto3d.py", "--image_path", temp_image_path, "--output_root", str(output_dir)],
-            
-            # С PYTHONPATH и правильным вызовом
-            ["python", "-c", "import sys; sys.path.append('/EmbodiedGen'); import os; os.chdir('/EmbodiedGen'); from embodied_gen.scripts.imageto3d import entrypoint; entrypoint(image_path='" + temp_image_path + "', output_root='" + str(output_dir) + "')"],
-            
-            # Старые варианты (для совместимости)
-            ["img3d-cli", "--image_path", temp_image_path, "--output_root", str(output_dir)],
-            ["python", "-m", "embodied_gen.img3d_cli", "--image_path", temp_image_path, "--output_root", str(output_dir)],
-            ["python", "-m", "embodied_gen", "--image_path", temp_image_path, "--output_root", str(output_dir)],
-            ["python", "-m", "embodied_gen.cli", "--image_path", temp_image_path, "--output_root", str(output_dir)],
-            ["python", "-m", "embodied_gen.tools", "--image_path", temp_image_path, "--output_root", str(output_dir)],
-            ["python", "img3d_cli.py", "--image_path", temp_image_path, "--output_root", str(output_dir)],
-            ["python", "/app/img3d_cli.py", "--image_path", temp_image_path, "--output_root", str(output_dir)],
-            
-            # Диагностические команды
-            ["find", "/EmbodiedGen", "-name", "*imageto3d*", "-o", "-name", "*img3d*"],
-            ["ls", "-la", "/EmbodiedGen/scripts/"],
-            ["ls", "-la", "/EmbodiedGen/embodied_gen/scripts/"]
+            # Проверяем, что доступно в системе
+            ["python", "-c", "import sys; print('Python paths:', sys.path)"],
+            ["python", "-c", "import torch; print('PyTorch version:', torch.__version__)"],
+            ["python", "-c", "import os; print('Current dir:', os.getcwd()); print('Files:', os.listdir('.'))"],
+            ["ls", "-la", "/"],
+            ["find", "/", "-name", "*embodied*", "-type", "d", "2>/dev/null"],
         ]
         
         # Сначала попробуем найти EmbodiedGen в системе

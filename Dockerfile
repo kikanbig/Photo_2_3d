@@ -7,18 +7,6 @@ USER root
 # Устанавливаем runpod
 RUN pip install runpod
 
-# Устанавливаем EmbodiedGen в development mode
-WORKDIR /EmbodiedGen
-RUN pip install -e .
-
-# Устанавливаем только основные зависимости (без проблемных)
-RUN pip install trimesh opencv-python
-
-# Проверяем, что доступно в базовом образе
-RUN python -c "import sys; print('Python version:', sys.version)"
-RUN python -c "import torch; print('PyTorch version:', torch.__version__)"
-RUN python -c "try: import nvdiffrast.torch as dr; print('nvdiffrast available'); except: print('nvdiffrast not available')"
-
 # Копируем API файл
 COPY api.py /app/api.py
 
@@ -26,7 +14,7 @@ COPY api.py /app/api.py
 RUN chmod +x /app/api.py
 
 # Устанавливаем переменные окружения
-ENV PYTHONPATH=/app:/EmbodiedGen
+ENV PYTHONPATH=/app
 ENV CUDA_VISIBLE_DEVICES=0
 ENV PYTHONUNBUFFERED=1
 
