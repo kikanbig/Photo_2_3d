@@ -4,6 +4,7 @@ RunPod API сервер для упрощенной Image-to-3D генераци
 """
 
 import os
+import sys
 import json
 import base64
 import tempfile
@@ -114,14 +115,14 @@ def handler(event: Dict[str, Any]) -> Dict[str, Any]:
         logger.info(f"📁 Output directory: {output_dir}")
         
         cmd = [
-            "python", "simple_image_to_3d.py",
+            "python3", "simple_image_to_3d.py",
             temp_image_path,
             str(output_dir)
         ]
         
         logger.info(f"🔧 Command: {' '.join(cmd)}")
         logger.info(f"🔧 Working directory: {os.getcwd()}")
-        logger.info(f"🔧 Python executable: {subprocess.which('python')}")
+        logger.info(f"🔧 Python executable: {sys.executable}")
         
         logger.info("⏳ Running subprocess...")
         result = subprocess.run(
