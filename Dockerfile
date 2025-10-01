@@ -8,7 +8,10 @@ USER root
 RUN pip install runpod
 
 # Устанавливаем недостающие зависимости
-RUN pip install trimesh opencv-python nvdiffrast
+RUN pip install trimesh opencv-python
+
+# Устанавливаем nvdiffrast из GitHub (недоступен через pip)
+RUN pip install git+https://github.com/NVlabs/nvdiffrast.git
 
 # Устанавливаем EmbodiedGen в development mode (без дополнительных зависимостей)
 WORKDIR /EmbodiedGen
