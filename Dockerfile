@@ -8,7 +8,7 @@ USER root
 RUN pip install runpod
 
 # Устанавливаем недостающие зависимости
-RUN pip install trimesh opencv-python spaces xatlas igraph pyvista
+RUN pip install trimesh opencv-python spaces xatlas igraph pyvista utils3d
 
 # Устанавливаем nvdiffrast из GitHub (недоступен через pip)
 RUN pip install git+https://github.com/NVlabs/nvdiffrast.git
