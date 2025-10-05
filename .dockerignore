@@ -1,0 +1,90 @@
+# Исключаем ненужные файлы из Docker контекста
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git/
+.mypy_cache/
+.pytest_cache/
+.hypothesis/
+
+# Временные файлы
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Логи
+logs/
+*.log
+
+# Выходные файлы
+outputs/
+test_outputs/
+test_simple_outputs/
+
+# Большие файлы
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.mp4
+*.avi
+*.mov
+
+# Документация
+*.md
+README*
+LICENSE
+CHANGELOG*
+
+# Тесты
+tests/
+test_*.py
+*_test.py
+
+# Скрипты разработки
+scripts/
+install/
+thirdparty/
+
+# Docker файлы
+Dockerfile*
+docker/
+
+# Git
+.gitignore
+.gitattributes
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python
+*.egg-info/
+build/
+dist/
+
+# Дополнительные файлы
+runpod_result.json
+DOCKER_FIX_README.md
+test_docker_builds.sh
+analyze_blob_issue.sh
+Dockerfile.fixed
+Dockerfile.alternative
