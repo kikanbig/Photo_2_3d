@@ -1,5 +1,5 @@
-# Используем совместимую версию PyTorch для xformers
-FROM pytorch/pytorch:2.4.0-cuda12.1-cudnn8-devel
+# Используем доступную версию PyTorch
+FROM pytorch/pytorch:2.1.0-cuda11.8-cudnn8-devel
 
 # Переключаемся на root для установки зависимостей
 USER root
