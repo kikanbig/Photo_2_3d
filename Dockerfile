@@ -4,6 +4,10 @@ FROM pytorch/pytorch:2.1.0-cuda11.8-cudnn8-devel
 # Переключаемся на root для установки зависимостей
 USER root
 
+# Устанавливаем переменные окружения для избежания интерактивных запросов
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
 # Обновляем систему и устанавливаем системные зависимости
 RUN apt-get update && apt-get install -y \
     git \
