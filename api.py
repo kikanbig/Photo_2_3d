@@ -64,12 +64,12 @@ def handler(event):
         # Команды для EmbodiedGen
         possible_commands = [
             # Прямые пути к скриптам
-            ["python", "/EmbodiedGen/embodied_gen/scripts/imageto3d.py", "--image_path", temp_image_path, "--output_root", str(output_dir)],
-            ["python", "/EmbodiedGen/scripts/imageto3d.py", "--image_path", temp_image_path, "--output_root", str(output_dir)],
+            ["python", "/app/embodied_gen/scripts/imageto3d.py", "--image_path", temp_image_path, "--output_root", str(output_dir)],
+            ["python", "/app/scripts/imageto3d.py", "--image_path", temp_image_path, "--output_root", str(output_dir)],
             
             # CLI команды
             ["img3d-cli", "--image_path", temp_image_path, "--output_root", str(output_dir)],
-            ["python", "-m", "embodied_gen.img3d_cli", "--image_path", temp_image_path, "--output_root", str(output_dir)],
+            ["python", "-m", "embodied_gen.scripts.imageto3d", "--image_path", temp_image_path, "--output_root", str(output_dir)],
         ]
         
         # Попробуем выполнить команды по порядку
@@ -82,7 +82,7 @@ def handler(event):
                     capture_output=True,
                     text=True,
                     timeout=300,  # 5 минут таймаут
-                    cwd="/EmbodiedGen"
+                    cwd="/app"
                 )
                 
                 if result.returncode == 0:
@@ -105,15 +105,18 @@ def handler(event):
             diagnostic_commands = [
                 ["python", "-c", "import sys; print('Python paths:', sys.path)"],
                 ["python", "-c", "import torch; print('PyTorch version:', torch.__version__)"],
-                ["find", "/EmbodiedGen", "-name", "*imageto3d*", "-o", "-name", "*img3d*"],
-                ["ls", "-la", "/EmbodiedGen/scripts/"],
-                ["ls", "-la", "/EmbodiedGen/embodied_gen/scripts/"],
+                ["python", "-c", "import igraph, xatlas, pyvista, utils3d; print('All imports OK')"],
+                ["find", "/app", "-name", "*imageto3d*", "-o", "-name", "*img3d*"],
+                ["ls", "-la", "/app/scripts/"],
+                ["ls", "-la", "/app/embodied_gen/scripts/"],
             ]
             
             for cmd in diagnostic_commands:
                 try:
                     result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
                     logger.info(f"Diagnostic {' '.join(cmd)}: {result.stdout}")
+                    if result.stderr:
+                        logger.error(f"Diagnostic stderr: {result.stderr}")
                 except Exception as e:
                     logger.error(f"Diagnostic failed: {e}")
         
