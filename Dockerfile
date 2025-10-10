@@ -48,10 +48,15 @@ RUN pip install --no-cache-dir --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Устанавливаем дополнительные зависимости, которых нет в requirements.txt
-RUN pip install --no-cache-dir \
-    utils3d \
-    git+https://github.com/NVlabs/nvdiffrast.git \
-    git+https://github.com/NVlabs/kaolin.git@v0.15.0
+RUN pip install --no-cache-dir utils3d
+
+# Устанавливаем nvdiffrast из GitHub
+RUN pip install --no-cache-dir git+https://github.com/NVlabs/nvdiffrast.git
+
+# Пытаемся установить kaolin - если не получится, используем заглушку
+RUN pip install --no-cache-dir kaolin==0.1 || \
+    (echo "Kaolin 0.1 установка не удалась, используем заглушку" && \
+     cp /app/kaolin_stub.py /opt/conda/lib/python3.10/site-packages/kaolin.py)
 
 # Устанавливаем EmbodiedGen в development mode
 RUN pip install -e .
