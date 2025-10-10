@@ -50,7 +50,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Устанавливаем дополнительные зависимости, которых нет в requirements.txt
 RUN pip install --no-cache-dir \
     utils3d \
-    git+https://github.com/NVlabs/nvdiffrast.git
+    git+https://github.com/NVlabs/nvdiffrast.git \
+    git+https://github.com/NVlabs/kaolin.git@v0.15.0
 
 # Устанавливаем EmbodiedGen в development mode
 RUN pip install -e .
