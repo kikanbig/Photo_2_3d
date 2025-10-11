@@ -61,14 +61,14 @@ RUN pip install --no-cache-dir git+https://github.com/NVlabs/nvdiffrast.git
 # ВАЖНО: Удаляем placeholder kaolin если он был установлен как зависимость
 RUN pip uninstall -y kaolin 2>/dev/null || true
 
-# Клонируем и устанавливаем kaolin из GitHub
+# Скачиваем и устанавливаем kaolin из GitHub release (без git clone)
 RUN cd /tmp && \
-    git clone --recursive https://github.com/NVlabs/kaolin.git && \
-    cd kaolin && \
-    git checkout v0.15.0 && \
+    wget -q https://github.com/NVlabs/kaolin/archive/refs/tags/v0.15.0.tar.gz && \
+    tar -xzf v0.15.0.tar.gz && \
+    cd kaolin-0.15.0 && \
     FORCE_CUDA=1 python setup.py develop && \
-    echo "Kaolin installed successfully from GitHub" || \
-    (echo "Kaolin installation from GitHub failed" && exit 1)
+    echo "Kaolin installed successfully from GitHub tarball" || \
+    (echo "Kaolin installation from tarball failed" && exit 1)
 
 # Устанавливаем EmbodiedGen в development mode
 RUN pip install -e .
