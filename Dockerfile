@@ -53,10 +53,22 @@ RUN pip install --no-cache-dir utils3d
 # Устанавливаем nvdiffrast из GitHub
 RUN pip install --no-cache-dir git+https://github.com/NVlabs/nvdiffrast.git
 
-# Kaolin из PyPI - это placeholder, используем свою заглушку
-RUN echo "Используем kaolin stub вместо placeholder из PyPI" && \
-    mkdir -p /opt/conda/lib/python3.10/site-packages/kaolin && \
-    cp /app/kaolin_stub.py /opt/conda/lib/python3.10/site-packages/kaolin/__init__.py
+# Пробуем разные способы установки kaolin
+RUN echo "Trying to install kaolin..." && \
+    # Вариант 1: Попробуем установить через pip с --no-deps
+    (pip install --no-cache-dir --no-deps kaolin==0.17.0 2>/dev/null || echo "Kaolin 0.17.0 failed") && \
+    # Вариант 2: Попробуем установить kaolin через conda
+    (conda install -c conda-forge kaolin -y 2>/dev/null || echo "Conda kaolin failed") && \
+    # Вариант 3: Установим из wheel файла если есть
+    (pip install --no-cache-dir https://github.com/NVlabs/kaolin/releases/download/v0.15.0/kaolin-0.15.0-cp310-cp310-linux_x86_64.whl 2>/dev/null || echo "Wheel install failed") && \
+    # Вариант 4: Установим минимальную версию из PyPI
+    (pip install --no-cache-dir --no-deps kaolin 2>/dev/null || echo "PyPI kaolin failed") && \
+    # Вариант 5: Клонируем и устанавливаем локально
+    (cd /tmp && git clone --depth 1 https://github.com/NVlabs/kaolin.git && cd kaolin && pip install --no-cache-dir . 2>/dev/null || echo "Git clone install failed") || \
+    # Если все не удалось, используем заглушку
+    (echo "All kaolin installation methods failed, using stub" && \
+     mkdir -p /opt/conda/lib/python3.10/site-packages/kaolin && \
+     cp /app/kaolin_stub.py /opt/conda/lib/python3.10/site-packages/kaolin/__init__.py)
 
 # Устанавливаем EmbodiedGen в development mode
 RUN pip install -e .
