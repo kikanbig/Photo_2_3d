@@ -53,10 +53,10 @@ RUN pip install --no-cache-dir utils3d
 # Устанавливаем nvdiffrast из GitHub
 RUN pip install --no-cache-dir git+https://github.com/NVlabs/nvdiffrast.git
 
-# Пытаемся установить kaolin - если не получится, используем заглушку
-RUN pip install --no-cache-dir kaolin==0.1 || \
-    (echo "Kaolin 0.1 установка не удалась, используем заглушку" && \
-     cp /app/kaolin_stub.py /opt/conda/lib/python3.10/site-packages/kaolin.py)
+# Kaolin из PyPI - это placeholder, используем свою заглушку
+RUN echo "Используем kaolin stub вместо placeholder из PyPI" && \
+    mkdir -p /opt/conda/lib/python3.10/site-packages/kaolin && \
+    cp /app/kaolin_stub.py /opt/conda/lib/python3.10/site-packages/kaolin/__init__.py
 
 # Устанавливаем EmbodiedGen в development mode
 RUN pip install -e .
