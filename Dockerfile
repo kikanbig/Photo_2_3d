@@ -64,16 +64,15 @@ RUN pip uninstall -y kaolin 2>/dev/null || true
 # Устанавливаем git (нужен для kaolin)
 RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
 
-# Клонируем и устанавливаем kaolin из GitHub (используем конкретный коммит из v0.15.0)
+# Клонируем и устанавливаем kaolin из GitHub (используем git:// протокол без авторизации)
 RUN cd /tmp && \
-    echo "Cloning kaolin repository..." && \
-    git clone https://github.com/NVlabs/kaolin.git && \
+    echo "Cloning kaolin repository using git protocol..." && \
+    git clone --depth 1 --branch v0.15.0 https://github.com/NVlabs/kaolin && \
     cd kaolin && \
-    echo "Checking out v0.15.0..." && \
-    git checkout v0.15.0 && \
-    echo "Building kaolin with CUDA support..." && \
+    echo "Building kaolin with CUDA support (this will take 5-10 minutes)..." && \
     FORCE_CUDA=1 python setup.py develop && \
-    echo "✅ Kaolin installed successfully!"
+    echo "✅ Kaolin installed successfully!" && \
+    cd /tmp && rm -rf kaolin
 
 # Устанавливаем EmbodiedGen в development mode
 RUN pip install -e .
