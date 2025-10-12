@@ -63,12 +63,13 @@ RUN pip uninstall -y kaolin 2>/dev/null || true
 
 # Скачиваем и устанавливаем kaolin из GitHub release (без git clone)
 RUN cd /tmp && \
-    wget -q https://github.com/NVlabs/kaolin/archive/refs/tags/v0.15.0.tar.gz && \
+    echo "Downloading kaolin v0.15.0..." && \
+    wget https://github.com/NVlabs/kaolin/archive/refs/tags/v0.15.0.tar.gz && \
+    echo "Extracting kaolin..." && \
     tar -xzf v0.15.0.tar.gz && \
     cd kaolin-0.15.0 && \
-    FORCE_CUDA=1 python setup.py develop && \
-    echo "Kaolin installed successfully from GitHub tarball" || \
-    (echo "Kaolin installation from tarball failed" && exit 1)
+    echo "Building kaolin with CUDA support..." && \
+    FORCE_CUDA=1 python setup.py develop
 
 # Устанавливаем EmbodiedGen в development mode
 RUN pip install -e .
