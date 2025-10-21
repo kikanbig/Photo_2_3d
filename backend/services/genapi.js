@@ -131,11 +131,12 @@ class GenAPIService {
   // Проверка статуса задачи
   async checkTaskStatus(requestId) {
     try {
-      const response = await axios.get(`https://api.gen-api.ru/api/v1/requests/${requestId}`, {
+      // ПРАВИЛЬНЫЙ URL согласно документации: GET https://api.gen-api.ru/api/v1/request/get/{request_id}
+      const response = await axios.get(`https://api.gen-api.ru/api/v1/request/get/${requestId}`, {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`
+          'Authorization': `Bearer ${this.apiKey.trim()}`
         }
       });
       return response.data;

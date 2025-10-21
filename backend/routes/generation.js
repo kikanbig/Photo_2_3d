@@ -284,9 +284,21 @@ async function pollTaskStatus(taskId, requestId) {
       
       if (statusResponse.status === 'success') {
         // Задача завершена успешно
-        const resultUrl = statusResponse.result;
+        // Согласно документации результат в поле output
+        const output = statusResponse.output;
+        
+        // Пытаемся найти URL модели в разных форматах
+        let resultUrl = null;
+        if (typeof output === 'string' && output.startsWith('http')) {
+          resultUrl = output;
+        } else if (output && typeof output === 'object') {
+          // Ищем URL в объекте output
+          resultUrl = output.model_url || output.url || output.glb || output.file;
+        }
         
         if (resultUrl) {
+          console.log(`[Задача ${taskId}] Найден URL модели: ${resultUrl}`);
+          
           // Скачиваем результат
           const outputDir = path.join(process.env.UPLOAD_DIR || 'uploads', 'output');
           await fs.ensureDir(outputDir);
@@ -306,9 +318,10 @@ async function pollTaskStatus(taskId, requestId) {
           
           console.log(`Задача ${taskId} завершена успешно`);
         } else {
+          console.log(`[Задача ${taskId}] URL не найден. Полный ответ:`, JSON.stringify(statusResponse, null, 2));
           throw new Error('URL результата не получен');
         }
-      } else if (statusResponse.status === 'failed') {
+      } else if (statusResponse.status === 'failed' || statusResponse.status === 'error') {
         // Задача завершена с ошибкой
         task.status = 'failed';
         task.error = statusResponse.error || 'Неизвестная ошибка генерации';
