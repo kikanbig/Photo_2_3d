@@ -344,16 +344,34 @@ async function pollTaskStatus(taskId, requestId) {
       
       if (statusResponse.status === 'success') {
         // Задача завершена успешно
-        // Согласно документации результат в поле output
-        const output = statusResponse.output;
-        
-        // Пытаемся найти URL модели в разных форматах
+        // GenAPI может возвращать результат в разных полях: output, result, full_response
         let resultUrl = null;
-        if (typeof output === 'string' && output.startsWith('http')) {
-          resultUrl = output;
-        } else if (output && typeof output === 'object') {
-          // Ищем URL в объекте output
-          resultUrl = output.model_url || output.url || output.glb || output.file;
+        
+        // Проверяем поле result (может быть массивом или строкой)
+        if (statusResponse.result) {
+          if (Array.isArray(statusResponse.result) && statusResponse.result.length > 0) {
+            resultUrl = statusResponse.result[0]; // Берем первый элемент массива
+          } else if (typeof statusResponse.result === 'string') {
+            resultUrl = statusResponse.result;
+          }
+        }
+        
+        // Если не нашли в result, проверяем output
+        if (!resultUrl && statusResponse.output) {
+          const output = statusResponse.output;
+          if (typeof output === 'string' && output.startsWith('http')) {
+            resultUrl = output;
+          } else if (output && typeof output === 'object') {
+            resultUrl = output.model_url || output.url || output.glb || output.file;
+          }
+        }
+        
+        // Если не нашли в output, проверяем full_response
+        if (!resultUrl && statusResponse.full_response && Array.isArray(statusResponse.full_response)) {
+          const firstResponse = statusResponse.full_response[0];
+          if (firstResponse && firstResponse.url) {
+            resultUrl = firstResponse.url;
+          }
         }
         
         if (resultUrl) {
