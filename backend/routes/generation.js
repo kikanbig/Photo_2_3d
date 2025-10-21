@@ -189,7 +189,67 @@ async function generate3DModelAsync(taskId, imagePath) {
       
       console.log(`Задача ${taskId} завершена успешно сразу`);
     } else {
-      throw new Error('Некорректный ответ от API');
+      console.log(`[Задача ${taskId}] Получен неожиданный формат ответа от API:`, JSON.stringify(response, null, 2));
+      
+      // Проверяем, есть ли в ответе HTML-страница (признак того, что API вернул веб-страницу вместо JSON)
+      if (typeof response === 'string' && response.includes('<!DOCTYPE html>')) {
+        throw new Error('API вернул HTML-страницу вместо ожидаемого JSON. Возможно, проблема с аутентификацией или URL API.');
+      }
+      
+      // Проверяем наличие URL модели в любом формате ответа
+      if (response && typeof response === 'object') {
+        // Попробуем найти URL модели в любом поле ответа
+        const findModelUrl = (obj) => {
+          if (!obj || typeof obj !== 'object') return null;
+          
+          // Проверяем прямые поля, которые могут содержать URL модели
+          for (const key of ['model_url', 'url', 'result', 'output']) {
+            if (obj[key] && typeof obj[key] === 'string' && obj[key].startsWith('http')) {
+              return obj[key];
+            } else if (obj[key] && typeof obj[key] === 'object') {
+              const nestedUrl = findModelUrl(obj[key]);
+              if (nestedUrl) return nestedUrl;
+            }
+          }
+          
+          // Проверяем все поля объекта
+          for (const key in obj) {
+            if (obj[key] && typeof obj[key] === 'object') {
+              const nestedUrl = findModelUrl(obj[key]);
+              if (nestedUrl) return nestedUrl;
+            }
+          }
+          
+          return null;
+        };
+        
+        const modelUrl = findModelUrl(response);
+        if (modelUrl) {
+          console.log(`[Задача ${taskId}] Найден URL модели в нестандартном формате ответа: ${modelUrl}`);
+          
+          // Скачиваем результат
+          const outputDir = path.join(process.env.UPLOAD_DIR || 'uploads', 'output');
+          await fs.ensureDir(outputDir);
+          
+          const outputPath = path.join(outputDir, `${taskId}.glb`);
+          await genapiService.downloadResult(modelUrl, outputPath);
+          
+          // Обновляем задачу
+          task.status = 'completed';
+          task.result = {
+            url: modelUrl,
+            filePath: outputPath,
+            downloadedAt: new Date(),
+            modelUrl: modelUrl
+          };
+          tasks.set(taskId, task);
+          
+          console.log(`Задача ${taskId} завершена успешно (нестандартный формат)`);
+          return;
+        }
+      }
+      
+      throw new Error('Некорректный ответ от API: не удалось найти URL модели');
     }
 
   } catch (error) {
