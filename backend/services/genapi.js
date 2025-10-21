@@ -1,6 +1,7 @@
 const axios = require('axios');
 const fs = require('fs-extra');
 const path = require('path');
+const FormData = require('form-data');
 
 class GenAPIService {
   constructor() {
@@ -32,22 +33,26 @@ class GenAPIService {
     try {
       // Читаем файл изображения
       const imageBuffer = await fs.readFile(imagePath);
-      const base64Image = imageBuffer.toString('base64');
       
-      // Согласно документации GenAPI, правильный формат запроса
-      const requestData = {
-        image: `data:image/jpeg;base64,${base64Image}`,
-        is_sync: true, // Получить результат сразу в ответе
-        ...options
-      };
+      // Создаем FormData для отправки файла
+      const formData = new FormData();
+      formData.append('file', imageBuffer, {
+        filename: path.basename(imagePath),
+        contentType: 'image/png', // Или другой тип в зависимости от файла
+      });
+      
+      // Добавляем параметры из options
+      for (const key in options) {
+        formData.append(key, options[key]);
+      }
 
       console.log('Отправляем запрос на генерацию 3D модели...');
       
       // Правильный URL для API Trellis
-      const response = await axios.post(`https://gen-api.ru/api/v1/generation/trellis`, requestData, {
+      const response = await axios.post(`https://gen-api.ru/model/trellis/api`, formData, {
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json'
+          ...formData.getHeaders()
         }
       });
 
