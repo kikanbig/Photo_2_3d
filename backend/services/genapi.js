@@ -49,10 +49,15 @@ class GenAPIService {
       console.log('Отправляем запрос на генерацию 3D модели...');
       
       // Правильный URL для API Trellis
+      // Исправляем формат заголовка Authorization
+      const headers = formData.getHeaders();
+      // Удаляем проблемный заголовок Authorization
+      delete headers['Authorization'];
+      
       const response = await axios.post(`https://gen-api.ru/model/trellis/api`, formData, {
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          ...formData.getHeaders()
+        headers: headers,
+        params: {
+          api_key: this.apiKey // Передаем API ключ как параметр запроса
         }
       });
 
@@ -68,8 +73,10 @@ class GenAPIService {
     try {
       const response = await axios.get(`${this.baseURL}/generation/${requestId}`, {
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json'
+        },
+        params: {
+          api_key: this.apiKey // Передаем API ключ как параметр запроса
         }
       });
       return response.data;
@@ -114,8 +121,10 @@ class GenAPIService {
 
       const response = await axios.post(`${this.baseURL}/generation`, requestData, {
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json'
+        },
+        params: {
+          api_key: this.apiKey // Передаем API ключ как параметр запроса
         }
       });
 
