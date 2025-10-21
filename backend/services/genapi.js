@@ -62,21 +62,54 @@ class GenAPIService {
       }
 
       console.log('Отправляем запрос на генерацию 3D модели...');
+      console.log(`Путь к файлу: ${imagePath}`);
+      console.log(`Параметры запроса:`, options);
       
       // Правильный URL для API Trellis
+      const apiUrl = 'https://gen-api.ru/model/trellis/api';
+      console.log(`URL API: ${apiUrl}`);
+      
       // Исправляем формат заголовка Authorization
       const headers = formData.getHeaders();
       // Удаляем проблемный заголовок Authorization
       delete headers['Authorization'];
       
-      const response = await axios.post(`https://gen-api.ru/model/trellis/api`, formData, {
-        headers: headers,
-        params: {
-          api_key: this.apiKey // Передаем API ключ как параметр запроса
+      console.log('Заголовки запроса:', headers);
+      console.log('API ключ (частично):', this.apiKey.substring(0, 5) + '...');
+      
+      try {
+        console.log('Отправка запроса...');
+        const response = await axios.post(apiUrl, formData, {
+          headers: headers,
+          params: {
+            api_key: this.apiKey // Передаем API ключ как параметр запроса
+          },
+          // Добавляем таймаут 5 минут (300000 мс)
+          timeout: 300000,
+          // Включаем отображение прогресса загрузки
+          onUploadProgress: (progressEvent) => {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            console.log(`Прогресс загрузки: ${percentCompleted}%`);
+          }
+        });
+        
+        console.log('Получен ответ от API:', response.status);
+        console.log('Тело ответа:', JSON.stringify(response.data, null, 2));
+        
+        return response.data;
+      } catch (axiosError) {
+        console.error('Ошибка запроса к API:', axiosError.message);
+        if (axiosError.response) {
+          console.error('Статус ответа:', axiosError.response.status);
+          console.error('Данные ответа:', axiosError.response.data);
+          console.error('Заголовки ответа:', axiosError.response.headers);
+        } else if (axiosError.request) {
+          console.error('Запрос был отправлен, но ответ не получен');
+          console.error(axiosError.request);
         }
-      });
+        throw axiosError;
+      }
 
-      return response.data;
     } catch (error) {
       console.error('Ошибка генерации 3D модели:', error.response?.data || error.message);
       throw error;

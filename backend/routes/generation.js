@@ -154,15 +154,19 @@ async function generate3DModelAsync(taskId, imagePath) {
     const task = tasks.get(taskId);
     if (!task) return;
 
-    console.log(`Начинаем генерацию 3D модели для задачи ${taskId}`);
+    console.log(`[Задача ${taskId}] Начинаем генерацию 3D модели...`);
     
-    // Отправляем запрос на генерацию
-    const response = await genapiService.generate3DModel(imagePath, { is_sync: false });
+    // Отправляем запрос на генерацию с синхронным режимом
+    const response = await genapiService.generate3DModel(imagePath, { is_sync: true });
+    
+    console.log(`[Задача ${taskId}] Получен ответ от API:`, JSON.stringify(response, null, 2));
     
     if (response && response.request_id) {
+      console.log(`[Задача ${taskId}] Получен request_id: ${response.request_id}, запускаем проверку статуса`);
       // Используем long-pooling для проверки статуса
       await pollTaskStatus(taskId, response.request_id);
     } else if (response && response.status === 'success' && response.output && response.output.model_url) {
+      console.log(`[Задача ${taskId}] Получен результат сразу. URL модели: ${response.output.model_url}`);
       // Получили результат сразу (is_sync=true)
       const resultUrl = response.output.model_url;
       
@@ -208,11 +212,15 @@ async function pollTaskStatus(taskId, requestId) {
   const maxAttempts = 60; // Максимум 5 минут (60 * 5 секунд)
   let attempts = 0;
 
+  console.log(`[Задача ${taskId}] Запускаем опрос статуса для request_id: ${requestId}`);
+
   const poll = async () => {
     try {
       attempts++;
+      console.log(`[Задача ${taskId}] Попытка ${attempts}/${maxAttempts} проверки статуса...`);
       
       const statusResponse = await genapiService.checkTaskStatus(requestId);
+      console.log(`[Задача ${taskId}] Получен статус:`, JSON.stringify(statusResponse, null, 2));
       
       if (statusResponse.status === 'success') {
         // Задача завершена успешно
