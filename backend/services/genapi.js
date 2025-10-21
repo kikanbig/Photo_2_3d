@@ -95,7 +95,7 @@ class GenAPIService {
           data: {
             status: 'success',
             output: {
-              model_url: 'https://storage.googleapis.com/ucloud-v3/ccab767f677e45b3b10ec15750bdce91/glb/Astronaut.glb'
+              model_url: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Avocado/glTF-Binary/Avocado.glb'
             }
           }
         };
