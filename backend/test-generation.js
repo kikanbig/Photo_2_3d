@@ -19,7 +19,7 @@ fs.ensureDirSync(TEST_DIR);
 fs.ensureDirSync(OUTPUT_DIR);
 
 // Тестовое изображение (должно существовать в папке test-images)
-const TEST_IMAGE = 'test.jpg'; // Замените на имя вашего тестового изображения
+const TEST_IMAGE = 'test.png'; // Используем образец 2.png
 const TEST_IMAGE_PATH = path.join(TEST_DIR, TEST_IMAGE);
 
 async function runTest() {

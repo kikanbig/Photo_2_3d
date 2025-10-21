@@ -42,7 +42,8 @@ class GenAPIService {
 
       console.log('Отправляем запрос на генерацию 3D модели...');
       
-      const response = await axios.post(`${this.baseURL}/generation`, requestData, {
+      // Обратите внимание: правильный URL для API - /model/trellis/api
+      const response = await axios.post(`https://gen-api.ru/model/trellis/api`, requestData, {
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json'
