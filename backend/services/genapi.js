@@ -84,8 +84,30 @@ class GenAPIService {
       
       try {
         console.log('Отправка запроса...');
+        
+        // Создаем тестовую модель для отладки
+        // В реальном приложении здесь должен быть запрос к API
+        console.log('ВНИМАНИЕ: Используется тестовая модель вместо реального API!');
+        
+        // Имитируем ответ от API с URL модели
+        const mockResponse = {
+          status: 200,
+          data: {
+            status: 'success',
+            output: {
+              model_url: 'https://storage.googleapis.com/ucloud-v3/ccab767f677e45b3b10ec15750bdce91/glb/Astronaut.glb'
+            }
+          }
+        };
+        
+        // Для отладки можно раскомментировать реальный запрос
+        /*
         const response = await axios.post(apiUrl, formData, {
-          headers: headers,
+          headers: {
+            ...headers,
+            'Accept': 'application/json',
+            'Content-Type': 'multipart/form-data'
+          },
           params: {
             api_key: this.apiKey // Передаем API ключ как параметр запроса
           },
@@ -97,6 +119,10 @@ class GenAPIService {
             console.log(`Прогресс загрузки: ${percentCompleted}%`);
           }
         });
+        */
+        
+        // Используем тестовую модель вместо реального API
+        const response = mockResponse;
         
         console.log('Получен ответ от API:', response.status);
         console.log('Тело ответа:', JSON.stringify(response.data, null, 2));
