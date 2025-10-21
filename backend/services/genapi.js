@@ -34,16 +34,17 @@ class GenAPIService {
       const imageBuffer = await fs.readFile(imagePath);
       const base64Image = imageBuffer.toString('base64');
       
+      // Согласно документации GenAPI, правильный формат запроса
       const requestData = {
-        model: 'trellis',
         image: `data:image/jpeg;base64,${base64Image}`,
+        is_sync: true, // Получить результат сразу в ответе
         ...options
       };
 
       console.log('Отправляем запрос на генерацию 3D модели...');
       
-      // Обратите внимание: правильный URL для API - /model/trellis/api
-      const response = await axios.post(`https://gen-api.ru/model/trellis/api`, requestData, {
+      // Правильный URL для API Trellis
+      const response = await axios.post(`https://gen-api.ru/api/v1/generation/trellis`, requestData, {
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json'

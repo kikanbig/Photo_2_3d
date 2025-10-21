@@ -157,13 +157,34 @@ async function generate3DModelAsync(taskId, imagePath) {
     console.log(`Начинаем генерацию 3D модели для задачи ${taskId}`);
     
     // Отправляем запрос на генерацию
-    const response = await genapiService.generate3DModel(imagePath);
+    const response = await genapiService.generate3DModel(imagePath, { is_sync: false });
     
-    if (response.request_id) {
+    if (response && response.request_id) {
       // Используем long-pooling для проверки статуса
       await pollTaskStatus(taskId, response.request_id);
+    } else if (response && response.status === 'success' && response.output && response.output.model_url) {
+      // Получили результат сразу (is_sync=true)
+      const resultUrl = response.output.model_url;
+      
+      // Скачиваем результат
+      const outputDir = path.join(process.env.UPLOAD_DIR || 'uploads', 'output');
+      await fs.ensureDir(outputDir);
+      
+      const outputPath = path.join(outputDir, `${taskId}.glb`);
+      await genapiService.downloadResult(resultUrl, outputPath);
+      
+      // Обновляем задачу
+      task.status = 'completed';
+      task.result = {
+        url: resultUrl,
+        filePath: outputPath,
+        downloadedAt: new Date()
+      };
+      tasks.set(taskId, task);
+      
+      console.log(`Задача ${taskId} завершена успешно сразу`);
     } else {
-      throw new Error('Не получен request_id от API');
+      throw new Error('Некорректный ответ от API');
     }
 
   } catch (error) {
