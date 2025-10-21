@@ -80,9 +80,5 @@ ENV PORT=3001
 # Открываем порт
 EXPOSE 3001
 
-# Копируем скрипт запуска
-COPY start.sh /app/start.sh
-RUN chmod +x /app/start.sh
-
-# Запускаем приложение
-CMD ["/app/start.sh"]
+# Запускаем приложение напрямую
+CMD ["node", "backend/server.js"]

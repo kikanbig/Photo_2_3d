@@ -73,6 +73,18 @@ app.get('/api', (req, res) => {
   });
 });
 
+// Проверка API ключа
+app.get('/api/check-api-key', (req, res) => {
+  const apiKey = process.env.GENAPI_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ error: 'API ключ не установлен' });
+  }
+  res.json({ 
+    message: 'API ключ установлен',
+    key: apiKey.substring(0, 10) + '...' // Показываем только часть ключа для безопасности
+  });
+});
+
 // Обслуживание React приложения для всех остальных маршрутов
 if (process.env.NODE_ENV === 'production') {
   app.get('*', (req, res) => {
