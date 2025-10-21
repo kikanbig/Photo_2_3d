@@ -17,7 +17,7 @@ COPY backend/ ./backend/
 COPY frontend/ ./frontend/
 
 # Собираем фронтенд
-RUN cd frontend && npm run build
+RUN cd frontend && chmod +x build.sh && ./build.sh
 
 # Создаем директории для загрузок
 RUN mkdir -p backend/uploads/input backend/uploads/output
