@@ -74,16 +74,18 @@ class GenAPIService {
       try {
         console.log('Отправка запроса с файлом...');
         
-        // Получаем заголовки из FormData
-        const headers = formData.getHeaders();
+        // Получаем заголовки из FormData и сразу добавляем Authorization
+        const headers = {
+          ...formData.getHeaders(),
+          'Authorization': `Bearer ${this.apiKey}`, // Bearer токен!
+          'Accept': 'application/json'
+        };
+        
+        console.log('Заголовки запроса:', Object.keys(headers));
         
         // ПРАВИЛЬНЫЕ ЗАГОЛОВКИ согласно документации
         const response = await axios.post(apiUrl, formData, {
-          headers: {
-            ...headers,
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${this.apiKey}` // Bearer токен!
-          },
+          headers: headers,
           timeout: 300000, // 5 минут
           maxContentLength: Infinity,
           maxBodyLength: Infinity,
