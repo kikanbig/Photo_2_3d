@@ -58,7 +58,12 @@ class GenAPIService {
       
       // Добавляем параметры из options
       for (const key in options) {
-        formData.append(key, options[key]);
+        // Преобразуем булевы значения в строки, чтобы избежать ошибки типа
+        if (typeof options[key] === 'boolean') {
+          formData.append(key, options[key].toString());
+        } else {
+          formData.append(key, options[key]);
+        }
       }
 
       console.log('Отправляем запрос на генерацию 3D модели...');
