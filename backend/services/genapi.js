@@ -31,14 +31,29 @@ class GenAPIService {
   // Генерация 3D модели с помощью Trellis
   async generate3DModel(imagePath, options = {}) {
     try {
-      // Читаем файл изображения
-      const imageBuffer = await fs.readFile(imagePath);
+      // Проверяем существование файла
+      if (!await fs.pathExists(imagePath)) {
+        throw new Error(`Файл не существует: ${imagePath}`);
+      }
       
       // Создаем FormData для отправки файла
       const formData = new FormData();
-      formData.append('file', imageBuffer, {
+      
+      // Определяем тип файла на основе расширения
+      const fileExt = path.extname(imagePath).toLowerCase();
+      let contentType = 'image/jpeg'; // По умолчанию
+      
+      if (fileExt === '.png') contentType = 'image/png';
+      else if (fileExt === '.gif') contentType = 'image/gif';
+      else if (fileExt === '.webp') contentType = 'image/webp';
+      
+      // Создаем поток для чтения файла напрямую с диска
+      const fileStream = fs.createReadStream(imagePath);
+      
+      // Добавляем файл как поток
+      formData.append('image', fileStream, {
         filename: path.basename(imagePath),
-        contentType: 'image/png', // Или другой тип в зависимости от файла
+        contentType: contentType,
       });
       
       // Добавляем параметры из options
