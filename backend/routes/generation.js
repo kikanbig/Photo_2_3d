@@ -178,7 +178,8 @@ async function generate3DModelAsync(taskId, imagePath) {
       task.result = {
         url: resultUrl,
         filePath: outputPath,
-        downloadedAt: new Date()
+        downloadedAt: new Date(),
+        modelUrl: resultUrl // Добавляем URL модели для отображения в интерфейсе
       };
       tasks.set(taskId, task);
       
@@ -230,7 +231,8 @@ async function pollTaskStatus(taskId, requestId) {
           task.result = {
             url: resultUrl,
             filePath: outputPath,
-            downloadedAt: new Date()
+            downloadedAt: new Date(),
+            modelUrl: resultUrl // Добавляем URL модели для отображения в интерфейсе
           };
           tasks.set(taskId, task);
           

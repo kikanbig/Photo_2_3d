@@ -159,9 +159,9 @@ function App() {
               />
             )}
 
-            {taskStatus?.status === 'completed' && (
+            {taskStatus?.status === 'completed' && taskStatus?.result?.url && (
               <ModelViewer
-                modelUrl={`http://localhost:3001/api/generation/download/${taskId}`}
+                modelUrl={taskStatus.result.url}
                 onDownload={handleDownload}
               />
             )}
