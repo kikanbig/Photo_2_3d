@@ -29,7 +29,8 @@ function App() {
       const formData = new FormData();
       formData.append('image', imageFile);
 
-      const response = await fetch('http://localhost:3001/api/generation/upload', {
+      const apiUrl = process.env.REACT_APP_BACKEND_URL || window.location.origin;
+      const response = await fetch(`${apiUrl}/api/generation/upload`, {
         method: 'POST',
         body: formData,
       });
@@ -54,7 +55,8 @@ function App() {
   const pollTaskStatus = async (currentTaskId) => {
     const poll = async () => {
       try {
-        const response = await fetch(`http://localhost:3001/api/generation/status/${currentTaskId}`);
+        const apiUrl = process.env.REACT_APP_BACKEND_URL || window.location.origin;
+        const response = await fetch(`${apiUrl}/api/generation/status/${currentTaskId}`);
         const data = await response.json();
 
         if (data.success) {
@@ -101,7 +103,8 @@ function App() {
 
   const handleDownload = () => {
     if (taskId && taskStatus?.status === 'completed') {
-      window.open(`http://localhost:3001/api/generation/download/${taskId}`, '_blank');
+      const apiUrl = process.env.REACT_APP_BACKEND_URL || window.location.origin;
+      window.open(`${apiUrl}/api/generation/download/${taskId}`, '_blank');
     }
   };
 

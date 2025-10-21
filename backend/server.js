@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: '*', // Разрешаем запросы с любого домена
   credentials: true
 }));
 app.use(express.json());
@@ -103,7 +103,7 @@ app.use((error, req, res, next) => {
 });
 
 // Запуск сервера
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Сервер запущен на порту ${PORT}`);
   console.log(`📁 Директория загрузок: ${uploadDir}`);
   console.log(`🌐 CORS настроен для: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`);
