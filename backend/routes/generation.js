@@ -183,6 +183,28 @@ router.get('/user-info', async (req, res) => {
   }
 });
 
+// Отладка: получить все задачи
+router.get('/debug/tasks', async (req, res) => {
+  try {
+    const allTasks = Array.from(tasks.entries()).map(([id, task]) => ({
+      id,
+      status: task.status,
+      createdAt: task.createdAt,
+      hasResult: !!task.result,
+      hasError: !!task.error
+    }));
+    
+    res.json({
+      success: true,
+      totalTasks: tasks.size,
+      tasks: allTasks
+    });
+  } catch (error) {
+    console.error('Ошибка получения задач:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Асинхронная генерация 3D модели
 async function generate3DModelAsync(taskId, imagePath) {
   try {
