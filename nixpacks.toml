@@ -60,4 +60,4 @@ cmds = [
 ]
 
 [start]
-cmd = 'cd backend && node server.js'
+cmd = 'node backend/server.js'
