@@ -5,11 +5,18 @@ const FormData = require('form-data');
 
 class GenAPIService {
   constructor() {
-    this.apiKey = process.env.GENAPI_API_KEY;
+    // Очищаем API ключ от пробелов и переносов строк
+    this.apiKey = process.env.GENAPI_API_KEY ? process.env.GENAPI_API_KEY.trim() : null;
     this.baseURL = process.env.GENAPI_BASE_URL || 'https://gen-api.ru/api/v1';
     
     if (!this.apiKey) {
       throw new Error('GENAPI_API_KEY не установлен в переменных окружения');
+    }
+    
+    // Проверяем, что ключ не содержит недопустимых символов
+    if (!/^[a-zA-Z0-9_-]+$/.test(this.apiKey)) {
+      console.warn('⚠️ ВНИМАНИЕ: API ключ содержит недопустимые символы!');
+      console.warn('Ключ (hex):', Buffer.from(this.apiKey).toString('hex'));
     }
   }
 
@@ -74,14 +81,18 @@ class GenAPIService {
       try {
         console.log('Отправка запроса с файлом...');
         
+        // Очищаем API ключ от возможных пробелов и переносов строк
+        const cleanApiKey = this.apiKey.trim();
+        
         // Получаем заголовки из FormData и сразу добавляем Authorization
         const headers = {
           ...formData.getHeaders(),
-          'Authorization': `Bearer ${this.apiKey}`, // Bearer токен!
+          'Authorization': `Bearer ${cleanApiKey}`, // Bearer токен!
           'Accept': 'application/json'
         };
         
         console.log('Заголовки запроса:', Object.keys(headers));
+        console.log('Длина API ключа:', cleanApiKey.length);
         
         // ПРАВИЛЬНЫЕ ЗАГОЛОВКИ согласно документации
         const response = await axios.post(apiUrl, formData, {
