@@ -338,7 +338,9 @@ async function pollTaskStatus(taskId, requestId) {
       console.log(`[Задача ${taskId}] Попытка ${attempts}/${maxAttempts} проверки статуса...`);
       
       const statusResponse = await genapiService.checkTaskStatus(requestId);
-      console.log(`[Задача ${taskId}] Получен статус:`, JSON.stringify(statusResponse, null, 2));
+      console.log(`[Задача ${taskId}] ===== ПОЛНЫЙ ОТВЕТ ОТ API =====`);
+      console.log(JSON.stringify(statusResponse, null, 2));
+      console.log(`[Задача ${taskId}] ===== КОНЕЦ ОТВЕТА =====`);
       
       if (statusResponse.status === 'success') {
         // Задача завершена успешно
