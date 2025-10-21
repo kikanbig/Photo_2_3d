@@ -37,8 +37,30 @@ const upload = multer({
   }
 });
 
-// Хранилище задач (в реальном проекте используйте базу данных)
-const tasks = new Map();
+// Хранилище задач - используем JSON файл для персистентности
+const tasksFilePath = path.join(process.env.UPLOAD_DIR || 'uploads', 'tasks.json');
+
+// Загружаем задачи из файла при старте
+let tasks = new Map();
+try {
+  if (fs.existsSync(tasksFilePath)) {
+    const tasksData = JSON.parse(fs.readFileSync(tasksFilePath, 'utf8'));
+    tasks = new Map(Object.entries(tasksData));
+    console.log(`✅ Загружено ${tasks.size} задач из файла`);
+  }
+} catch (error) {
+  console.error('⚠️ Ошибка загрузки задач из файла:', error.message);
+}
+
+// Функция сохранения задач в файл
+function saveTasks() {
+  try {
+    const tasksData = Object.fromEntries(tasks);
+    fs.writeFileSync(tasksFilePath, JSON.stringify(tasksData, null, 2));
+  } catch (error) {
+    console.error('⚠️ Ошибка сохранения задач:', error.message);
+  }
+}
 
 // Загрузка изображения и запуск генерации
 router.post('/upload', upload.single('image'), async (req, res) => {
@@ -63,6 +85,9 @@ router.post('/upload', upload.single('image'), async (req, res) => {
     });
 
     console.log(`[Задача ${taskId}] Информация сохранена. Всего задач в памяти: ${tasks.size}`);
+    
+    // Сохраняем задачи в файл
+    saveTasks();
 
     // Запускаем генерацию в фоновом режиме
     generate3DModelAsync(taskId, imagePath);
@@ -196,6 +221,7 @@ async function generate3DModelAsync(taskId, imagePath) {
         modelUrl: resultUrl // Добавляем URL модели для отображения в интерфейсе
       };
       tasks.set(taskId, task);
+      saveTasks(); // Сохраняем в файл
       
       console.log(`Задача ${taskId} завершена успешно сразу`);
     } else {
@@ -324,9 +350,10 @@ async function pollTaskStatus(taskId, requestId) {
             downloadedAt: new Date(),
             modelUrl: resultUrl // Добавляем URL модели для отображения в интерфейсе
           };
-          tasks.set(taskId, task);
-          
-          console.log(`Задача ${taskId} завершена успешно`);
+      tasks.set(taskId, task);
+      saveTasks(); // Сохраняем в файл
+      
+      console.log(`Задача ${taskId} завершена успешно`);
         } else {
           console.log(`[Задача ${taskId}] URL не найден. Полный ответ:`, JSON.stringify(statusResponse, null, 2));
           throw new Error('URL результата не получен');
@@ -336,6 +363,7 @@ async function pollTaskStatus(taskId, requestId) {
         task.status = 'failed';
         task.error = statusResponse.error || 'Неизвестная ошибка генерации';
         tasks.set(taskId, task);
+        saveTasks(); // Сохраняем в файл
         
         console.log(`Задача ${taskId} завершена с ошибкой: ${task.error}`);
       } else if (statusResponse.status === 'processing') {
