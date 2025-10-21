@@ -1,0 +1,23 @@
+{
+  "name": "photo-to-3d",
+  "version": "1.0.0",
+  "description": "Генерация 3D моделей из фотографий с помощью ИИ",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "cd backend && npm start",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm start\"",
+    "build": "cd frontend && npm run build",
+    "install-all": "cd backend && npm install && cd ../frontend && npm install",
+    "deploy": "./deploy.sh"
+  },
+  "keywords": ["3d", "photo", "generation", "ai", "react", "node"],
+  "author": "Photo to 3D Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}
