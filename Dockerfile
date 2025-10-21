@@ -21,53 +21,53 @@ RUN cd frontend && \
     # Создаем папку public
     mkdir -p public && \
     # Создаем index.html
-    echo '<!DOCTYPE html>
-<html lang="ru">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#667eea" />
-    <meta name="description" content="Photo to 3D - Превращайте фотографии в 3D модели с помощью ИИ" />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <title>Photo to 3D - Генерация 3D моделей</title>
-  </head>
-  <body>
-    <noscript>Для работы этого приложения необходимо включить JavaScript.</noscript>
-    <div id="root"></div>
-  </body>
-</html>' > public/index.html && \
+    echo "<!DOCTYPE html>" > public/index.html && \
+    echo "<html lang=\"ru\">" >> public/index.html && \
+    echo "  <head>" >> public/index.html && \
+    echo "    <meta charset=\"utf-8\" />" >> public/index.html && \
+    echo "    <link rel=\"icon\" href=\"%PUBLIC_URL%/favicon.ico\" />" >> public/index.html && \
+    echo "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />" >> public/index.html && \
+    echo "    <meta name=\"theme-color\" content=\"#667eea\" />" >> public/index.html && \
+    echo "    <meta name=\"description\" content=\"Photo to 3D - Превращайте фотографии в 3D модели с помощью ИИ\" />" >> public/index.html && \
+    echo "    <link rel=\"apple-touch-icon\" href=\"%PUBLIC_URL%/logo192.png\" />" >> public/index.html && \
+    echo "    <link rel=\"manifest\" href=\"%PUBLIC_URL%/manifest.json\" />" >> public/index.html && \
+    echo "    <title>Photo to 3D - Генерация 3D моделей</title>" >> public/index.html && \
+    echo "  </head>" >> public/index.html && \
+    echo "  <body>" >> public/index.html && \
+    echo "    <noscript>Для работы этого приложения необходимо включить JavaScript.</noscript>" >> public/index.html && \
+    echo "    <div id=\"root\"></div>" >> public/index.html && \
+    echo "  </body>" >> public/index.html && \
+    echo "</html>" >> public/index.html && \
     # Создаем manifest.json
-    echo '{
-  "short_name": "Photo to 3D",
-  "name": "Photo to 3D - Генерация 3D моделей из фотографий",
-  "icons": [
-    {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
-    },
-    {
-      "src": "logo192.png",
-      "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "logo512.png",
-      "type": "image/png",
-      "sizes": "512x512"
-    }
-  ],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#667eea",
-  "background_color": "#764ba2"
-}' > public/manifest.json && \
+    echo "{" > public/manifest.json && \
+    echo "  \"short_name\": \"Photo to 3D\"," >> public/manifest.json && \
+    echo "  \"name\": \"Photo to 3D - Генерация 3D моделей из фотографий\"," >> public/manifest.json && \
+    echo "  \"icons\": [" >> public/manifest.json && \
+    echo "    {" >> public/manifest.json && \
+    echo "      \"src\": \"favicon.ico\"," >> public/manifest.json && \
+    echo "      \"sizes\": \"64x64 32x32 24x24 16x16\"," >> public/manifest.json && \
+    echo "      \"type\": \"image/x-icon\"" >> public/manifest.json && \
+    echo "    }," >> public/manifest.json && \
+    echo "    {" >> public/manifest.json && \
+    echo "      \"src\": \"logo192.png\"," >> public/manifest.json && \
+    echo "      \"type\": \"image/png\"," >> public/manifest.json && \
+    echo "      \"sizes\": \"192x192\"" >> public/manifest.json && \
+    echo "    }," >> public/manifest.json && \
+    echo "    {" >> public/manifest.json && \
+    echo "      \"src\": \"logo512.png\"," >> public/manifest.json && \
+    echo "      \"type\": \"image/png\"," >> public/manifest.json && \
+    echo "      \"sizes\": \"512x512\"" >> public/manifest.json && \
+    echo "    }" >> public/manifest.json && \
+    echo "  ]," >> public/manifest.json && \
+    echo "  \"start_url\": \".\"," >> public/manifest.json && \
+    echo "  \"display\": \"standalone\"," >> public/manifest.json && \
+    echo "  \"theme_color\": \"#667eea\"," >> public/manifest.json && \
+    echo "  \"background_color\": \"#764ba2\"" >> public/manifest.json && \
+    echo "}" >> public/manifest.json && \
     # Создаем robots.txt
-    echo '# https://www.robotstxt.org/robotstxt.html
-User-agent: *
-Disallow:' > public/robots.txt && \
+    echo "# https://www.robotstxt.org/robotstxt.html" > public/robots.txt && \
+    echo "User-agent: *" >> public/robots.txt && \
+    echo "Disallow:" >> public/robots.txt && \
     # Создаем пустые файлы для иконок
     touch public/favicon.ico public/logo192.png public/logo512.png && \
     # Запускаем сборку
