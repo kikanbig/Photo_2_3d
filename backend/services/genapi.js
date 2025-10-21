@@ -4,11 +4,12 @@ const path = require('path');
 
 class GenAPIService {
   constructor() {
-    this.apiKey = process.env.GENAPI_API_KEY;
+    // Используем тестовый ключ по умолчанию, если не указан в переменных окружения
+    this.apiKey = process.env.GENAPI_API_KEY || 'sk-nt14wDb0YEGeK0trh1rss8XIRc6ivSoxV0yKedgSeqeWPlSIIbqEVsRv2el1';
     this.baseURL = process.env.GENAPI_BASE_URL || 'https://gen-api.ru/api/v1';
     
-    if (!this.apiKey) {
-      throw new Error('GENAPI_API_KEY не установлен в переменных окружения');
+    if (!process.env.GENAPI_API_KEY) {
+      console.warn('ВНИМАНИЕ: GENAPI_API_KEY не установлен в переменных окружения, используется тестовый ключ');
     }
   }
 
