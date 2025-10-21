@@ -36,93 +36,62 @@ class GenAPIService {
         throw new Error(`Файл не существует: ${imagePath}`);
       }
       
-      // Создаем FormData для отправки файла
-      const formData = new FormData();
-      
-      // Определяем тип файла на основе расширения
-      const fileExt = path.extname(imagePath).toLowerCase();
-      let contentType = 'image/jpeg'; // По умолчанию
-      
-      if (fileExt === '.png') contentType = 'image/png';
-      else if (fileExt === '.gif') contentType = 'image/gif';
-      else if (fileExt === '.webp') contentType = 'image/webp';
-      
-      // Создаем поток для чтения файла напрямую с диска
-      const fileStream = fs.createReadStream(imagePath);
-      
-      // Добавляем файл как поток
-      formData.append('image', fileStream, {
-        filename: path.basename(imagePath),
-        contentType: contentType,
-      });
-      
-      // Добавляем параметры из options
-      for (const key in options) {
-        // Преобразуем булевы значения в строки, чтобы избежать ошибки типа
-        if (typeof options[key] === 'boolean') {
-          formData.append(key, options[key].toString());
-        } else {
-          formData.append(key, options[key]);
-        }
-      }
-
       console.log('Отправляем запрос на генерацию 3D модели...');
       console.log(`Путь к файлу: ${imagePath}`);
       console.log(`Параметры запроса:`, options);
       
-      // Правильный URL для API Trellis
-      const apiUrl = 'https://gen-api.ru/model/trellis/api';
+      // Создаем FormData для отправки файла
+      const FormData = require('form-data');
+      const formData = new FormData();
+      
+      // Определяем тип файла на основе расширения
+      const fileExt = path.extname(imagePath).toLowerCase();
+      let contentType = 'image/jpeg';
+      if (fileExt === '.png') contentType = 'image/png';
+      else if (fileExt === '.gif') contentType = 'image/gif';
+      else if (fileExt === '.webp') contentType = 'image/webp';
+      
+      // Добавляем файл как поток
+      const fileStream = fs.createReadStream(imagePath);
+      formData.append('image_url', fileStream, {
+        filename: path.basename(imagePath),
+        contentType: contentType,
+      });
+      
+      // Добавляем опциональные параметры
+      if (options.ss_guidance_strength !== undefined) formData.append('ss_guidance_strength', options.ss_guidance_strength.toString());
+      if (options.ss_sampling_steps !== undefined) formData.append('ss_sampling_steps', options.ss_sampling_steps.toString());
+      if (options.slat_guidance_strength !== undefined) formData.append('slat_guidance_strength', options.slat_guidance_strength.toString());
+      if (options.slat_sampling_steps !== undefined) formData.append('slat_sampling_steps', options.slat_sampling_steps.toString());
+      if (options.mesh_simplify !== undefined) formData.append('mesh_simplify', options.mesh_simplify.toString());
+      if (options.texture_size !== undefined) formData.append('texture_size', options.texture_size.toString());
+      
+      // ПРАВИЛЬНЫЙ URL согласно документации
+      const apiUrl = 'https://api.gen-api.ru/api/v1/networks/trellis';
       console.log(`URL API: ${apiUrl}`);
-      
-      // Исправляем формат заголовка Authorization
-      const headers = formData.getHeaders();
-      // Удаляем проблемный заголовок Authorization
-      delete headers['Authorization'];
-      
-      console.log('Заголовки запроса:', headers);
-      console.log('API ключ (частично):', this.apiKey.substring(0, 5) + '...');
+      console.log('API ключ (частично):', this.apiKey.substring(0, 10) + '...');
       
       try {
-        console.log('Отправка запроса...');
+        console.log('Отправка запроса с файлом...');
         
-        // Создаем тестовую модель для отладки
-        // В реальном приложении здесь должен быть запрос к API
-        console.log('ВНИМАНИЕ: Используется тестовая модель вместо реального API!');
+        // Получаем заголовки из FormData
+        const headers = formData.getHeaders();
         
-        // Имитируем ответ от API с URL модели
-        const mockResponse = {
-          status: 200,
-          data: {
-            status: 'success',
-            output: {
-              model_url: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Avocado/glTF-Binary/Avocado.glb'
-            }
-          }
-        };
-        
-        // Для отладки можно раскомментировать реальный запрос
-        /*
+        // ПРАВИЛЬНЫЕ ЗАГОЛОВКИ согласно документации
         const response = await axios.post(apiUrl, formData, {
           headers: {
             ...headers,
             'Accept': 'application/json',
-            'Content-Type': 'multipart/form-data'
+            'Authorization': `Bearer ${this.apiKey}` // Bearer токен!
           },
-          params: {
-            api_key: this.apiKey // Передаем API ключ как параметр запроса
-          },
-          // Добавляем таймаут 5 минут (300000 мс)
-          timeout: 300000,
-          // Включаем отображение прогресса загрузки
+          timeout: 300000, // 5 минут
+          maxContentLength: Infinity,
+          maxBodyLength: Infinity,
           onUploadProgress: (progressEvent) => {
             const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
             console.log(`Прогресс загрузки: ${percentCompleted}%`);
           }
         });
-        */
-        
-        // Используем тестовую модель вместо реального API
-        const response = mockResponse;
         
         console.log('Получен ответ от API:', response.status);
         console.log('Тело ответа:', JSON.stringify(response.data, null, 2));
@@ -132,11 +101,10 @@ class GenAPIService {
         console.error('Ошибка запроса к API:', axiosError.message);
         if (axiosError.response) {
           console.error('Статус ответа:', axiosError.response.status);
-          console.error('Данные ответа:', axiosError.response.data);
+          console.error('Данные ответа:', typeof axiosError.response.data === 'string' ? axiosError.response.data.substring(0, 500) : axiosError.response.data);
           console.error('Заголовки ответа:', axiosError.response.headers);
         } else if (axiosError.request) {
           console.error('Запрос был отправлен, но ответ не получен');
-          console.error(axiosError.request);
         }
         throw axiosError;
       }
@@ -150,12 +118,11 @@ class GenAPIService {
   // Проверка статуса задачи
   async checkTaskStatus(requestId) {
     try {
-      const response = await axios.get(`${this.baseURL}/generation/${requestId}`, {
+      const response = await axios.get(`https://api.gen-api.ru/api/v1/requests/${requestId}`, {
         headers: {
-          'Content-Type': 'application/json'
-        },
-        params: {
-          api_key: this.apiKey // Передаем API ключ как параметр запроса
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`
         }
       });
       return response.data;
