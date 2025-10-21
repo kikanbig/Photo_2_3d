@@ -50,6 +50,8 @@ router.post('/upload', upload.single('image'), async (req, res) => {
     const taskId = uuidv4();
     const imagePath = req.file.path;
     
+    console.log(`[Задача ${taskId}] Создана новая задача для файла: ${imagePath}`);
+    
     // Сохраняем информацию о задаче
     tasks.set(taskId, {
       id: taskId,
@@ -59,6 +61,8 @@ router.post('/upload', upload.single('image'), async (req, res) => {
       result: null,
       error: null
     });
+
+    console.log(`[Задача ${taskId}] Информация сохранена. Всего задач в памяти: ${tasks.size}`);
 
     // Запускаем генерацию в фоновом режиме
     generate3DModelAsync(taskId, imagePath);
@@ -79,11 +83,17 @@ router.post('/upload', upload.single('image'), async (req, res) => {
 router.get('/status/:taskId', async (req, res) => {
   try {
     const { taskId } = req.params;
+    
+    console.log(`[Проверка статуса] Запрос для задачи: ${taskId}. Всего задач: ${tasks.size}`);
+    
     const task = tasks.get(taskId);
 
     if (!task) {
+      console.log(`[Проверка статуса] Задача ${taskId} НЕ НАЙДЕНА! Список задач:`, Array.from(tasks.keys()));
       return res.status(404).json({ error: 'Задача не найдена' });
     }
+
+    console.log(`[Проверка статуса] Задача ${taskId} найдена. Статус: ${task.status}`);
 
     res.json({
       success: true,
