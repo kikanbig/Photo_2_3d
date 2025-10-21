@@ -106,7 +106,7 @@ app.use((error, req, res, next) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Сервер запущен на порту ${PORT}`);
   console.log(`📁 Директория загрузок: ${uploadDir}`);
-  console.log(`🌐 CORS настроен для: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`);
+  console.log(`🌐 CORS настроен для: * (все домены)`);
 });
 
 module.exports = app;
