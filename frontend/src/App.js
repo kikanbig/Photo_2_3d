@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import './App.css';
+import Sidebar from './components/Sidebar';
+import Header from './components/Header';
+import Footer from './components/Footer';
 import ImageUpload from './components/ImageUpload';
 import ModelViewer from './components/ModelViewer';
 import LoadingSpinner from './components/LoadingSpinner';
 import StatusCard from './components/StatusCard';
-import { RotateCcw, Settings } from 'lucide-react';
 
 function App() {
   const [selectedImage, setSelectedImage] = useState(null);
@@ -12,7 +14,7 @@ function App() {
   const [taskStatus, setTaskStatus] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState(null);
-  // const [userInfo, setUserInfo] = useState(null); // Пока не используется
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const handleImageSelect = (image) => {
     setSelectedImage(image);
@@ -116,21 +118,16 @@ function App() {
     setError(null);
   };
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
     <div className="App">
-      <header className="app-header">
-        <div className="header-content">
-          <div className="logo">
-            <RotateCcw className="logo-icon" />
-            <h1>Photo to 3D</h1>
-          </div>
-          <div className="header-actions">
-            <button className="settings-btn">
-              <Settings size={20} />
-            </button>
-          </div>
-        </div>
-      </header>
+      <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
+      
+      <div className={`main-layout ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+        <Header onMenuToggle={toggleSidebar} />
 
       <main className="app-main">
         <div className="container">
@@ -187,9 +184,8 @@ function App() {
         </div>
       </main>
 
-      <footer className="app-footer">
-        <p>© 2024 Photo to 3D. Превращайте фотографии в 3D модели с помощью ИИ</p>
-      </footer>
+      <Footer />
+      </div>
     </div>
   );
 }

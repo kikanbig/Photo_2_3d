@@ -35,59 +35,35 @@ body {
 .App {
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
   background: var(--bg-primary);
+  position: relative;
 }
 
-/* Header */
-.app-header {
-  background: rgba(19, 19, 26, 0.8);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border-color);
-  padding: 1rem 0;
-  position: sticky;
-  top: 0;
-  z-index: 50;
-}
-
-.header-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 2rem;
+/* Main layout с учётом сайдбара */
+.main-layout {
+  flex: 1;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  transition: margin-left 0.3s ease;
+  min-height: 100vh;
 }
 
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  color: var(--text-primary);
-  font-weight: 700;
-  font-size: 1.5rem;
+.main-layout.sidebar-open {
+  margin-left: 260px;
 }
 
-.logo-icon {
-  width: 36px;
-  height: 36px;
-  color: var(--accent-primary);
+.main-layout.sidebar-closed {
+  margin-left: 80px;
 }
 
-.settings-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 0.75rem;
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: all 0.3s ease;
+@media (max-width: 768px) {
+  .main-layout.sidebar-open,
+  .main-layout.sidebar-closed {
+    margin-left: 0;
+  }
 }
 
-.settings-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px);
-}
+/* Header и Footer теперь в отдельных компонентах */
 
 /* Main Content */
 .app-main {
@@ -222,16 +198,6 @@ body {
   box-shadow: 0 8px 24px rgba(239, 68, 68, 0.6);
 }
 
-/* Footer */
-.app-footer {
-  background: rgba(19, 19, 26, 0.8);
-  backdrop-filter: blur(20px);
-  border-top: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  text-align: center;
-  padding: 1.5rem;
-  font-size: 0.9rem;
-}
 
 /* Responsive */
 @media (max-width: 1024px) {
