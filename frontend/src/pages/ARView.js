@@ -116,16 +116,33 @@ const ARView = () => {
 
       const handleScaleChange = () => {
         try {
-          if (modelViewer.scale) {
-            const scale = parseFloat(modelViewer.scale);
-            const scalePercent = Math.round(scale * 100);
-            setArScale(scalePercent);
-            console.log('📏 Scale changed:', scalePercent + '%');
-          }
+          // В AR режиме нужно отслеживать через transform
+          const updateScale = () => {
+            if (modelViewer.arScale) {
+              console.log('📏 AR Scale:', modelViewer.arScale);
+            }
+            
+            // Пытаемся получить текущий масштаб разными способами
+            if (modelViewer.scale) {
+              const scale = parseFloat(modelViewer.scale);
+              const scalePercent = Math.round(scale * 100);
+              setArScale(scalePercent);
+              console.log('📏 Scale changed:', scalePercent + '%');
+            }
+          };
+          
+          updateScale();
         } catch (e) {
           console.log('Scale change error:', e);
         }
       };
+      
+      // Интервал для постоянного обновления масштаба в AR
+      const scaleInterval = setInterval(() => {
+        if (isInAR && modelViewer) {
+          handleScaleChange();
+        }
+      }, 500); // Каждые 500мс
 
       modelViewer.addEventListener('load', handleLoad);
       modelViewer.addEventListener('error', handleError);
@@ -135,6 +152,7 @@ const ARView = () => {
 
       return () => {
         clearTimeout(timeout);
+        clearInterval(scaleInterval);
         modelViewer.removeEventListener('load', handleLoad);
         modelViewer.removeEventListener('error', handleError);
         modelViewer.removeEventListener('progress', handleProgress);
@@ -142,7 +160,7 @@ const ARView = () => {
         modelViewer.removeEventListener('scale-change', handleScaleChange);
       };
     }
-  }, [model]);
+  }, [model, isInAR]);
 
   const loadModel = async () => {
     try {
@@ -341,6 +359,78 @@ const ARView = () => {
               <div className="ar-icon">📱</div>
               <h2>Просмотр в дополненной реальности</h2>
               <p>Нажмите кнопку ниже, чтобы увидеть модель в вашем пространстве</p>
+            </div>
+          </div>
+
+          {/* AR Status индикатор - отображается ВНУТРИ AR режима */}
+          <div slot="ar-status" style={{
+            position: 'fixed',
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 99999,
+            pointerEvents: 'none',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '12px',
+            maxWidth: '90%'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              background: 'rgba(0, 0, 0, 0.85)',
+              backdropFilter: 'blur(10px)',
+              padding: '12px 20px',
+              borderRadius: '20px',
+              border: '2px solid rgba(87, 68, 226, 0.6)',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)'
+            }}>
+              <div style={{ fontSize: '1.75rem' }}>📏</div>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                gap: '2px'
+              }}>
+                <div style={{
+                  fontSize: '1.5rem',
+                  fontWeight: '700',
+                  color: '#ffffff',
+                  lineHeight: 1
+                }}>
+                  {arScale}%
+                </div>
+                <div style={{
+                  fontSize: '0.75rem',
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}>
+                  от реального размера
+                </div>
+                {model.dimensions && (
+                  <div style={{
+                    fontSize: '0.85rem',
+                    color: 'rgba(139, 92, 246, 1)',
+                    marginTop: '4px',
+                    fontWeight: '500'
+                  }}>
+                    Реальный: {getDimensionsText()}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div style={{
+              background: 'rgba(0, 0, 0, 0.75)',
+              backdropFilter: 'blur(10px)',
+              padding: '8px 16px',
+              borderRadius: '12px',
+              fontSize: '0.85rem',
+              color: 'rgba(255, 255, 255, 0.8)'
+            }}>
+              Жест «щипок» для изменения масштаба
             </div>
           </div>
         </model-viewer>
