@@ -7,7 +7,7 @@ const DimensionsInput = ({ onDimensionsChange }) => {
     length: '',
     width: '',
     height: '',
-    unit: 'mm'
+    unit: 'cm' // По умолчанию сантиметры (более привычно для мебели)
   });
 
   const handleChange = (field, value) => {

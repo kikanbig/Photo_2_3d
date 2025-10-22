@@ -338,13 +338,46 @@ const ARView = () => {
 
   // Настройки для AR - начальный масштаб (реальный размер)
   // ar-scale должен быть в метрах: "длина ширина высота"
-  // Согласно документации: 1 unit glTF = 1 метр
-  // Поэтому размеры в см нужно делить на 100 (не на 1000!)
+  // Согласно документации glTF: 1 unit = 1 метр
   const arScaleAttr = model.dimensions 
-    ? `${model.dimensions.length / 100} ${model.dimensions.width / 100} ${model.dimensions.height / 100}` 
+    ? (() => {
+        const { length, width, height, unit } = model.dimensions;
+        
+        // Конвертируем в метры в зависимости от единицы измерения
+        let lengthM, widthM, heightM;
+        
+        if (unit === 'mm') {
+          // Миллиметры → метры: делим на 1000
+          lengthM = length / 1000;
+          widthM = width / 1000;
+          heightM = height / 1000;
+        } else if (unit === 'cm') {
+          // Сантиметры → метры: делим на 100
+          lengthM = length / 100;
+          widthM = width / 100;
+          heightM = height / 100;
+        } else if (unit === 'm') {
+          // Уже в метрах
+          lengthM = length;
+          widthM = width;
+          heightM = height;
+        } else {
+          // По умолчанию считаем см
+          lengthM = length / 100;
+          widthM = width / 100;
+          heightM = height / 100;
+        }
+        
+        const scaleString = `${lengthM} ${widthM} ${heightM}`;
+        console.log('📏 AR Scale:', {
+          input: `${length} × ${width} × ${height} ${unit}`,
+          meters: `${lengthM} × ${widthM} × ${heightM} m`,
+          arScale: scaleString
+        });
+        
+        return scaleString;
+      })()
     : 'auto';
-  
-  console.log('📏 AR Scale attr:', arScaleAttr, 'meters');
   
   // Форматируем размеры для отображения
   const getDimensionsText = () => {
