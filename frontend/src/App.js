@@ -7,6 +7,7 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import MyModels from './pages/MyModels';
 import ModelView from './pages/ModelView';
+import ARView from './pages/ARView';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -17,23 +18,31 @@ function App() {
 
   return (
     <Router>
-      <div className="App">
-        <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
+      <Routes>
+        {/* AR View - без сайдбара и футера */}
+        <Route path="/ar-view/:modelId" element={<ARView />} />
         
-        <div className={`main-layout ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-          <Header onMenuToggle={toggleSidebar} />
+        {/* Обычные страницы с сайдбаром */}
+        <Route path="*" element={
+          <div className="App">
+            <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
+            
+            <div className={`main-layout ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+              <Header onMenuToggle={toggleSidebar} />
 
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/create" element={<Home />} />
-            <Route path="/my-models" element={<MyModels />} />
-            <Route path="/model/:modelId" element={<ModelView />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/create" element={<Home />} />
+                <Route path="/my-models" element={<MyModels />} />
+                <Route path="/model/:modelId" element={<ModelView />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
 
-          <Footer />
-        </div>
-      </div>
+              <Footer />
+            </div>
+          </div>
+        } />
+      </Routes>
     </Router>
   );
 }
