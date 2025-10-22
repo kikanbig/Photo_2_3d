@@ -19,7 +19,13 @@ const ARView = () => {
 
   useEffect(() => {
     const modelViewer = modelViewerRef.current;
-    if (modelViewer) {
+    if (modelViewer && model) {
+      // Принудительно устанавливаем src через setAttribute
+      // Это нужно для web components в React
+      console.log('Setting model src:', model.modelUrl);
+      modelViewer.setAttribute('src', model.modelUrl);
+      modelViewer.setAttribute('alt', model.name || 'AR Model');
+      
       const handleLoad = () => {
         console.log('Model loaded successfully');
         setModelLoading(false);
@@ -147,8 +153,6 @@ const ARView = () => {
         
         <model-viewer
           ref={modelViewerRef}
-          src={model.modelUrl}
-          alt={model.name || 'AR Model'}
           ar
           ar-modes="webxr scene-viewer quick-look"
           camera-controls
