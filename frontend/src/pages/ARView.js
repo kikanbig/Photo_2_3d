@@ -34,9 +34,26 @@ const ARView = () => {
       
       const handleLoad = () => {
         console.log('✅ Model loaded successfully - hiding overlay');
+        console.log('📐 Model viewer dimensions:', {
+          width: modelViewer.clientWidth,
+          height: modelViewer.clientHeight,
+          offsetWidth: modelViewer.offsetWidth,
+          offsetHeight: modelViewer.offsetHeight
+        });
+        console.log('🎥 Camera:', modelViewer.getCameraOrbit());
+        console.log('🔍 Field of view:', modelViewer.fieldOfView);
+        
         clearTimeout(timeout);
         // КРИТИЧЕСКИ ВАЖНО: скрываем overlay сразу!
         setModelLoading(false);
+        
+        // Принудительно обновляем рендер через 100ms
+        setTimeout(() => {
+          if (modelViewer) {
+            console.log('🔄 Force jumpCameraToGoal');
+            modelViewer.jumpCameraToGoal();
+          }
+        }, 100);
       };
       
       const handleError = (event) => {
@@ -189,18 +206,21 @@ const ARView = () => {
           ar-modes="webxr scene-viewer quick-look"
           camera-controls
           touch-action="pan-y"
-          auto-rotate
           shadow-intensity="1"
           environment-image="neutral"
-          exposure="1"
+          exposure="1.5"
           ar-scale={arScale}
           ios-src={model.modelUrl}
           loading="eager"
           reveal="auto"
+          camera-orbit="0deg 75deg 105%"
+          field-of-view="30deg"
+          min-camera-orbit="auto auto 5%"
+          max-camera-orbit="auto auto 200%"
           style={{
             width: '100%',
             height: '100%',
-            backgroundColor: '#0a0a0f',
+            backgroundColor: '#1a1a2e',
             display: 'block'
           }}
         >
