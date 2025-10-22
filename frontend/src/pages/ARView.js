@@ -26,23 +26,39 @@ const ARView = () => {
       modelViewer.setAttribute('src', model.modelUrl);
       modelViewer.setAttribute('alt', model.name || 'AR Model');
       
+      // Таймаут на случай если событие load не сработает
+      const timeout = setTimeout(() => {
+        console.log('Force hiding loading overlay after timeout');
+        setModelLoading(false);
+      }, 10000); // 10 секунд максимум
+      
       const handleLoad = () => {
         console.log('Model loaded successfully');
+        clearTimeout(timeout);
         setModelLoading(false);
       };
       
       const handleError = (event) => {
         console.error('Model failed to load:', event);
-        setError('Не удалось загрузить 3D модель');
+        clearTimeout(timeout);
         setModelLoading(false);
+        // Не показываем ошибку, просто скрываем overlay
+        // Возможно модель всё равно загрузится
+      };
+      
+      const handleProgress = (event) => {
+        console.log('Model loading progress:', event.detail);
       };
 
       modelViewer.addEventListener('load', handleLoad);
       modelViewer.addEventListener('error', handleError);
+      modelViewer.addEventListener('progress', handleProgress);
 
       return () => {
+        clearTimeout(timeout);
         modelViewer.removeEventListener('load', handleLoad);
         modelViewer.removeEventListener('error', handleError);
+        modelViewer.removeEventListener('progress', handleProgress);
       };
     }
   }, [model]);
@@ -141,13 +157,22 @@ const ARView = () => {
 
       <div className="ar-viewer-container">
         {modelLoading && (
-          <div className="model-loading-overlay">
+          <div 
+            className="model-loading-overlay"
+            onClick={() => {
+              console.log('Overlay clicked - force hide');
+              setModelLoading(false);
+            }}
+          >
             <div className="spinner">
               <div className="spinner-ring"></div>
               <div className="spinner-ring"></div>
               <div className="spinner-ring"></div>
             </div>
             <p>Загрузка 3D модели...</p>
+            <p style={{ fontSize: '0.85rem', opacity: 0.7, marginTop: '1rem' }}>
+              Нажмите для пропуска
+            </p>
           </div>
         )}
         
