@@ -96,11 +96,22 @@ const ARView = () => {
         }
       };
 
-      const handleArStatusChange = () => {
-        const isInArMode = modelViewer.arStatus === 'session-started' || 
-                           modelViewer.arStatus === 'object-placed';
-        setIsInAR(isInArMode);
+      const handleArStatusChange = (event) => {
+        console.log('🎯 AR Status event:', event);
         console.log('🎯 AR Status:', modelViewer.arStatus);
+        
+        const isInArMode = modelViewer.arStatus === 'session-started' || 
+                           modelViewer.arStatus === 'object-placed' ||
+                           modelViewer.arStatus === 'not-presenting';
+        
+        console.log('🎯 Is in AR mode:', isInArMode);
+        setIsInAR(isInArMode);
+        
+        // Тестовое включение для отладки
+        if (modelViewer.arStatus) {
+          console.log('✅ AR активен, включаем индикатор');
+          setIsInAR(true);
+        }
       };
 
       const handleScaleChange = () => {
@@ -252,6 +263,52 @@ const ARView = () => {
             </p>
           </div>
         )}
+
+        {/* AR Scale Indicator - отображается поверх model-viewer */}
+        <div className="ar-scale-indicator" style={{ display: isInAR ? 'flex' : 'none' }}>
+          <div className="ar-scale-badge">
+            <div className="ar-scale-icon">📏</div>
+            <div className="ar-scale-info">
+              <div className="ar-scale-percent">{arScale}%</div>
+              <div className="ar-scale-label">от реального размера</div>
+              {model.dimensions && (
+                <div className="ar-scale-dimensions">
+                  Реальный: {getDimensionsText()}
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="ar-scale-hint">
+            Жест «щипок» для изменения масштаба
+          </div>
+        </div>
+
+        {/* Тестовая кнопка для включения индикатора */}
+        {!isInAR && (
+          <button 
+            style={{
+              position: 'absolute',
+              top: '20px',
+              right: '20px',
+              padding: '10px 20px',
+              background: 'rgba(87, 68, 226, 0.9)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              zIndex: 1001,
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+            onClick={() => {
+              console.log('🧪 Тестовое включение индикатора');
+              setIsInAR(true);
+              setArScale(150);
+            }}
+          >
+            Тест индикатора
+          </button>
+        )}
         
         <model-viewer
           ref={modelViewerRef}
@@ -284,25 +341,6 @@ const ARView = () => {
               <div className="ar-icon">📱</div>
               <h2>Просмотр в дополненной реальности</h2>
               <p>Нажмите кнопку ниже, чтобы увидеть модель в вашем пространстве</p>
-            </div>
-          </div>
-
-          {/* AR Status - отображается только в AR режиме */}
-          <div slot="ar-status" className="ar-scale-indicator">
-            <div className="ar-scale-badge">
-              <div className="ar-scale-icon">📏</div>
-              <div className="ar-scale-info">
-                <div className="ar-scale-percent">{arScale}%</div>
-                <div className="ar-scale-label">от реального размера</div>
-                {model.dimensions && (
-                  <div className="ar-scale-dimensions">
-                    Реальный: {getDimensionsText()}
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="ar-scale-hint">
-              Жест «щипок» для изменения масштаба
             </div>
           </div>
         </model-viewer>
