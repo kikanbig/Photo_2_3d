@@ -29,10 +29,6 @@ function Model({ url }) {
 const ModelViewer = ({ modelUrl }) => {
   return (
     <div className="model-viewer">
-      <div className="viewer-header">
-        <h3>✨ Ваша 3D модель готова!</h3>
-      </div>
-      
       <div className="viewer-container">
         <Canvas
           camera={{ position: [0, 0, 3], fov: 60 }}
