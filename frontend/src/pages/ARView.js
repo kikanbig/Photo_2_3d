@@ -337,9 +337,14 @@ const ARView = () => {
   }
 
   // Настройки для AR - начальный масштаб (реальный размер)
+  // ar-scale должен быть в метрах: "длина ширина высота"
+  // Согласно документации: 1 unit glTF = 1 метр
+  // Поэтому размеры в см нужно делить на 100 (не на 1000!)
   const arScaleAttr = model.dimensions 
-    ? `${model.dimensions.length / 1000} ${model.dimensions.width / 1000} ${model.dimensions.height / 1000}` 
+    ? `${model.dimensions.length / 100} ${model.dimensions.width / 100} ${model.dimensions.height / 100}` 
     : 'auto';
+  
+  console.log('📏 AR Scale attr:', arScaleAttr, 'meters');
   
   // Форматируем размеры для отображения
   const getDimensionsText = () => {
