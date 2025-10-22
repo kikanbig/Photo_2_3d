@@ -236,6 +236,13 @@
   position: relative;
   width: 80px;
   height: 80px;
+  text-align: center;
+}
+
+.loading-spinner p {
+  margin-top: 1rem;
+  color: var(--text-secondary);
+  font-size: 1rem;
 }
 
 .spinner {

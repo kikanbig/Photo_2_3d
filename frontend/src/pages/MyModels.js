@@ -1,26 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Package, Trash2, Eye, Calendar } from 'lucide-react';
+import { getModels, deleteModel } from '../services/api';
 import './MyModels.css';
 
 const MyModels = () => {
   const [models, setModels] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     loadModels();
   }, []);
 
-  const loadModels = () => {
-    const savedModels = JSON.parse(localStorage.getItem('savedModels') || '[]');
-    setModels(savedModels);
+  const loadModels = async () => {
+    try {
+      setLoading(true);
+      const data = await getModels();
+      setModels(data);
+    } catch (error) {
+      console.error('Ошибка загрузки моделей:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDelete = (modelId) => {
+  const handleDelete = async (modelId) => {
     if (window.confirm('Удалить эту модель?')) {
-      const updatedModels = models.filter(m => m.id !== modelId);
-      localStorage.setItem('savedModels', JSON.stringify(updatedModels));
-      setModels(updatedModels);
+      try {
+        await deleteModel(modelId);
+        setModels(models.filter(m => m.id !== modelId));
+      } catch (error) {
+        console.error('Ошибка удаления модели:', error);
+        alert('Ошибка удаления модели: ' + error.message);
+      }
     }
   };
 
@@ -38,6 +51,21 @@ const MyModels = () => {
       minute: '2-digit'
     });
   };
+
+  if (loading) {
+    return (
+      <div className="my-models-page loading">
+        <div className="loading-spinner">
+          <div className="spinner">
+            <div className="spinner-ring"></div>
+            <div className="spinner-ring"></div>
+            <div className="spinner-ring"></div>
+          </div>
+          <p>Загрузка моделей...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="my-models-page">
@@ -69,8 +97,8 @@ const MyModels = () => {
           {models.map((model) => (
             <div key={model.id} className="model-card">
               <div className="model-preview">
-                {model.previewImage ? (
-                  <img src={model.previewImage} alt={model.name} />
+                {model.previewImageUrl ? (
+                  <img src={model.previewImageUrl} alt={model.name} />
                 ) : (
                   <div className="no-preview">
                     <Package size={48} />
@@ -102,7 +130,7 @@ const MyModels = () => {
                 )}
                 <div className="model-meta">
                   <Calendar size={14} />
-                  <span>{formatDate(model.savedAt)}</span>
+                  <span>{formatDate(model.createdAt)}</span>
                 </div>
               </div>
             </div>

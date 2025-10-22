@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Save } from 'lucide-react';
+import { saveModel } from '../services/api';
 import ImageUpload from '../components/ImageUpload';
 import ModelViewer from '../components/ModelViewer';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -114,23 +115,24 @@ const Home = () => {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (taskId && taskStatus?.status === 'completed' && taskStatus.result) {
-      const savedModels = JSON.parse(localStorage.getItem('savedModels') || '[]');
-      
-      const newModel = {
-        id: taskId,
-        name: selectedImage?.file?.name?.replace(/\.[^/.]+$/, "") || `Model ${Date.now()}`,
-        modelUrl: taskStatus.result.url,
-        previewImage: selectedImage?.preview,
-        dimensions: dimensions,
-        savedAt: new Date().toISOString()
-      };
+      try {
+        const modelData = {
+          name: selectedImage?.file?.name?.replace(/\.[^/.]+$/, "") || `Model ${Date.now()}`,
+          modelUrl: taskStatus.result.url,
+          previewImageUrl: selectedImage?.preview,
+          originalImageUrl: selectedImage?.preview,
+          dimensions: dimensions,
+          taskId: taskId
+        };
 
-      savedModels.push(newModel);
-      localStorage.setItem('savedModels', JSON.stringify(savedModels));
-
-      alert('✅ Модель сохранена! Посмотреть её можно в разделе "Мои модели"');
+        await saveModel(modelData);
+        alert('✅ Модель сохранена! Посмотреть её можно в разделе "Мои модели"');
+      } catch (error) {
+        console.error('Ошибка сохранения модели:', error);
+        alert('❌ Ошибка сохранения модели: ' + error.message);
+      }
     }
   };
 

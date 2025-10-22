@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { QRCodeCanvas } from 'qrcode.react';
 import { ArrowLeft, Download, Smartphone, Info } from 'lucide-react';
+import { getModel } from '../services/api';
 import ModelViewer from '../components/ModelViewer';
 import './ModelView.css';
 
@@ -9,24 +10,28 @@ const ModelView = () => {
   const { modelId } = useParams();
   const navigate = useNavigate();
   const [model, setModel] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [arUrl, setArUrl] = useState('');
 
   useEffect(() => {
     loadModel();
   }, [modelId]);
 
-  const loadModel = () => {
-    const savedModels = JSON.parse(localStorage.getItem('savedModels') || '[]');
-    const foundModel = savedModels.find(m => m.id === modelId);
-    
-    if (foundModel) {
-      setModel(foundModel);
+  const loadModel = async () => {
+    try {
+      setLoading(true);
+      const data = await getModel(modelId);
+      setModel(data);
+      
       // Создаем URL для AR просмотра
       const baseUrl = window.location.origin;
       const arViewUrl = `${baseUrl}/ar-view/${modelId}`;
       setArUrl(arViewUrl);
-    } else {
+    } catch (error) {
+      console.error('Ошибка загрузки модели:', error);
       navigate('/my-models');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -41,7 +46,7 @@ const ModelView = () => {
     }
   };
 
-  if (!model) {
+  if (loading || !model) {
     return (
       <div className="model-view-page loading">
         <div className="loading-spinner">
@@ -50,6 +55,7 @@ const ModelView = () => {
             <div className="spinner-ring"></div>
             <div className="spinner-ring"></div>
           </div>
+          <p>Загрузка модели...</p>
         </div>
       </div>
     );

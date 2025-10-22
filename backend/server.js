@@ -5,6 +5,8 @@ const path = require('path');
 const fs = require('fs-extra');
 require('dotenv').config();
 
+const { testConnection, syncDatabase } = require('./config/database');
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -59,10 +61,12 @@ const upload = multer({
 // Импорт роутов
 const generationRoutes = require('./routes/generation');
 const userRoutes = require('./routes/users');
+const modelsRoutes = require('./routes/models');
 
 // Роуты
 app.use('/api/generation', generationRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/models', modelsRoutes);
 
 // API роуты
 app.get('/api', (req, res) => {
@@ -102,11 +106,28 @@ app.use((error, req, res, next) => {
   res.status(500).json({ error: error.message });
 });
 
-// Запуск сервера
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Сервер запущен на порту ${PORT}`);
-  console.log(`📁 Директория загрузок: ${uploadDir}`);
-  console.log(`🌐 CORS настроен для: * (все домены)`);
-});
+// Инициализация базы данных и запуск сервера
+const startServer = async () => {
+  try {
+    // Проверяем подключение к БД
+    await testConnection();
+    
+    // Синхронизируем модели с БД
+    await syncDatabase();
+    
+    // Запускаем сервер
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Сервер запущен на порту ${PORT}`);
+      console.log(`📁 Директория загрузок: ${uploadDir}`);
+      console.log(`🌐 CORS настроен для: * (все домены)`);
+      console.log(`🗄️  База данных подключена`);
+    });
+  } catch (error) {
+    console.error('❌ Ошибка запуска сервера:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 module.exports = app;
