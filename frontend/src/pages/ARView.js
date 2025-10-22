@@ -22,33 +22,39 @@ const ARView = () => {
     const modelViewer = modelViewerRef.current;
     if (modelViewer && model) {
       // Принудительно устанавливаем src через setAttribute
-      // Это нужно для web components в React
-      console.log('Setting model src:', model.modelUrl);
+      console.log('🎨 Setting model src:', model.modelUrl);
       modelViewer.setAttribute('src', model.modelUrl);
       modelViewer.setAttribute('alt', model.name || 'AR Model');
       
       // Таймаут на случай если событие load не сработает
       const timeout = setTimeout(() => {
-        console.log('Force hiding loading overlay after timeout');
+        console.log('⏱️ Timeout: Force hiding loading overlay');
         setModelLoading(false);
-      }, 10000); // 10 секунд максимум
+      }, 5000); // 5 секунд максимум
       
       const handleLoad = () => {
-        console.log('Model loaded successfully');
+        console.log('✅ Model loaded successfully - hiding overlay');
         clearTimeout(timeout);
+        // КРИТИЧЕСКИ ВАЖНО: скрываем overlay сразу!
         setModelLoading(false);
       };
       
       const handleError = (event) => {
-        console.error('Model failed to load:', event);
+        console.error('❌ Model failed to load:', event);
         clearTimeout(timeout);
         setModelLoading(false);
-        // Не показываем ошибку, просто скрываем overlay
-        // Возможно модель всё равно загрузится
       };
       
       const handleProgress = (event) => {
-        console.log('Model loading progress:', event.detail);
+        const progress = event.detail.totalProgress;
+        console.log(`📊 Loading: ${(progress * 100).toFixed(1)}%`);
+        
+        // Если прогресс 100% (или очень близко), скрываем overlay
+        if (progress >= 0.99) {
+          console.log('✅ Progress 99%+ - hiding overlay');
+          clearTimeout(timeout);
+          setModelLoading(false);
+        }
       };
 
       modelViewer.addEventListener('load', handleLoad);
