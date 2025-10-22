@@ -11,6 +11,8 @@ const ARView = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [modelLoading, setModelLoading] = useState(true);
+  const [arScale, setArScale] = useState(100); // Масштаб в процентах
+  const [isInAR, setIsInAR] = useState(false);
   const modelViewerRef = useRef(null);
 
   useEffect(() => {
@@ -94,15 +96,39 @@ const ARView = () => {
         }
       };
 
+      const handleArStatusChange = () => {
+        const isInArMode = modelViewer.arStatus === 'session-started' || 
+                           modelViewer.arStatus === 'object-placed';
+        setIsInAR(isInArMode);
+        console.log('🎯 AR Status:', modelViewer.arStatus);
+      };
+
+      const handleScaleChange = () => {
+        try {
+          if (modelViewer.scale) {
+            const scale = parseFloat(modelViewer.scale);
+            const scalePercent = Math.round(scale * 100);
+            setArScale(scalePercent);
+            console.log('📏 Scale changed:', scalePercent + '%');
+          }
+        } catch (e) {
+          console.log('Scale change error:', e);
+        }
+      };
+
       modelViewer.addEventListener('load', handleLoad);
       modelViewer.addEventListener('error', handleError);
       modelViewer.addEventListener('progress', handleProgress);
+      modelViewer.addEventListener('ar-status', handleArStatusChange);
+      modelViewer.addEventListener('scale-change', handleScaleChange);
 
       return () => {
         clearTimeout(timeout);
         modelViewer.removeEventListener('load', handleLoad);
         modelViewer.removeEventListener('error', handleError);
         modelViewer.removeEventListener('progress', handleProgress);
+        modelViewer.removeEventListener('ar-status', handleArStatusChange);
+        modelViewer.removeEventListener('scale-change', handleScaleChange);
       };
     }
   }, [model]);
@@ -183,10 +209,17 @@ const ARView = () => {
     );
   }
 
-  // Настройки для AR
-  const arScale = model.dimensions 
+  // Настройки для AR - начальный масштаб (реальный размер)
+  const arScaleAttr = model.dimensions 
     ? `${model.dimensions.length / 1000} ${model.dimensions.width / 1000} ${model.dimensions.height / 1000}` 
     : 'auto';
+  
+  // Форматируем размеры для отображения
+  const getDimensionsText = () => {
+    if (!model.dimensions) return 'Размеры не указаны';
+    const { length, width, height, unit } = model.dimensions;
+    return `${length} × ${width} × ${height} ${unit}`;
+  };
 
   return (
     <div className="ar-view-page">
@@ -232,7 +265,7 @@ const ARView = () => {
           shadow-intensity="1"
           environment-image="neutral"
           exposure="2"
-          ar-scale={arScale}
+          ar-scale={arScaleAttr}
           ios-src={model.modelUrl}
           loading="eager"
           reveal="auto"
@@ -251,6 +284,25 @@ const ARView = () => {
               <div className="ar-icon">📱</div>
               <h2>Просмотр в дополненной реальности</h2>
               <p>Нажмите кнопку ниже, чтобы увидеть модель в вашем пространстве</p>
+            </div>
+          </div>
+
+          {/* AR Status - отображается только в AR режиме */}
+          <div slot="ar-status" className="ar-scale-indicator">
+            <div className="ar-scale-badge">
+              <div className="ar-scale-icon">📏</div>
+              <div className="ar-scale-info">
+                <div className="ar-scale-percent">{arScale}%</div>
+                <div className="ar-scale-label">от реального размера</div>
+                {model.dimensions && (
+                  <div className="ar-scale-dimensions">
+                    Реальный: {getDimensionsText()}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="ar-scale-hint">
+              Жест «щипок» для изменения масштаба
             </div>
           </div>
         </model-viewer>
