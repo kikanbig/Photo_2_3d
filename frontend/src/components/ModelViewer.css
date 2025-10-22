@@ -60,61 +60,10 @@
   font-size: 1rem;
 }
 
-.viewer-info {
-  margin-top: 1rem;
-  padding: 1rem 1.5rem;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
-  border-radius: 12px;
-  border: 1px solid rgba(99, 102, 241, 0.1);
-}
-
-.viewer-instructions {
-  color: #64748b;
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
-  text-align: center;
-  font-weight: 500;
-}
-
-.viewer-controls {
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-  flex-wrap: wrap;
-}
-
-.control-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.85rem;
-  color: #64748b;
-  font-weight: 500;
-}
-
-.control-key {
-  background: white;
-  padding: 0.4rem 0.8rem;
-  border-radius: 8px;
-  font-weight: 600;
-  color: #6366f1;
-  font-size: 0.75rem;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
-  border: 1px solid rgba(99, 102, 241, 0.2);
-}
 
 /* Responsive */
 @media (max-width: 768px) {
   .viewer-container {
     min-height: 300px;
-  }
-  
-  .viewer-controls {
-    gap: 1rem;
-  }
-  
-  .control-item {
-    font-size: 0.75rem;
   }
 }
