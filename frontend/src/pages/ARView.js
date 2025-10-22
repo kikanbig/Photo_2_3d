@@ -241,13 +241,6 @@ const ARView = () => {
           min-camera-orbit="auto auto auto"
           max-camera-orbit="auto auto auto"
           interpolation-decay="100"
-          style={{
-            width: '100%',
-            height: '100%',
-            minHeight: '400px',
-            backgroundColor: '#1a1a2e',
-            display: 'block'
-          }}
         >
           <button slot="ar-button" className="ar-button">
             👁️ Посмотреть в AR
