@@ -11,6 +11,7 @@ const MyModels = () => {
 
   useEffect(() => {
     loadModels();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadModels = async () => {

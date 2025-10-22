@@ -15,6 +15,7 @@ const ModelView = () => {
 
   useEffect(() => {
     loadModel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modelId]);
 
   const loadModel = async () => {
