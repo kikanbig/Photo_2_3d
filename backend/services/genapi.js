@@ -73,6 +73,15 @@ class GenAPIService {
       if (options.mesh_simplify !== undefined) formData.append('mesh_simplify', options.mesh_simplify.toString());
       if (options.texture_size !== undefined) formData.append('texture_size', options.texture_size.toString());
       
+      console.log('🎨 Параметры генерации:', {
+        ss_guidance_strength: options.ss_guidance_strength || 'default',
+        ss_sampling_steps: options.ss_sampling_steps || 'default',
+        slat_guidance_strength: options.slat_guidance_strength || 'default',
+        slat_sampling_steps: options.slat_sampling_steps || 'default',
+        mesh_simplify: options.mesh_simplify || 'default',
+        texture_size: options.texture_size || 'default'
+      });
+      
       // ПРАВИЛЬНЫЙ URL согласно документации
       const apiUrl = 'https://api.gen-api.ru/api/v1/networks/trellis';
       console.log(`URL API: ${apiUrl}`);
