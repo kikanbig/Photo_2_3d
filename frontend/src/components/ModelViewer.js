@@ -1,7 +1,6 @@
 import React, { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, useGLTF } from '@react-three/drei';
-import { Download } from 'lucide-react';
 import './ModelViewer.css';
 
 // Компонент для загрузки 3D модели
@@ -27,17 +26,11 @@ function Model({ url }) {
 //   );
 // }
 
-const ModelViewer = ({ modelUrl, onDownload }) => {
+const ModelViewer = ({ modelUrl }) => {
   return (
     <div className="model-viewer">
       <div className="viewer-header">
-        <h3>3D Модель</h3>
-        <div className="viewer-actions">
-          <button className="btn btn-success" onClick={onDownload}>
-            <Download size={16} />
-            Скачать
-          </button>
-        </div>
+        <h3>✨ Ваша 3D модель готова!</h3>
       </div>
       
       <div className="viewer-container">

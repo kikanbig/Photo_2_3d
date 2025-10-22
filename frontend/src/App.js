@@ -134,24 +134,46 @@ function App() {
 
       <main className="app-main">
         <div className="container">
-          <div className="upload-section">
-            <ImageUpload
-              onImageSelect={handleImageSelect}
-              onGenerate={handleGenerate}
-              selectedImage={selectedImage}
-              isGenerating={isGenerating}
-            />
+          <div className="workspace">
+            <div className="upload-section">
+              <ImageUpload
+                onImageSelect={handleImageSelect}
+                onGenerate={handleGenerate}
+                selectedImage={selectedImage}
+                isGenerating={isGenerating}
+              />
+            </div>
+
+            <div className="result-section">
+              {isGenerating && (
+                <div className="loading-container">
+                  <LoadingSpinner />
+                  <p className="loading-text">{taskStatus?.message || 'Генерация 3D модели...'}</p>
+                </div>
+              )}
+
+              {taskStatus?.status === 'completed' && taskStatus?.result?.url && (
+                <ModelViewer
+                  modelUrl={taskStatus.result.url}
+                />
+              )}
+
+              {!isGenerating && !taskStatus && !error && (
+                <div className="placeholder-container">
+                  <p className="placeholder-text">👈 Загрузите фото для генерации 3D модели</p>
+                </div>
+              )}
+
+              {error && (
+                <div className="error-container">
+                  <p className="error-text">{error}</p>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="result-section">
-            {isGenerating && (
-              <div className="loading-container">
-                <LoadingSpinner />
-                <p className="loading-text">{taskStatus?.message || 'Генерация 3D модели...'}</p>
-              </div>
-            )}
-
-            {taskStatus && !isGenerating && (
+          {taskStatus && !isGenerating && (
+            <div className="actions-bar">
               <StatusCard
                 status={taskStatus.status}
                 message={taskStatus.message}
@@ -160,24 +182,8 @@ function App() {
                 onReset={handleReset}
                 canDownload={taskStatus.status === 'completed'}
               />
-            )}
-
-            {taskStatus?.status === 'completed' && taskStatus?.result?.url && (
-              <ModelViewer
-                modelUrl={taskStatus.result.url}
-                onDownload={handleDownload}
-              />
-            )}
-
-            {error && (
-              <div className="error-container">
-                <p className="error-text">{error}</p>
-                <button onClick={handleReset} className="retry-btn">
-                  Попробовать снова
-                </button>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </main>
 
