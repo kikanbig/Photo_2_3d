@@ -75,7 +75,7 @@ RUN cd frontend && \
     npm run build
 
 # Создаем директории для загрузок
-RUN mkdir -p backend/uploads/input backend/uploads/output
+RUN mkdir -p backend/uploads/input backend/uploads/output backend/uploads/models
 
 # Устанавливаем переменные окружения
 ENV NODE_ENV=production

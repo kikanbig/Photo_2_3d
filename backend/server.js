@@ -29,6 +29,17 @@ const uploadDir = process.env.UPLOAD_DIR || 'uploads';
 fs.ensureDirSync(uploadDir);
 fs.ensureDirSync(path.join(uploadDir, 'input'));
 fs.ensureDirSync(path.join(uploadDir, 'output'));
+fs.ensureDirSync(path.join(uploadDir, 'models'));
+
+// Раздача статических файлов для GLB моделей
+app.use('/uploads/models', express.static(path.join(__dirname, uploadDir, 'models'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.glb')) {
+      res.setHeader('Content-Type', 'model/gltf-binary');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+    }
+  }
+}));
 
 // Настройка multer для загрузки файлов
 const storage = multer.diskStorage({
