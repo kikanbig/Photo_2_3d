@@ -328,56 +328,37 @@ const ARView = () => {
           </div>
         )}
 
-        {/* AR Scale Indicator - отображается поверх model-viewer */}
-        <div className="ar-scale-indicator" style={{ display: isInAR ? 'flex' : 'none' }}>
-          <div className="ar-scale-badge">
-            <div className="ar-scale-icon">📏</div>
-            <div className="ar-scale-info">
-              <div className="ar-scale-percent">{arScale}%</div>
-              <div className="ar-scale-label">от реального размера</div>
-              {model.dimensions && (
-                <div className="ar-scale-dimensions">
-                  Реальный: {getDimensionsText()}
-                </div>
-              )}
+        {/* Постоянная карточка с размерами - ВСЕГДА видна */}
+        {model.dimensions && (
+          <div className="ar-dimensions-card">
+            <div className="dimensions-header">
+              <span className="dimensions-icon">📏</span>
+              <span className="dimensions-title">Реальные размеры</span>
+            </div>
+            <div className="dimensions-values">
+              <div className="dimension-item">
+                <span className="dimension-label">Длина:</span>
+                <span className="dimension-value">{model.dimensions.length} {model.dimensions.unit}</span>
+              </div>
+              <div className="dimension-item">
+                <span className="dimension-label">Ширина:</span>
+                <span className="dimension-value">{model.dimensions.width} {model.dimensions.unit}</span>
+              </div>
+              <div className="dimension-item">
+                <span className="dimension-label">Высота:</span>
+                <span className="dimension-value">{model.dimensions.height} {model.dimensions.unit}</span>
+              </div>
+            </div>
+            <div className="dimensions-hint">
+              💡 Используйте жест «щипок» для масштабирования в AR
             </div>
           </div>
-          <div className="ar-scale-hint">
-            Жест «щипок» для изменения масштаба
-          </div>
-        </div>
-
-        {/* Тестовая кнопка для включения индикатора */}
-        {!isInAR && (
-          <button 
-            style={{
-              position: 'absolute',
-              top: '20px',
-              right: '20px',
-              padding: '10px 20px',
-              background: 'rgba(87, 68, 226, 0.9)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              zIndex: 1001,
-              fontSize: '14px',
-              fontWeight: '600'
-            }}
-            onClick={() => {
-              console.log('🧪 Тестовое включение индикатора');
-              setIsInAR(true);
-              setArScale(150);
-            }}
-          >
-            Тест индикатора
-          </button>
         )}
         
         <model-viewer
           ref={modelViewerRef}
           ar
-          ar-modes="webxr"
+          ar-modes="webxr scene-viewer quick-look"
           xr-environment
           camera-controls
           touch-action="pan-y"
