@@ -118,13 +118,20 @@ const Home = () => {
   const handleSave = async () => {
     if (taskId && taskStatus?.status === 'completed' && taskStatus.result) {
       try {
+        // Не отправляем base64 изображения, только URL модели
+        // Превью можно будет получить из самого GLB файла или использовать плейсхолдер
         const modelData = {
           name: selectedImage?.file?.name?.replace(/\.[^/.]+$/, "") || `Model ${Date.now()}`,
           modelUrl: taskStatus.result.url,
-          previewImageUrl: selectedImage?.preview,
-          originalImageUrl: selectedImage?.preview,
+          previewImageUrl: null, // Не сохраняем base64
+          originalImageUrl: null, // Не сохраняем base64
           dimensions: dimensions,
-          taskId: taskId
+          taskId: taskId,
+          metadata: {
+            originalFileName: selectedImage?.file?.name,
+            fileSize: selectedImage?.file?.size,
+            generatedAt: new Date().toISOString()
+          }
         };
 
         await saveModel(modelData);

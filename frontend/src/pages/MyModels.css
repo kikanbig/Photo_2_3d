@@ -201,6 +201,28 @@
   color: var(--text-tertiary);
 }
 
+.model-preview-icon {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: linear-gradient(135deg, rgba(87, 68, 226, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+  color: var(--accent-primary);
+}
+
+.model-format {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  background: var(--accent-gradient);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  letter-spacing: 0.1em;
+}
+
 .model-overlay {
   position: absolute;
   top: 0;

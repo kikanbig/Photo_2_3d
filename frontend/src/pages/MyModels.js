@@ -97,13 +97,11 @@ const MyModels = () => {
           {models.map((model) => (
             <div key={model.id} className="model-card">
               <div className="model-preview">
-                {model.previewImageUrl ? (
-                  <img src={model.previewImageUrl} alt={model.name} />
-                ) : (
-                  <div className="no-preview">
-                    <Package size={48} />
-                  </div>
-                )}
+                {/* Всегда показываем иконку 3D модели как превью */}
+                <div className="model-preview-icon">
+                  <Package size={64} />
+                  <span className="model-format">GLB</span>
+                </div>
                 <div className="model-overlay">
                   <button
                     className="overlay-btn"
