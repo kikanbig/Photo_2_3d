@@ -213,15 +213,15 @@ async function generate3DModelAsync(taskId, imagePath) {
 
     console.log(`[Задача ${taskId}] Начинаем генерацию 3D модели...`);
     
-    // PRESET_UNIVERSAL: Сбалансированные параметры для универсального качества
+    // PRESET_ULTIMATE: Максимальное качество для финальных работ, презентаций, рендеринга и 3D печати
     const response = await genapiService.generate3DModel(imagePath, {
       is_sync: true,
-      ss_guidance_strength: 7.5,     // Сбалансированная точность
-      ss_sampling_steps: 40,         // Оптимальное количество шагов
-      slat_guidance_strength: 3.5,   // Умеренная детализация геометрии
-      slat_sampling_steps: 40,       // Оптимальное количество шагов детализации
-      mesh_simplify: 0.95,           // Стандартное упрощение сетки
-      texture_size: 1024             // Текстуры 1K (баланс качества/размера)
+      ss_guidance_strength: 8.5,     // Очень высокая точность следования изображению
+      ss_sampling_steps: 50,         // МАКСИМУМ: 50 шагов для лучшего качества
+      slat_guidance_strength: 4.0,   // Высокая детализация геометрии
+      slat_sampling_steps: 50,       // МАКСИМУМ: 50 шагов детализации
+      mesh_simplify: 0.98,           // МАКСИМУМ: минимальное упрощение сетки
+      texture_size: 2048             // МАКСИМУМ: 2K текстуры для высокой четкости
     });
     
     console.log(`[Задача ${taskId}] Получен ответ от API:`, JSON.stringify(response, null, 2));
