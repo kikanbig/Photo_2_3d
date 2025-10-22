@@ -136,7 +136,7 @@ router.post('/', async (req, res) => {
     const model = await Model3D.create({
       name: name || 'Untitled Model',
       description,
-      modelUrl: `/api/models/${taskId}/download`, // URL для скачивания из БД
+      modelUrl: taskId ? `/api/models/${taskId}/download` : modelUrl, // URL для скачивания из БД или внешний
       glbFile: glbFileBuffer, // Бинарный файл
       previewImageUrl,
       originalImageUrl,
