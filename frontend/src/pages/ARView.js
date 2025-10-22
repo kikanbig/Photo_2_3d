@@ -101,16 +101,19 @@ const ARView = () => {
         console.log('🎯 AR Status:', modelViewer.arStatus);
         
         const isInArMode = modelViewer.arStatus === 'session-started' || 
-                           modelViewer.arStatus === 'object-placed' ||
-                           modelViewer.arStatus === 'not-presenting';
+                           modelViewer.arStatus === 'object-placed';
         
         console.log('🎯 Is in AR mode:', isInArMode);
         setIsInAR(isInArMode);
         
-        // Тестовое включение для отладки
-        if (modelViewer.arStatus) {
-          console.log('✅ AR активен, включаем индикатор');
-          setIsInAR(true);
+        // Настраиваем WebXR DOM Overlay
+        if (isInArMode && navigator.xr) {
+          console.log('✅ Настраиваем WebXR DOM Overlay');
+          const overlayElement = document.getElementById('ar-scale-info');
+          if (overlayElement) {
+            overlayElement.style.display = 'flex';
+            console.log('✅ Overlay элемент показан');
+          }
         }
       };
 
@@ -332,6 +335,7 @@ const ARView = () => {
           ref={modelViewerRef}
           ar
           ar-modes="webxr scene-viewer quick-look"
+          xr-environment
           camera-controls
           touch-action="pan-y"
           auto-rotate
@@ -362,78 +366,80 @@ const ARView = () => {
             </div>
           </div>
 
-          {/* AR Status индикатор - отображается ВНУТРИ AR режима */}
-          <div slot="ar-status" style={{
-            position: 'fixed',
-            top: '20px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 99999,
-            pointerEvents: 'none',
+        </model-viewer>
+        
+        {/* Floating AR info - для WebXR режима */}
+        <div id="ar-scale-info" style={{
+          position: 'fixed',
+          top: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 99999,
+          pointerEvents: 'none',
+          display: isInAR ? 'flex' : 'none',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '12px',
+          maxWidth: '90%',
+          fontFamily: 'system-ui, -apple-system, sans-serif'
+        }}>
+          <div style={{
             display: 'flex',
-            flexDirection: 'column',
             alignItems: 'center',
             gap: '12px',
-            maxWidth: '90%'
+            background: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(10px)',
+            padding: '12px 20px',
+            borderRadius: '20px',
+            border: '2px solid rgba(87, 68, 226, 0.6)',
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)'
           }}>
+            <div style={{ fontSize: '1.75rem' }}>📏</div>
             <div style={{
               display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              background: 'rgba(0, 0, 0, 0.85)',
-              backdropFilter: 'blur(10px)',
-              padding: '12px 20px',
-              borderRadius: '20px',
-              border: '2px solid rgba(87, 68, 226, 0.6)',
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)'
+              flexDirection: 'column',
+              alignItems: 'flex-start',
+              gap: '2px'
             }}>
-              <div style={{ fontSize: '1.75rem' }}>📏</div>
               <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'flex-start',
-                gap: '2px'
+                fontSize: '1.5rem',
+                fontWeight: '700',
+                color: '#ffffff',
+                lineHeight: 1
               }}>
-                <div style={{
-                  fontSize: '1.5rem',
-                  fontWeight: '700',
-                  color: '#ffffff',
-                  lineHeight: 1
-                }}>
-                  {arScale}%
-                </div>
-                <div style={{
-                  fontSize: '0.75rem',
-                  color: 'rgba(255, 255, 255, 0.7)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px'
-                }}>
-                  от реального размера
-                </div>
-                {model.dimensions && (
-                  <div style={{
-                    fontSize: '0.85rem',
-                    color: 'rgba(139, 92, 246, 1)',
-                    marginTop: '4px',
-                    fontWeight: '500'
-                  }}>
-                    Реальный: {getDimensionsText()}
-                  </div>
-                )}
+                {arScale}%
               </div>
-            </div>
-            <div style={{
-              background: 'rgba(0, 0, 0, 0.75)',
-              backdropFilter: 'blur(10px)',
-              padding: '8px 16px',
-              borderRadius: '12px',
-              fontSize: '0.85rem',
-              color: 'rgba(255, 255, 255, 0.8)'
-            }}>
-              Жест «щипок» для изменения масштаба
+              <div style={{
+                fontSize: '0.75rem',
+                color: 'rgba(255, 255, 255, 0.7)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}>
+                от реального размера
+              </div>
+              {model.dimensions && (
+                <div style={{
+                  fontSize: '0.85rem',
+                  color: 'rgba(139, 92, 246, 1)',
+                  marginTop: '4px',
+                  fontWeight: '500'
+                }}>
+                  Реальный: {getDimensionsText()}
+                </div>
+              )}
             </div>
           </div>
-        </model-viewer>
+          <div style={{
+            background: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(10px)',
+            padding: '8px 16px',
+            borderRadius: '12px',
+            fontSize: '0.85rem',
+            color: 'rgba(255, 255, 255, 0.8)'
+          }}>
+            Жест «щипок» для изменения масштаба
+          </div>
+        </div>
       </div>
 
       <div className="ar-instructions">
