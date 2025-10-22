@@ -162,7 +162,7 @@ model-viewer {
   width: 100% !important;
   height: 100% !important;
   display: block !important;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+  background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%) !important;
   --poster-color: transparent;
   --progress-bar-color: var(--accent-purple);
   --progress-bar-height: 4px;
