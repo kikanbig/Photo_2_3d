@@ -89,7 +89,9 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
-  align-items: start;
+  align-items: stretch;
+  flex: 1;
+  min-height: 600px;
 }
 
 .actions-bar {
@@ -111,9 +113,9 @@ body {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  min-height: 500px;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 /* Result Section */
@@ -126,7 +128,7 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.3);
   display: flex;
   flex-direction: column;
-  min-height: 500px;
+  height: 100%;
   overflow: hidden;
 }
 
