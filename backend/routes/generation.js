@@ -72,20 +72,32 @@ router.post('/upload', upload.single('image'), async (req, res) => {
     const taskId = uuidv4();
     const imagePath = req.file.path;
     
+    // Получаем размеры из запроса если они есть
+    let dimensions = null;
+    if (req.body.dimensions) {
+      try {
+        dimensions = JSON.parse(req.body.dimensions);
+        console.log(`[Задача ${taskId}] Размеры объекта:`, dimensions);
+      } catch (e) {
+        console.warn(`[Задача ${taskId}] Не удалось распарсить размеры:`, e);
+      }
+    }
+
     console.log(`[Задача ${taskId}] Создана новая задача для файла: ${imagePath}`);
-    
+
     // Сохраняем информацию о задаче
     tasks.set(taskId, {
       id: taskId,
       status: 'processing',
       imagePath: imagePath,
+      dimensions: dimensions,
       createdAt: new Date(),
       result: null,
       error: null
     });
 
     console.log(`[Задача ${taskId}] Информация сохранена. Всего задач в памяти: ${tasks.size}`);
-    
+
     // Сохраняем задачи в файл
     saveTasks();
 

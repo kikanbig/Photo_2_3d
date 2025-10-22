@@ -1,0 +1,206 @@
+/* Поля ввода размеров в тёмной теме */
+.dimensions-input {
+  width: 100%;
+  padding: 1.5rem;
+  background: rgba(87, 68, 226, 0.05);
+  border: 1px solid rgba(87, 68, 226, 0.2);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+
+.dimensions-input:hover {
+  background: rgba(87, 68, 226, 0.08);
+  border-color: rgba(87, 68, 226, 0.3);
+}
+
+/* Header */
+.dimensions-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.dimensions-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--accent-primary);
+}
+
+.dimensions-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.dimensions-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  margin-left: auto;
+}
+
+/* Поля */
+.dimensions-fields {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr) auto;
+  gap: 1rem;
+  align-items: end;
+}
+
+.dimension-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dimension-field label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.dimension-field input {
+  width: 100%;
+  padding: 0.875rem 3rem 0.875rem 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  appearance: textfield;
+}
+
+/* Убираем стрелки у number input */
+.dimension-field input::-webkit-outer-spin-button,
+.dimension-field input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.dimension-field input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.dimension-field input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(87, 68, 226, 0.1);
+  background: var(--bg-tertiary);
+}
+
+.dimension-field input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.unit-label {
+  position: absolute;
+  right: 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+/* Кнопка переключения единиц */
+.unit-toggle {
+  padding: 0.875rem 1.5rem;
+  background: var(--gradient-primary);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 12px rgba(87, 68, 226, 0.3);
+  min-width: 60px;
+  height: fit-content;
+}
+
+.unit-toggle:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(87, 68, 226, 0.4);
+}
+
+.unit-toggle:active {
+  transform: translateY(0);
+}
+
+/* Мобильная адаптация */
+@media (max-width: 768px) {
+  .dimensions-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .dimensions-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dimensions-subtitle {
+    margin-left: 0;
+  }
+
+  .unit-toggle {
+    width: 100%;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .dimensions-fields {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dimension-field:nth-child(3) {
+    grid-column: 1;
+  }
+
+  .unit-toggle {
+    grid-column: 2;
+  }
+}
+
+/* Анимации */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dimensions-input {
+  animation: slideUp 0.4s ease-out;
+}
+
+.dimension-field {
+  animation: slideUp 0.4s ease-out backwards;
+}
+
+.dimension-field:nth-child(1) { animation-delay: 0.1s; }
+.dimension-field:nth-child(2) { animation-delay: 0.15s; }
+.dimension-field:nth-child(3) { animation-delay: 0.2s; }
+.unit-toggle { animation: slideUp 0.4s ease-out 0.25s backwards; }
+
+/* Эффект свечения при фокусе */
+.dimension-field input:focus + .unit-label {
+  color: var(--accent-primary);
+}
+

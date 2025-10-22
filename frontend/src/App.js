@@ -23,13 +23,18 @@ function App() {
     setError(null);
   };
 
-  const handleGenerate = async (imageFile) => {
+  const handleGenerate = async (imageFile, dimensions) => {
     setIsGenerating(true);
     setError(null);
-    
+
     try {
       const formData = new FormData();
       formData.append('image', imageFile);
+      
+      // Добавляем размеры если они указаны
+      if (dimensions) {
+        formData.append('dimensions', JSON.stringify(dimensions));
+      }
 
       const apiUrl = process.env.REACT_APP_BACKEND_URL || window.location.origin;
       const response = await fetch(`${apiUrl}/api/generation/upload`, {

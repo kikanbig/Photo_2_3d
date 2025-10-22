@@ -1,10 +1,12 @@
 import React, { useRef, useState } from 'react';
 import { Upload, Image as ImageIcon, X, Play } from 'lucide-react';
+import DimensionsInput from './DimensionsInput';
 import './ImageUpload.css';
 
 const ImageUpload = ({ onImageSelect, onGenerate, selectedImage, isGenerating }) => {
   const fileInputRef = useRef(null);
   const [dragActive, setDragActive] = useState(false);
+  const [dimensions, setDimensions] = useState(null);
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -48,8 +50,12 @@ const ImageUpload = ({ onImageSelect, onGenerate, selectedImage, isGenerating })
 
   const handleGenerate = () => {
     if (selectedImage && selectedImage.file) {
-      onGenerate(selectedImage.file);
+      onGenerate(selectedImage.file, dimensions);
     }
+  };
+
+  const handleDimensionsChange = (newDimensions) => {
+    setDimensions(newDimensions);
   };
 
   const handleRemoveImage = () => {
@@ -113,6 +119,10 @@ const ImageUpload = ({ onImageSelect, onGenerate, selectedImage, isGenerating })
               <span>Размер: {(selectedImage.file.size / 1024 / 1024).toFixed(2)} MB</span>
             </div>
           </div>
+
+          {/* Поля для ввода размеров */}
+          <DimensionsInput onDimensionsChange={handleDimensionsChange} />
+
           <button
             className="btn generate-btn"
             onClick={handleGenerate}
