@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getModel } from '../services/api';
 import '@google/model-viewer';
@@ -10,10 +10,36 @@ const ARView = () => {
   const [model, setModel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [modelLoading, setModelLoading] = useState(true);
+  const modelViewerRef = useRef(null);
 
   useEffect(() => {
     loadModel();
   }, [modelId]);
+
+  useEffect(() => {
+    const modelViewer = modelViewerRef.current;
+    if (modelViewer) {
+      const handleLoad = () => {
+        console.log('Model loaded successfully');
+        setModelLoading(false);
+      };
+      
+      const handleError = (event) => {
+        console.error('Model failed to load:', event);
+        setError('Не удалось загрузить 3D модель');
+        setModelLoading(false);
+      };
+
+      modelViewer.addEventListener('load', handleLoad);
+      modelViewer.addEventListener('error', handleError);
+
+      return () => {
+        modelViewer.removeEventListener('load', handleLoad);
+        modelViewer.removeEventListener('error', handleError);
+      };
+    }
+  }, [model]);
 
   const loadModel = async () => {
     try {
@@ -108,22 +134,38 @@ const ARView = () => {
       </div>
 
       <div className="ar-viewer-container">
+        {modelLoading && (
+          <div className="model-loading-overlay">
+            <div className="spinner">
+              <div className="spinner-ring"></div>
+              <div className="spinner-ring"></div>
+              <div className="spinner-ring"></div>
+            </div>
+            <p>Загрузка 3D модели...</p>
+          </div>
+        )}
+        
         <model-viewer
+          ref={modelViewerRef}
           src={model.modelUrl}
-          alt={model.name}
+          alt={model.name || 'AR Model'}
           ar
           ar-modes="webxr scene-viewer quick-look"
           camera-controls
+          touch-action="pan-y"
           auto-rotate
           shadow-intensity="1"
           environment-image="neutral"
           exposure="1"
           ar-scale={arScale}
           ios-src={model.modelUrl}
+          loading="eager"
+          reveal="auto"
           style={{
             width: '100%',
             height: '100%',
-            backgroundColor: '#0a0a0f'
+            backgroundColor: '#0a0a0f',
+            display: 'block'
           }}
         >
           <button slot="ar-button" className="ar-button">
