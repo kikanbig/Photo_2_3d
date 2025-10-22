@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Model3D = require('../models/Model3D');
 const { Op } = require('sequelize');
+const path = require('path');
+const fs = require('fs-extra');
 
 // Получить все модели
 router.get('/', async (req, res) => {
@@ -55,7 +57,10 @@ router.get('/:id', async (req, res) => {
 
     res.json({
       success: true,
-      data: model
+      data: {
+        ...model.toJSON(),
+        glbFile: undefined // Не отправляем бинарные данные
+      }
     });
   } catch (error) {
     console.error('Ошибка получения модели:', error);
@@ -63,6 +68,32 @@ router.get('/:id', async (req, res) => {
       success: false,
       error: error.message
     });
+  }
+});
+
+// Скачать GLB файл модели из БД
+router.get('/:id/download', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const model = await Model3D.findOne({
+      where: { taskId: id }, // Ищем по taskId
+      attributes: ['glbFile', 'name']
+    });
+
+    if (!model || !model.glbFile) {
+      return res.status(404).send('GLB файл не найден');
+    }
+
+    res.setHeader('Content-Type', 'model/gltf-binary');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Content-Disposition', `inline; filename="${model.name || 'model'}.glb"`);
+    res.send(model.glbFile);
+    
+    console.log(`📤 GLB файл отдан из БД: ${id}`);
+  } catch (error) {
+    console.error('Ошибка скачивания GLB:', error);
+    res.status(500).send('Ошибка скачивания файла');
   }
 });
 
@@ -88,10 +119,25 @@ router.post('/', async (req, res) => {
       });
     }
 
+    // Если это локальный файл, читаем его и сохраняем в БД
+    let glbFileBuffer = null;
+    if (modelUrl.startsWith('/uploads/models/')) {
+      try {
+        const filePath = path.join(__dirname, '..', modelUrl);
+        if (await fs.pathExists(filePath)) {
+          glbFileBuffer = await fs.readFile(filePath);
+          console.log(`📦 GLB файл прочитан для сохранения в БД: ${(glbFileBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+        }
+      } catch (err) {
+        console.warn('⚠️ Не удалось прочитать GLB файл:', err.message);
+      }
+    }
+
     const model = await Model3D.create({
       name: name || 'Untitled Model',
       description,
-      modelUrl,
+      modelUrl: `/api/models/${taskId}/download`, // URL для скачивания из БД
+      glbFile: glbFileBuffer, // Бинарный файл
       previewImageUrl,
       originalImageUrl,
       dimensions,
@@ -101,10 +147,16 @@ router.post('/', async (req, res) => {
     });
 
     console.log(`✅ Модель создана: ${model.id} - ${model.name}`);
+    if (glbFileBuffer) {
+      console.log(`💾 GLB файл сохранён в БД: ${(glbFileBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+    }
 
     res.status(201).json({
       success: true,
-      data: model
+      data: {
+        ...model.toJSON(),
+        glbFile: undefined // Не отправляем бинарные данные в ответе
+      }
     });
   } catch (error) {
     console.error('Ошибка создания модели:', error);

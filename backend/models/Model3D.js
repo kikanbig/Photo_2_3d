@@ -16,10 +16,16 @@ const Model3D = sequelize.define('Model3D', {
     type: DataTypes.TEXT,
     allowNull: true
   },
-  // URL модели (GLB файл)
+  // URL модели (GLB файл) - может быть внешний или /api/models/:id/download
   modelUrl: {
     type: DataTypes.STRING,
     allowNull: false
+  },
+  // GLB файл хранится в БД как бинарные данные
+  glbFile: {
+    type: DataTypes.BLOB('long'), // До 4GB
+    allowNull: true,
+    comment: 'Бинарный GLB файл'
   },
   // URL превью изображения
   previewImageUrl: {
