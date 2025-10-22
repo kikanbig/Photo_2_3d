@@ -1,6 +1,9 @@
+/* Тёмная тема для ModelViewer */
 .model-viewer {
   width: 100%;
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .viewer-container {
@@ -8,10 +11,12 @@
   height: 100%;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   position: relative;
-  border: 2px solid rgba(99, 102, 241, 0.1);
+  background: linear-gradient(135deg, #1a1a24 0%, #0a0a0f 100%);
+  border: 1px solid rgba(87, 68, 226, 0.2);
+  box-shadow: 
+    0 0 20px rgba(87, 68, 226, 0.1),
+    inset 0 0 40px rgba(87, 68, 226, 0.05);
 }
 
 .viewer-container > div {
@@ -25,20 +30,89 @@
   display: block !important;
 }
 
+/* Loading состояние для 3D модели */
 .model-loading {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
-  color: #666;
+  color: #a0a0b2;
+  z-index: 10;
 }
 
 .model-loading p {
   margin-top: 1rem;
   font-size: 1rem;
+  font-weight: 500;
 }
 
+.loading-spinner {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  margin: 0 auto;
+}
+
+.spinner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.spinner-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 3px solid transparent;
+  border-top-color: #5744e2;
+  border-radius: 50%;
+  animation: spin 1.5s linear infinite;
+}
+
+.spinner-ring:nth-child(2) {
+  border-top-color: #8b5cf6;
+  animation-delay: -0.4s;
+}
+
+.spinner-ring:nth-child(3) {
+  border-top-color: #a78bfa;
+  animation-delay: -0.8s;
+}
+
+.spinner-ring:nth-child(4) {
+  border-top-color: #c4b5fd;
+  animation-delay: -1.2s;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Гло-эффект для контейнера */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 20px rgba(87, 68, 226, 0.1),
+      inset 0 0 40px rgba(87, 68, 226, 0.05);
+  }
+  50% {
+    box-shadow: 
+      0 0 30px rgba(87, 68, 226, 0.2),
+      inset 0 0 60px rgba(87, 68, 226, 0.1);
+  }
+}
+
+.viewer-container:hover {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
 
 /* Responsive */
 @media (max-width: 768px) {
