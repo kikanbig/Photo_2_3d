@@ -32,7 +32,12 @@ const ModelViewer = ({ modelUrl }) => {
       <div className="viewer-container">
         <Canvas
           camera={{ position: [0, 0, 3], fov: 60 }}
-          style={{ background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)' }}
+          style={{ 
+            width: '100%', 
+            height: '100%', 
+            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)' 
+          }}
+          gl={{ preserveDrawingBuffer: true }}
         >
           <Suspense fallback={null}>
             <Model url={modelUrl} />
