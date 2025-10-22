@@ -158,6 +158,10 @@ class GenAPIService {
   // Скачивание результата
   async downloadResult(resultUrl, outputPath) {
     try {
+      console.log('📥 Скачивание GLB файла...');
+      console.log('  URL:', resultUrl);
+      console.log('  Путь:', outputPath);
+      
       const response = await axios.get(resultUrl, {
         responseType: 'stream'
       });
@@ -166,11 +170,20 @@ class GenAPIService {
       response.data.pipe(writer);
 
       return new Promise((resolve, reject) => {
-        writer.on('finish', resolve);
-        writer.on('error', reject);
+        writer.on('finish', () => {
+          console.log('✅ GLB файл скачан успешно:', outputPath);
+          // Проверяем размер файла
+          const stats = fs.statSync(outputPath);
+          console.log('  Размер файла:', (stats.size / 1024 / 1024).toFixed(2), 'MB');
+          resolve();
+        });
+        writer.on('error', (err) => {
+          console.error('❌ Ошибка записи файла:', err);
+          reject(err);
+        });
       });
     } catch (error) {
-      console.error('Ошибка скачивания результата:', error.message);
+      console.error('❌ Ошибка скачивания результата:', error.message);
       throw error;
     }
   }
