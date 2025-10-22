@@ -38,20 +38,40 @@ const ARView = () => {
           width: modelViewer.clientWidth,
           height: modelViewer.clientHeight,
           offsetWidth: modelViewer.offsetWidth,
-          offsetHeight: modelViewer.offsetHeight
+          offsetHeight: modelViewer.offsetHeight,
+          scrollWidth: modelViewer.scrollWidth,
+          scrollHeight: modelViewer.scrollHeight,
+          parentWidth: modelViewer.parentElement?.clientWidth,
+          parentHeight: modelViewer.parentElement?.clientHeight
         });
-        console.log('🎥 Camera:', modelViewer.getCameraOrbit());
+        console.log('🎥 Camera orbit:', modelViewer.getCameraOrbit());
+        console.log('🎯 Camera target:', modelViewer.getCameraTarget());
         console.log('🔍 Field of view:', modelViewer.fieldOfView);
+        console.log('📦 Model bounds:', modelViewer.getBoundingBoxCenter());
         
         clearTimeout(timeout);
         // КРИТИЧЕСКИ ВАЖНО: скрываем overlay сразу!
         setModelLoading(false);
         
-        // Принудительно обновляем рендер через 100ms
+        // Принудительно сбрасываем камеру и рендерим
         setTimeout(() => {
           if (modelViewer) {
-            console.log('🔄 Force jumpCameraToGoal');
+            console.log('🔄 Resetting camera and forcing render...');
+            
+            // Сбрасываем камеру к модели
+            modelViewer.resetTurntableRotation();
             modelViewer.jumpCameraToGoal();
+            
+            // Принудительно вызываем рендер
+            if (modelViewer.updateFraming) {
+              modelViewer.updateFraming();
+            }
+            
+            // Начинаем авто-вращение
+            modelViewer.play();
+            
+            console.log('✨ Camera reset complete');
+            console.log('🎥 New camera orbit:', modelViewer.getCameraOrbit());
           }
         }, 100);
       };
@@ -206,20 +226,25 @@ const ARView = () => {
           ar-modes="webxr scene-viewer quick-look"
           camera-controls
           touch-action="pan-y"
+          auto-rotate
+          auto-rotate-delay="0"
+          rotation-per-second="30deg"
           shadow-intensity="1"
           environment-image="neutral"
-          exposure="1.5"
+          exposure="2"
           ar-scale={arScale}
           ios-src={model.modelUrl}
           loading="eager"
-          reveal="auto"
-          camera-orbit="0deg 75deg 105%"
-          field-of-view="30deg"
-          min-camera-orbit="auto auto 5%"
-          max-camera-orbit="auto auto 200%"
+          reveal="interaction"
+          camera-orbit="45deg 75deg 2m"
+          field-of-view="45deg"
+          min-camera-orbit="auto auto auto"
+          max-camera-orbit="auto auto auto"
+          interpolation-decay="100"
           style={{
             width: '100%',
             height: '100%',
+            minHeight: '400px',
             backgroundColor: '#1a1a2e',
             display: 'block'
           }}
