@@ -2,6 +2,36 @@
 
 All notable changes to Photo to 3D project will be documented in this file.
 
+## [1.1.0] - 2025-10-22
+
+### 🎨 UI/UX Improvements
+
+#### ✨ Layout Redesign
+- **Side-by-side layout**: Photo upload on the left, 3D model preview on the right
+- **Equal heights**: Both panels now 500px min-height for visual consistency
+- **Actions bar**: Status and action buttons moved to bottom panel below workspace
+- **Single download button**: Removed duplicate download button from model viewer
+- **Placeholder text**: Added helpful hint when no model is generated
+
+#### 🎨 Visual Design
+- **Modern gradient**: New indigo-violet-pink gradient background
+- **Glass-morphism**: Enhanced blur effects and transparency
+- **Better borders**: Rounded corners (24px) and subtle borders
+- **Gradient buttons**: All buttons now have gradient backgrounds with shadows
+- **Typography**: Improved fonts, weights, and gradient text effects
+- **Color scheme**: Updated to modern purple/indigo palette
+
+#### 📱 Responsive Design
+- Improved mobile layout (stacks vertically on tablets)
+- Better button sizing on mobile
+- Flexible action bar for small screens
+
+### 🔧 Technical Changes
+- Refactored App.css with new workspace and actions-bar containers
+- Updated StatusCard to work in horizontal layout
+- Simplified ModelViewer component (removed download button)
+- Better CSS organization and naming
+
 ## [1.0.0] - 2025-10-21
 
 ### 🎉 Initial Release - Production Ready
