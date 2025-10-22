@@ -10,6 +10,13 @@ const { testConnection, syncDatabase } = require('./config/database');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Создаем директории для загрузок СРАЗУ
+const uploadDir = process.env.UPLOAD_DIR || 'uploads';
+fs.ensureDirSync(uploadDir);
+fs.ensureDirSync(path.join(uploadDir, 'input'));
+fs.ensureDirSync(path.join(uploadDir, 'output'));
+fs.ensureDirSync(path.join(uploadDir, 'models'));
+
 // Middleware
 app.use(cors({
   origin: '*', // Разрешаем запросы с любого домена
@@ -17,21 +24,8 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '50mb' })); // Увеличиваем лимит для base64 изображений
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-// Обслуживание статических файлов фронтенда
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../frontend/build')));
-} else {
-  app.use(express.static('public'));
-}
 
-// Создаем директории для загрузок
-const uploadDir = process.env.UPLOAD_DIR || 'uploads';
-fs.ensureDirSync(uploadDir);
-fs.ensureDirSync(path.join(uploadDir, 'input'));
-fs.ensureDirSync(path.join(uploadDir, 'output'));
-fs.ensureDirSync(path.join(uploadDir, 'models'));
-
-// Раздача статических файлов для GLB моделей
+// ВАЖНО: Раздача GLB файлов ПЕРЕД статическими файлами фронтенда!
 app.use('/uploads/models', express.static(path.join(__dirname, uploadDir, 'models'), {
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.glb')) {
@@ -40,6 +34,13 @@ app.use('/uploads/models', express.static(path.join(__dirname, uploadDir, 'model
     }
   }
 }));
+
+// Обслуживание статических файлов фронтенда
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../frontend/build')));
+} else {
+  app.use(express.static('public'));
+}
 
 // Настройка multer для загрузки файлов
 const storage = multer.diskStorage({
@@ -102,8 +103,13 @@ app.get('/api/check-api-key', (req, res) => {
 });
 
 // Обслуживание React приложения для всех остальных маршрутов
+// ВАЖНО: Исключаем /uploads/* чтобы не перехватывать статические файлы
 if (process.env.NODE_ENV === 'production') {
-  app.get('*', (req, res) => {
+  app.get('*', (req, res, next) => {
+    // Пропускаем запросы к статическим файлам
+    if (req.path.startsWith('/uploads/')) {
+      return next();
+    }
     res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
   });
 }
