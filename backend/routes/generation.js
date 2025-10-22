@@ -247,29 +247,46 @@ async function generate3DModelAsync(taskId, imagePath) {
       // Получили результат сразу (is_sync=true)
       const resultUrl = response.output.model_url;
       
-      // Скачиваем результат
-      const outputDir = path.join(process.env.UPLOAD_DIR || 'uploads', 'models');
+      // Скачиваем результат во временную папку
+      const outputDir = path.join(process.env.UPLOAD_DIR || 'uploads', 'temp');
       await fs.ensureDir(outputDir);
 
-      const outputPath = path.join(outputDir, `${taskId}.glb`);
-      await genapiService.downloadResult(resultUrl, outputPath);
+      const tempPath = path.join(outputDir, `${taskId}.glb`);
+      await genapiService.downloadResult(resultUrl, tempPath);
 
-      // Создаём локальный URL (будет доступен через /uploads/models/)
-      const localModelUrl = `/uploads/models/${taskId}.glb`;
+      // Читаем файл для сохранения в БД
+      const glbBuffer = await fs.readFile(tempPath);
+      console.log(`📦 GLB прочитан: ${(glbBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+
+      // Сохраняем в БД
+      const Model3D = require('../models/Model3D');
+      await Model3D.create({
+        name: `Model ${taskId}`,
+        modelUrl: `/api/models/${taskId}/download`,
+        glbFile: glbBuffer,
+        taskId: taskId,
+        status: 'active'
+      });
+      console.log(`💾 GLB сохранён в БД для задачи: ${taskId}`);
+
+      // Удаляем временный файл
+      await fs.remove(tempPath);
+
+      // URL для фронтенда
+      const apiModelUrl = `/api/models/${taskId}/download`;
 
       // Обновляем задачу
       task.status = 'completed';
       task.result = {
-        url: localModelUrl, // Локальный URL вместо внешнего
-        externalUrl: resultUrl, // Сохраняем внешний для справки
-        filePath: outputPath,
+        url: apiModelUrl, // URL для скачивания из БД
+        externalUrl: resultUrl, // Внешний URL для справки
         downloadedAt: new Date(),
-        modelUrl: localModelUrl // Локальный URL для отображения
+        modelUrl: apiModelUrl // URL для model-viewer
       };
       tasks.set(taskId, task);
-      saveTasks(); // Сохраняем в файл
+      saveTasks();
 
-      console.log(`Задача ${taskId} завершена успешно. Локальный файл: ${localModelUrl}`);
+      console.log(`✅ Задача ${taskId} завершена. URL: ${apiModelUrl}`);
     } else {
       console.log(`[Задача ${taskId}] Получен неожиданный формат ответа от API:`, JSON.stringify(response, null, 2));
       
@@ -309,24 +326,44 @@ async function generate3DModelAsync(taskId, imagePath) {
         if (modelUrl) {
           console.log(`[Задача ${taskId}] Найден URL модели в нестандартном формате ответа: ${modelUrl}`);
           
-          // Скачиваем результат
-          const outputDir = path.join(process.env.UPLOAD_DIR || 'uploads', 'output');
+          // Скачиваем во временную папку
+          const outputDir = path.join(process.env.UPLOAD_DIR || 'uploads', 'temp');
           await fs.ensureDir(outputDir);
           
-          const outputPath = path.join(outputDir, `${taskId}.glb`);
-          await genapiService.downloadResult(modelUrl, outputPath);
+          const tempPath = path.join(outputDir, `${taskId}.glb`);
+          await genapiService.downloadResult(modelUrl, tempPath);
+          
+          // Читаем и сохраняем в БД
+          const glbBuffer = await fs.readFile(tempPath);
+          console.log(`📦 GLB прочитан: ${(glbBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+          
+          const Model3D = require('../models/Model3D');
+          await Model3D.create({
+            name: `Model ${taskId}`,
+            modelUrl: `/api/models/${taskId}/download`,
+            glbFile: glbBuffer,
+            taskId: taskId,
+            status: 'active'
+          });
+          console.log(`💾 GLB сохранён в БД для задачи: ${taskId}`);
+          
+          // Удаляем временный файл
+          await fs.remove(tempPath);
+          
+          const apiModelUrl = `/api/models/${taskId}/download`;
           
           // Обновляем задачу
           task.status = 'completed';
           task.result = {
-            url: modelUrl,
-            filePath: outputPath,
+            url: apiModelUrl,
+            externalUrl: modelUrl,
             downloadedAt: new Date(),
-            modelUrl: modelUrl
+            modelUrl: apiModelUrl
           };
           tasks.set(taskId, task);
+          saveTasks();
           
-          console.log(`Задача ${taskId} завершена успешно (нестандартный формат)`);
+          console.log(`✅ Задача ${taskId} завершена (нестандартный формат). URL: ${apiModelUrl}`);
           return;
         }
       }
@@ -401,29 +438,44 @@ async function pollTaskStatus(taskId, requestId) {
         if (resultUrl) {
           console.log(`[Задача ${taskId}] Найден URL модели: ${resultUrl}`);
           
-          // Скачиваем результат
-          const outputDir = path.join(process.env.UPLOAD_DIR || 'uploads', 'models');
+          // Скачиваем во временную папку
+          const outputDir = path.join(process.env.UPLOAD_DIR || 'uploads', 'temp');
           await fs.ensureDir(outputDir);
           
-          const outputPath = path.join(outputDir, `${taskId}.glb`);
-          await genapiService.downloadResult(resultUrl, outputPath);
+          const tempPath = path.join(outputDir, `${taskId}.glb`);
+          await genapiService.downloadResult(resultUrl, tempPath);
           
-          // Создаём локальный URL
-          const localModelUrl = `/uploads/models/${taskId}.glb`;
+          // Читаем и сохраняем в БД
+          const glbBuffer = await fs.readFile(tempPath);
+          console.log(`📦 GLB прочитан: ${(glbBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+          
+          const Model3D = require('../models/Model3D');
+          await Model3D.create({
+            name: `Model ${taskId}`,
+            modelUrl: `/api/models/${taskId}/download`,
+            glbFile: glbBuffer,
+            taskId: taskId,
+            status: 'active'
+          });
+          console.log(`💾 GLB сохранён в БД для задачи: ${taskId}`);
+          
+          // Удаляем временный файл
+          await fs.remove(tempPath);
+          
+          const apiModelUrl = `/api/models/${taskId}/download`;
           
           // Обновляем задачу
           task.status = 'completed';
           task.result = {
-            url: localModelUrl, // Локальный URL вместо внешнего
-            externalUrl: resultUrl, // Сохраняем внешний для справки
-            filePath: outputPath,
+            url: apiModelUrl,
+            externalUrl: resultUrl,
             downloadedAt: new Date(),
-            modelUrl: localModelUrl // Локальный URL для отображения
+            modelUrl: apiModelUrl
           };
-      tasks.set(taskId, task);
-      saveTasks(); // Сохраняем в файл
-      
-      console.log(`Задача ${taskId} завершена успешно. Локальный файл: ${localModelUrl}`);
+          tasks.set(taskId, task);
+          saveTasks();
+          
+          console.log(`✅ Задача ${taskId} завершена успешно. URL: ${apiModelUrl}`);
         } else {
           console.log(`[Задача ${taskId}] URL не найден. Полный ответ:`, JSON.stringify(statusResponse, null, 2));
           throw new Error('URL результата не получен');

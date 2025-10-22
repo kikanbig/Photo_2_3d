@@ -167,6 +167,47 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Обновить метаданные модели по taskId
+router.put('/update-metadata/:taskId', async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const { name, description, dimensions, metadata } = req.body;
+
+    const model = await Model3D.findOne({ where: { taskId } });
+
+    if (!model) {
+      return res.status(404).json({
+        success: false,
+        error: 'Модель не найдена'
+      });
+    }
+
+    // Обновляем метаданные
+    if (name !== undefined) model.name = name;
+    if (description !== undefined) model.description = description;
+    if (dimensions !== undefined) model.dimensions = dimensions;
+    if (metadata !== undefined) model.metadata = metadata;
+
+    await model.save();
+
+    console.log(`✅ Метаданные обновлены для модели: ${model.id}`);
+
+    res.json({
+      success: true,
+      data: {
+        ...model.toJSON(),
+        glbFile: undefined
+      }
+    });
+  } catch (error) {
+    console.error('Ошибка обновления метаданных:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 // Обновить модель
 router.put('/:id', async (req, res) => {
   try {

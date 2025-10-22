@@ -118,23 +118,28 @@ const Home = () => {
   const handleSave = async () => {
     if (taskId && taskStatus?.status === 'completed' && taskStatus.result) {
       try {
-        // Не отправляем base64 изображения, только URL модели
-        // Превью можно будет получить из самого GLB файла или использовать плейсхолдер
-        const modelData = {
-          name: selectedImage?.file?.name?.replace(/\.[^/.]+$/, "") || `Model ${Date.now()}`,
-          modelUrl: taskStatus.result.url,
-          previewImageUrl: null, // Не сохраняем base64
-          originalImageUrl: null, // Не сохраняем base64
-          dimensions: dimensions,
-          taskId: taskId,
-          metadata: {
-            originalFileName: selectedImage?.file?.name,
-            fileSize: selectedImage?.file?.size,
-            generatedAt: new Date().toISOString()
-          }
-        };
+        // Модель уже сохранена в БД при генерации, просто обновляем метаданные
+        const apiUrl = process.env.REACT_APP_BACKEND_URL || window.location.origin;
+        const response = await fetch(`${apiUrl}/api/models/update-metadata/${taskId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: selectedImage?.file?.name?.replace(/\.[^/.]+$/, "") || `Model ${Date.now()}`,
+            dimensions: dimensions,
+            metadata: {
+              originalFileName: selectedImage?.file?.name,
+              fileSize: selectedImage?.file?.size,
+              generatedAt: new Date().toISOString()
+            }
+          })
+        });
 
-        await saveModel(modelData);
+        if (!response.ok) {
+          throw new Error('Ошибка обновления метаданных');
+        }
+
         alert('✅ Модель сохранена! Посмотреть её можно в разделе "Мои модели"');
       } catch (error) {
         console.error('Ошибка сохранения модели:', error);
