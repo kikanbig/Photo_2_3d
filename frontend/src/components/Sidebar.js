@@ -1,20 +1,30 @@
 import React from 'react';
-import { RotateCcw, Package, HelpCircle, Settings, Home, Image, Sparkles } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { RotateCcw, Package, HelpCircle, Settings, Home, Sparkles } from 'lucide-react';
 import './Sidebar.css';
 
 const Sidebar = ({ isOpen, onToggle }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const menuItems = [
-    { icon: Home, label: 'Главная', active: false },
-    { icon: RotateCcw, label: '3D из фото', active: true },
-    { icon: Sparkles, label: 'AI Рендер', active: false },
-    { icon: Image, label: 'Галерея', active: false },
+    { icon: Home, label: 'Главная', path: '/' },
+    { icon: RotateCcw, label: '3D из фото', path: '/create' },
+    { icon: Package, label: 'Мои модели', path: '/my-models' },
+    { icon: Sparkles, label: 'AI Рендер', path: '/render' },
   ];
 
   const bottomItems = [
-    { icon: Package, label: 'Библиотека', active: false },
-    { icon: HelpCircle, label: 'Помощь', active: false },
-    { icon: Settings, label: 'Настройки', active: false },
+    { icon: HelpCircle, label: 'Помощь', path: '/help' },
+    { icon: Settings, label: 'Настройки', path: '/settings' },
   ];
+
+  const handleNavigate = (path) => {
+    navigate(path);
+    if (window.innerWidth <= 768) {
+      onToggle();
+    }
+  };
 
   return (
     <>
@@ -31,8 +41,9 @@ const Sidebar = ({ isOpen, onToggle }) => {
             {menuItems.map((item, index) => (
               <button
                 key={index}
-                className={`nav-item ${item.active ? 'active' : ''}`}
+                className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
                 title={item.label}
+                onClick={() => handleNavigate(item.path)}
               >
                 <item.icon className="nav-icon" />
                 {isOpen && <span className="nav-label">{item.label}</span>}
@@ -45,8 +56,9 @@ const Sidebar = ({ isOpen, onToggle }) => {
             {bottomItems.map((item, index) => (
               <button
                 key={index}
-                className={`nav-item ${item.active ? 'active' : ''}`}
+                className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
                 title={item.label}
+                onClick={() => handleNavigate(item.path)}
               >
                 <item.icon className="nav-icon" />
                 {isOpen && <span className="nav-label">{item.label}</span>}

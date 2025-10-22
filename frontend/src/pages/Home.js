@@ -1,0 +1,208 @@
+import React, { useState } from 'react';
+import { Save } from 'lucide-react';
+import ImageUpload from '../components/ImageUpload';
+import ModelViewer from '../components/ModelViewer';
+import LoadingSpinner from '../components/LoadingSpinner';
+import StatusCard from '../components/StatusCard';
+import './Home.css';
+
+const Home = () => {
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [taskId, setTaskId] = useState(null);
+  const [taskStatus, setTaskStatus] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState(null);
+  const [dimensions, setDimensions] = useState(null);
+
+  const handleImageSelect = (image) => {
+    setSelectedImage(image);
+    setTaskId(null);
+    setTaskStatus(null);
+    setError(null);
+  };
+
+  const handleGenerate = async (imageFile, dims) => {
+    setIsGenerating(true);
+    setError(null);
+    setDimensions(dims);
+
+    try {
+      const formData = new FormData();
+      formData.append('image', imageFile);
+      
+      if (dims) {
+        formData.append('dimensions', JSON.stringify(dims));
+      }
+
+      const apiUrl = process.env.REACT_APP_BACKEND_URL || window.location.origin;
+      const response = await fetch(`${apiUrl}/api/generation/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setTaskId(data.taskId);
+        setTaskStatus({
+          status: 'processing',
+          message: 'Генерация 3D модели...'
+        });
+
+        pollTaskStatus(data.taskId);
+      } else {
+        throw new Error(data.error || 'Ошибка при загрузке изображения');
+      }
+    } catch (err) {
+      setError(err.message);
+      setIsGenerating(false);
+    }
+  };
+
+  const pollTaskStatus = async (currentTaskId) => {
+    const poll = async () => {
+      try {
+        const apiUrl = process.env.REACT_APP_BACKEND_URL || window.location.origin;
+        const response = await fetch(`${apiUrl}/api/generation/status/${currentTaskId}`);
+        const data = await response.json();
+
+        if (data.success) {
+          const task = data.task;
+          setTaskStatus({
+            status: task.status,
+            message: getStatusMessage(task.status),
+            result: task.result,
+            error: task.error
+          });
+
+          if (task.status === 'completed' || task.status === 'failed' || task.status === 'timeout') {
+            setIsGenerating(false);
+            return;
+          }
+
+          setTimeout(poll, 2000);
+        }
+      } catch (err) {
+        console.error('Ошибка проверки статуса:', err);
+        setError('Ошибка проверки статуса задачи');
+        setIsGenerating(false);
+      }
+    };
+
+    poll();
+  };
+
+  const getStatusMessage = (status) => {
+    switch (status) {
+      case 'processing':
+        return 'Генерация 3D модели...';
+      case 'completed':
+        return '3D модель готова!';
+      case 'failed':
+        return 'Ошибка генерации';
+      case 'timeout':
+        return 'Превышено время ожидания';
+      default:
+        return 'Обработка...';
+    }
+  };
+
+  const handleDownload = () => {
+    if (taskId && taskStatus?.status === 'completed') {
+      const apiUrl = process.env.REACT_APP_BACKEND_URL || window.location.origin;
+      window.open(`${apiUrl}/api/generation/download/${taskId}`, '_blank');
+    }
+  };
+
+  const handleSave = () => {
+    if (taskId && taskStatus?.status === 'completed' && taskStatus.result) {
+      const savedModels = JSON.parse(localStorage.getItem('savedModels') || '[]');
+      
+      const newModel = {
+        id: taskId,
+        name: selectedImage?.file?.name?.replace(/\.[^/.]+$/, "") || `Model ${Date.now()}`,
+        modelUrl: taskStatus.result.url,
+        previewImage: selectedImage?.preview,
+        dimensions: dimensions,
+        savedAt: new Date().toISOString()
+      };
+
+      savedModels.push(newModel);
+      localStorage.setItem('savedModels', JSON.stringify(savedModels));
+
+      alert('✅ Модель сохранена! Посмотреть её можно в разделе "Мои модели"');
+    }
+  };
+
+  const handleReset = () => {
+    setSelectedImage(null);
+    setTaskId(null);
+    setTaskStatus(null);
+    setIsGenerating(false);
+    setError(null);
+  };
+
+  return (
+    <main className="home-page">
+      <div className="container">
+        <div className="workspace">
+          <div className="upload-section">
+            <ImageUpload
+              onImageSelect={handleImageSelect}
+              onGenerate={handleGenerate}
+              selectedImage={selectedImage}
+              isGenerating={isGenerating}
+            />
+          </div>
+
+          <div className="result-section">
+            {isGenerating && (
+              <div className="loading-container">
+                <LoadingSpinner />
+                <p className="loading-text">{taskStatus?.message || 'Генерация 3D модели...'}</p>
+              </div>
+            )}
+
+            {taskStatus?.status === 'completed' && taskStatus?.result?.url && (
+              <ModelViewer modelUrl={taskStatus.result.url} />
+            )}
+
+            {!isGenerating && !taskStatus && !error && (
+              <div className="placeholder-container">
+                <p className="placeholder-text">👈 Загрузите фото для генерации 3D модели</p>
+              </div>
+            )}
+
+            {error && (
+              <div className="error-container">
+                <p className="error-text">{error}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {taskStatus && !isGenerating && (
+          <div className="actions-bar">
+            <StatusCard
+              status={taskStatus.status}
+              message={taskStatus.message}
+              error={taskStatus.error}
+              onDownload={handleDownload}
+              onReset={handleReset}
+              canDownload={taskStatus.status === 'completed'}
+            />
+            {taskStatus.status === 'completed' && (
+              <button className="btn btn-success" onClick={handleSave}>
+                <Save size={20} />
+                Сохранить модель
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </main>
+  );
+};
+
+export default Home;
+
