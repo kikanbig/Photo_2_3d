@@ -1,10 +1,11 @@
 /* AR View страница для мобильных */
 .ar-view-page {
   min-height: 100vh;
-  background: var(--bg-primary);
+  background: #0a0a0f;
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
+  color: #ffffff;
 }
 
 .ar-view-page.loading,
@@ -17,12 +18,18 @@
 .ar-loading {
   text-align: center;
   padding: 2rem;
+  background: rgba(10, 10, 15, 0.95);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  max-width: 400px;
+  margin: 0 1rem;
 }
 
 .ar-loading p {
   margin-top: 1.5rem;
-  color: var(--text-secondary);
+  color: #ffffff;
   font-size: 1.125rem;
+  font-weight: 500;
 }
 
 .spinner {
@@ -68,17 +75,22 @@
   text-align: center;
   padding: 2rem;
   max-width: 500px;
+  background: rgba(10, 10, 15, 0.95);
+  border-radius: 16px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  margin: 0 1rem;
 }
 
 .ar-error h2 {
   font-size: 1.5rem;
   margin-bottom: 1rem;
-  color: var(--text-primary);
+  color: #ffffff;
 }
 
 .ar-error p {
-  color: var(--text-secondary);
+  color: #d1d5db;
   margin-bottom: 2rem;
+  line-height: 1.6;
 }
 
 /* Header */
