@@ -7,10 +7,11 @@ WORKDIR /app
 # Копируем package.json файлы
 COPY backend/package*.json ./backend/
 COPY frontend/package*.json ./frontend/
+COPY frontend/.npmrc ./frontend/
 
 # Устанавливаем зависимости
 RUN cd backend && npm ci --only=production
-RUN cd frontend && npm ci --only=production
+RUN cd frontend && npm ci --legacy-peer-deps --only=production
 
 # Копируем исходный код
 COPY backend/ ./backend/
