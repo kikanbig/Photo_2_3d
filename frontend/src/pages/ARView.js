@@ -28,6 +28,30 @@ const ARView = () => {
       modelViewer.setAttribute('src', model.modelUrl);
       modelViewer.setAttribute('alt', model.name || 'AR Model');
       
+      // Настраиваем WebXR DOM Overlay
+      if (navigator.xr) {
+        console.log('✅ WebXR доступен');
+        
+        // Проверяем поддержку DOM Overlay
+        navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
+          if (supported) {
+            console.log('✅ AR сессия поддерживается');
+            
+            // Регистрируем overlay элемент
+            const overlayElement = document.getElementById('ar-scale-info');
+            if (overlayElement) {
+              console.log('✅ Overlay элемент найден');
+              // Устанавливаем как overlay для model-viewer
+              modelViewer.xrEnvironment = true;
+            }
+          } else {
+            console.log('⚠️ AR сессия не поддерживается');
+          }
+        });
+      } else {
+        console.log('⚠️ WebXR не доступен');
+      }
+      
       // Таймаут на случай если событие load не сработает
       const timeout = setTimeout(() => {
         console.log('⏱️ Timeout: Force hiding loading overlay');
@@ -105,16 +129,29 @@ const ARView = () => {
         
         console.log('🎯 Is in AR mode:', isInArMode);
         setIsInAR(isInArMode);
+      };
+      
+      // WebXR Session started - настраиваем overlay
+      const handleSessionStart = async (event) => {
+        console.log('🚀 WebXR Session started!');
+        setIsInAR(true);
         
-        // Настраиваем WebXR DOM Overlay
-        if (isInArMode && navigator.xr) {
-          console.log('✅ Настраиваем WebXR DOM Overlay');
+        const session = event.detail?.session || modelViewer.xrSession;
+        if (session) {
+          console.log('✅ XR Session получена');
+          
+          // Получаем overlay элемент
           const overlayElement = document.getElementById('ar-scale-info');
           if (overlayElement) {
+            console.log('✅ Показываем overlay в WebXR');
             overlayElement.style.display = 'flex';
-            console.log('✅ Overlay элемент показан');
           }
         }
+      };
+      
+      const handleSessionEnd = () => {
+        console.log('🛑 WebXR Session ended');
+        setIsInAR(false);
       };
 
       const handleScaleChange = () => {
@@ -152,6 +189,10 @@ const ARView = () => {
       modelViewer.addEventListener('progress', handleProgress);
       modelViewer.addEventListener('ar-status', handleArStatusChange);
       modelViewer.addEventListener('scale-change', handleScaleChange);
+      
+      // WebXR события
+      modelViewer.addEventListener('ar-session-start', handleSessionStart);
+      modelViewer.addEventListener('ar-session-end', handleSessionEnd);
 
       return () => {
         clearTimeout(timeout);
@@ -161,6 +202,8 @@ const ARView = () => {
         modelViewer.removeEventListener('progress', handleProgress);
         modelViewer.removeEventListener('ar-status', handleArStatusChange);
         modelViewer.removeEventListener('scale-change', handleScaleChange);
+        modelViewer.removeEventListener('ar-session-start', handleSessionStart);
+        modelViewer.removeEventListener('ar-session-end', handleSessionEnd);
       };
     }
   }, [model, isInAR]);
@@ -334,7 +377,7 @@ const ARView = () => {
         <model-viewer
           ref={modelViewerRef}
           ar
-          ar-modes="webxr scene-viewer quick-look"
+          ar-modes="webxr"
           xr-environment
           camera-controls
           touch-action="pan-y"
