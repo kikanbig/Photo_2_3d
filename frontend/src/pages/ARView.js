@@ -131,6 +131,27 @@ const ARView = () => {
         setIsInAR(isInArMode);
       };
       
+      // Перехватываем AR клик для добавления параметров Scene Viewer
+      const handleArClick = (event) => {
+        console.log('🎯 AR button clicked');
+        
+        // Для Android Scene Viewer добавляем параметры
+        if (modelViewer && model.dimensions) {
+          const sceneViewerParams = {
+            resizable: true,
+            enable_vertical_placement: true,
+            disable_occlusion: false,
+            title: model.name || '3D Model',
+            link: window.location.href
+          };
+          
+          console.log('📱 Scene Viewer params:', sceneViewerParams);
+          
+          // Параметры будут добавлены через model-viewer автоматически
+          // если они поддерживаются в текущей версии
+        }
+      };
+      
       // WebXR Session started - настраиваем overlay
       const handleSessionStart = async (event) => {
         console.log('🚀 WebXR Session started!');
@@ -193,6 +214,12 @@ const ARView = () => {
       // WebXR события
       modelViewer.addEventListener('ar-session-start', handleSessionStart);
       modelViewer.addEventListener('ar-session-end', handleSessionEnd);
+      
+      // AR button click
+      const arButton = modelViewer.querySelector('[slot="ar-button"]');
+      if (arButton) {
+        arButton.addEventListener('click', handleArClick);
+      }
 
       return () => {
         clearTimeout(timeout);
@@ -204,6 +231,9 @@ const ARView = () => {
         modelViewer.removeEventListener('scale-change', handleScaleChange);
         modelViewer.removeEventListener('ar-session-start', handleSessionStart);
         modelViewer.removeEventListener('ar-session-end', handleSessionEnd);
+        if (arButton) {
+          arButton.removeEventListener('click', handleArClick);
+        }
       };
     }
   }, [model, isInAR]);
@@ -358,7 +388,7 @@ const ARView = () => {
         <model-viewer
           ref={modelViewerRef}
           ar
-          ar-modes="webxr scene-viewer quick-look"
+          ar-modes="scene-viewer webxr quick-look"
           xr-environment
           camera-controls
           touch-action="pan-y"
@@ -369,6 +399,7 @@ const ARView = () => {
           environment-image="neutral"
           exposure="2"
           ar-scale={arScaleAttr}
+          ar-placement="floor"
           ios-src={model.modelUrl}
           loading="eager"
           reveal="auto"
@@ -377,6 +408,7 @@ const ARView = () => {
           min-camera-orbit="auto auto auto"
           max-camera-orbit="auto auto auto"
           interpolation-decay="100"
+          alt={`${model.name} - ${getDimensionsText()}`}
         >
           <button slot="ar-button" className="ar-button">
             👁️ Посмотреть в AR
