@@ -26,7 +26,29 @@ const ARView = () => {
       // Принудительно устанавливаем src через setAttribute
       console.log('🎨 Setting model src:', model.modelUrl);
       modelViewer.setAttribute('src', model.modelUrl);
-      modelViewer.setAttribute('alt', model.name || 'AR Model');
+      
+      // Настройка Scene Viewer согласно документации Google
+      const title = model.name || '3D Model';
+      const link = window.location.href;
+      
+      modelViewer.setAttribute('alt', title);
+      modelViewer.setAttribute('ar-scale', arScaleAttr);
+      
+      // Создаём правильный Intent URL для Scene Viewer
+      const sceneViewerUrl = new URL('https://arvr.google.com/scene-viewer/1.1');
+      sceneViewerUrl.searchParams.set('file', model.modelUrl);
+      sceneViewerUrl.searchParams.set('mode', 'ar_preferred');
+      sceneViewerUrl.searchParams.set('title', title);
+      sceneViewerUrl.searchParams.set('link', link);
+      sceneViewerUrl.searchParams.set('resizable', 'true'); // !!!КЛЮЧЕВОЙ ПАРАМЕТР!!!
+      sceneViewerUrl.searchParams.set('enable_vertical_placement', 'true');
+      
+      console.log('📱 Scene Viewer URL:', sceneViewerUrl.toString());
+      
+      // Устанавливаем кастомный Intent для Android
+      if (modelViewer.canActivateAR) {
+        modelViewer.activateAR();
+      }
       
       // Настраиваем WebXR DOM Overlay
       if (navigator.xr) {
@@ -389,7 +411,6 @@ const ARView = () => {
           ref={modelViewerRef}
           ar
           ar-modes="scene-viewer webxr quick-look"
-          xr-environment
           camera-controls
           touch-action="pan-y"
           auto-rotate
@@ -408,7 +429,7 @@ const ARView = () => {
           min-camera-orbit="auto auto auto"
           max-camera-orbit="auto auto auto"
           interpolation-decay="100"
-          alt={`${model.name} - ${getDimensionsText()}`}
+          alt={model.name || '3D Model'}
         >
           <button slot="ar-button" className="ar-button">
             👁️ Посмотреть в AR
