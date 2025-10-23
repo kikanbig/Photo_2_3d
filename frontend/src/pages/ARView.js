@@ -379,6 +379,8 @@ const ARView = () => {
     ? (() => {
         const { length, width, height, unit } = model.dimensions;
         
+        console.log('🚀 ARView.js: Начинаем расчёт ar-scale, model.dimensions:', { length, width, height, unit });
+        
         let lengthM, widthM, heightM;
         
         if (unit === 'mm') {
@@ -399,15 +401,20 @@ const ARView = () => {
           heightM = height / 100;
         }
         
+        console.log('📏 После конвертации в метры:', { lengthM, widthM, heightM });
+        
         // 🔥 КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: умножаем на 2, так как модель в 2 раза меньше!
         const AR_SCALE_MULTIPLIER = 2.0;
         lengthM *= AR_SCALE_MULTIPLIER;
         widthM *= AR_SCALE_MULTIPLIER;
         heightM *= AR_SCALE_MULTIPLIER;
         
+        console.log('🔥 После умножения на', AR_SCALE_MULTIPLIER + ':', { lengthM, widthM, heightM });
+        
         // Scene Viewer принимает "length width height" в метрах
         const scaleString = `${lengthM.toFixed(3)} ${widthM.toFixed(3)} ${heightM.toFixed(3)}`;
         
+        console.log('✅ ФИНАЛЬНЫЙ ar-scale:', scaleString);
         console.log('📏 AR Scale (Scene Viewer):', {
           input: `${length} × ${width} × ${height} ${unit}`,
           metersConverted: `${(lengthM/AR_SCALE_MULTIPLIER).toFixed(3)} × ${(widthM/AR_SCALE_MULTIPLIER).toFixed(3)} × ${(heightM/AR_SCALE_MULTIPLIER).toFixed(3)} m`,
@@ -418,7 +425,10 @@ const ARView = () => {
         
         return scaleString;
       })()
-    : 'auto';
+    : (() => {
+        console.log('⚠️ ARView.js: Нет model.dimensions, используем ar-scale="auto"');
+        return 'auto';
+      })()
   
   // Форматируем размеры для отображения
   const getDimensionsText = () => {
