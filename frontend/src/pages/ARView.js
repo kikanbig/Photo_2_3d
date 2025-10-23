@@ -80,49 +80,86 @@ const ARView = () => {
         setModelLoading(false);
       }, 5000); // 5 секунд максимум
       
-      const handleLoad = () => {
-        console.log('✅ Model loaded successfully - hiding overlay');
-        console.log('📐 Model viewer dimensions:', {
-          width: modelViewer.clientWidth,
-          height: modelViewer.clientHeight,
-          offsetWidth: modelViewer.offsetWidth,
-          offsetHeight: modelViewer.offsetHeight,
-          scrollWidth: modelViewer.scrollWidth,
-          scrollHeight: modelViewer.scrollHeight,
-          parentWidth: modelViewer.parentElement?.clientWidth,
-          parentHeight: modelViewer.parentElement?.clientHeight
-        });
-        console.log('🎥 Camera orbit:', modelViewer.getCameraOrbit());
-        console.log('🎯 Camera target:', modelViewer.getCameraTarget());
-        console.log('🔍 Field of view:', modelViewer.fieldOfView);
-        console.log('📦 Model bounds:', modelViewer.getBoundingBoxCenter());
-        
-        clearTimeout(timeout);
-        // КРИТИЧЕСКИ ВАЖНО: скрываем overlay сразу!
-        setModelLoading(false);
-        
-        // Принудительно сбрасываем камеру и рендерим
-        setTimeout(() => {
-          if (modelViewer) {
-            console.log('🔄 Resetting camera and forcing render...');
+          const handleLoad = () => {
+            console.log('✅ Model loaded successfully - hiding overlay');
+            console.log('📐 Model viewer dimensions:', {
+              width: modelViewer.clientWidth,
+              height: modelViewer.clientHeight,
+              offsetWidth: modelViewer.offsetWidth,
+              offsetHeight: modelViewer.offsetHeight,
+              scrollWidth: modelViewer.scrollWidth,
+              scrollHeight: modelViewer.scrollHeight,
+              parentWidth: modelViewer.parentElement?.clientWidth,
+              parentHeight: modelViewer.parentElement?.clientHeight
+            });
+            console.log('🎥 Camera orbit:', modelViewer.getCameraOrbit());
+            console.log('🎯 Camera target:', modelViewer.getCameraTarget());
+            console.log('🔍 Field of view:', modelViewer.fieldOfView);
+            console.log('📦 Model bounds:', modelViewer.getBoundingBoxCenter());
             
-            // Сбрасываем камеру к модели
-            modelViewer.resetTurntableRotation();
-            modelViewer.jumpCameraToGoal();
-            
-            // Принудительно вызываем рендер
-            if (modelViewer.updateFraming) {
-              modelViewer.updateFraming();
+            // 🧪 ОТЛАДКА: получаем реальные размеры GLB модели
+            try {
+              const bbox = modelViewer.getBoundingBoxCenter();
+              const dimensions = modelViewer.getDimensions();
+              
+              console.log('📦 Real GLB model dimensions:', {
+                boundingBox: bbox,
+                dimensions: dimensions,
+                expected: model.dimensions,
+                currentScale: modelViewer.scale
+              });
+              
+              // Проверяем, насколько модель отличается от ожидаемого размера
+              if (model.dimensions && dimensions) {
+                const expectedMaxM = Math.max(
+                  model.dimensions.length / 100,
+                  model.dimensions.width / 100,
+                  model.dimensions.height / 100
+                );
+                
+                const actualMaxM = Math.max(dimensions.x, dimensions.y, dimensions.z);
+                
+                const sizeDifference = actualMaxM / expectedMaxM;
+                
+                console.log('🔍 Size analysis:', {
+                  expectedMax: expectedMaxM.toFixed(3) + 'm',
+                  actualMax: actualMaxM.toFixed(3) + 'm',
+                  ratio: sizeDifference.toFixed(3),
+                  verdict: sizeDifference < 0.9 ? '⚠️ Модель меньше ожидаемого!' : 
+                           sizeDifference > 1.1 ? '⚠️ Модель больше ожидаемого!' : 
+                           '✅ Размер соответствует'
+                });
+              }
+            } catch (e) {
+              console.log('⚠️ Не удалось получить размеры модели:', e);
             }
             
-            // Начинаем авто-вращение
-            modelViewer.play();
+            clearTimeout(timeout);
+            // КРИТИЧЕСКИ ВАЖНО: скрываем overlay сразу!
+            setModelLoading(false);
             
-            console.log('✨ Camera reset complete');
-            console.log('🎥 New camera orbit:', modelViewer.getCameraOrbit());
-          }
-        }, 100);
-      };
+            // Принудительно сбрасываем камеру и рендерим
+            setTimeout(() => {
+              if (modelViewer) {
+                console.log('🔄 Resetting camera and forcing render...');
+                
+                // Сбрасываем камеру к модели
+                modelViewer.resetTurntableRotation();
+                modelViewer.jumpCameraToGoal();
+                
+                // Принудительно вызываем рендер
+                if (modelViewer.updateFraming) {
+                  modelViewer.updateFraming();
+                }
+                
+                // Начинаем авто-вращение
+                modelViewer.play();
+                
+                console.log('✨ Camera reset complete');
+                console.log('🎥 New camera orbit:', modelViewer.getCameraOrbit());
+              }
+            }, 100);
+          };
       
       const handleError = (event) => {
         console.error('❌ Model failed to load:', event);
@@ -336,42 +373,95 @@ const ARView = () => {
     );
   }
 
-  // Настройки для AR - начальный масштаб (реальный размер)
-  // ar-scale должен быть в метрах: "длина ширина высота"
-  // Согласно документации glTF: 1 unit = 1 метр
+  // 🎯 ПРАВИЛЬНЫЙ расчёт масштаба для AR
+  // Проблема: ar-scale работает по-разному в Scene Viewer и WebXR
+  // Решение: используем атрибут scale для точного контроля размера
+  
+  const calculateModelScale = () => {
+    if (!model?.dimensions) {
+      console.log('⚠️ Нет dimensions, используем scale = 1');
+      return '1 1 1';
+    }
+    
+    const { length, width, height, unit } = model.dimensions;
+    
+    // Конвертируем в метры в зависимости от единицы измерения
+    let lengthM, widthM, heightM;
+    
+    if (unit === 'mm') {
+      // Миллиметры → метры: делим на 1000
+      lengthM = length / 1000;
+      widthM = width / 1000;
+      heightM = height / 1000;
+    } else if (unit === 'cm') {
+      // Сантиметры → метры: делим на 100
+      lengthM = length / 100;
+      widthM = width / 100;
+      heightM = height / 100;
+    } else if (unit === 'm') {
+      // Уже в метрах
+      lengthM = length;
+      widthM = width;
+      heightM = height;
+    } else {
+      // По умолчанию считаем см
+      lengthM = length / 100;
+      widthM = width / 100;
+      heightM = height / 100;
+    }
+    
+    // Берём максимальный размер как reference
+    const maxDimension = Math.max(lengthM, widthM, heightM);
+    
+    // 🔥 ЭКСПЕРИМЕНТАЛЬНЫЙ множитель - если модель в 2 раза меньше, ставим 2.0
+    const scaleFactor = 2.0; // Попробуем удвоить размер
+    
+    const finalScale = maxDimension * scaleFactor;
+    
+    console.log('🎯 Model scale calculation:', {
+      input: `${length} × ${width} × ${height} ${unit}`,
+      metersConverted: `${lengthM.toFixed(3)} × ${widthM.toFixed(3)} × ${heightM.toFixed(3)} m`,
+      maxDimension: maxDimension.toFixed(3),
+      scaleFactor,
+      finalScale: finalScale.toFixed(3),
+      scaleString: `${finalScale.toFixed(3)} ${finalScale.toFixed(3)} ${finalScale.toFixed(3)}`
+    });
+    
+    // Возвращаем единый масштаб для всех осей
+    return `${finalScale.toFixed(3)} ${finalScale.toFixed(3)} ${finalScale.toFixed(3)}`;
+  };
+  
+  // ar-scale для Scene Viewer (Android)
   const arScaleAttr = model.dimensions 
     ? (() => {
         const { length, width, height, unit } = model.dimensions;
         
-        // Конвертируем в метры в зависимости от единицы измерения
         let lengthM, widthM, heightM;
         
         if (unit === 'mm') {
-          // Миллиметры → метры: делим на 1000
           lengthM = length / 1000;
           widthM = width / 1000;
           heightM = height / 1000;
         } else if (unit === 'cm') {
-          // Сантиметры → метры: делим на 100
           lengthM = length / 100;
           widthM = width / 100;
           heightM = height / 100;
         } else if (unit === 'm') {
-          // Уже в метрах
           lengthM = length;
           widthM = width;
           heightM = height;
         } else {
-          // По умолчанию считаем см
           lengthM = length / 100;
           widthM = width / 100;
           heightM = height / 100;
         }
         
-        const scaleString = `${lengthM} ${widthM} ${heightM}`;
-        console.log('📏 AR Scale:', {
+        // Scene Viewer принимает "length width height" в метрах
+        const scaleString = `${lengthM.toFixed(3)} ${widthM.toFixed(3)} ${heightM.toFixed(3)}`;
+        
+        console.log('📏 AR Scale (Scene Viewer):', {
           input: `${length} × ${width} × ${height} ${unit}`,
-          meters: `${lengthM} × ${widthM} × ${heightM} m`,
+          meters: `${lengthM.toFixed(3)} × ${widthM.toFixed(3)} × ${heightM.toFixed(3)} m`,
           arScale: scaleString
         });
         
@@ -457,6 +547,7 @@ const ARView = () => {
           shadow-intensity="1"
           environment-image="neutral"
           exposure="2"
+          scale={calculateModelScale()}
           ar-scale={arScaleAttr}
           ar-placement="floor"
           ios-src={model.modelUrl}
