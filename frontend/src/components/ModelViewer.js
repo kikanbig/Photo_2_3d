@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useLayoutEffect, useState } from 'react';
+import React, { Suspense, useEffect, useLayoutEffect, useState, useCallback, useRef } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Environment, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
@@ -7,9 +7,10 @@ import './ModelViewer.css';
 // Компонент для загрузки 3D модели с авто-фитом
 function Model({ url, onComputed }) {
   const { scene } = useGLTF(url);
+  const computedRef = useRef(false);
 
   useLayoutEffect(() => {
-    if (!scene) return;
+    if (!scene || computedRef.current) return;
 
     // Вычисляем bounding box модели
     const box = new THREE.Box3().setFromObject(scene);
@@ -32,8 +33,9 @@ function Model({ url, onComputed }) {
     const sphere = new THREE.Sphere();
     fittedBox.getBoundingSphere(sphere);
 
-    // Передаём радиус для настройки камеры/контролов
-    onComputed?.({ radius: sphere.radius });
+    // Передаём радиус для настройки камеры/контролов (только один раз)
+    onComputed?.(sphere.radius);
+    computedRef.current = true;
   }, [scene, onComputed]);
 
   return <primitive object={scene} />;
@@ -78,6 +80,10 @@ function FitCamera({ radius }) {
 const ModelViewer = ({ modelUrl }) => {
   const [radius, setRadius] = useState(null);
 
+  const handleComputed = useCallback((r) => {
+    setRadius(r);
+  }, []);
+
   return (
     <div className="model-viewer">
       <div className="viewer-container">
@@ -92,7 +98,7 @@ const ModelViewer = ({ modelUrl }) => {
         >
           <Suspense fallback={null}>
             <FitCamera radius={radius} />
-            <Model url={modelUrl} onComputed={({ radius: r }) => setRadius(r)} />
+            <Model url={modelUrl} onComputed={handleComputed} />
             <OrbitControls
               enablePan={true}
               enableZoom={true}
