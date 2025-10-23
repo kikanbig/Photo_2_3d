@@ -1,12 +1,61 @@
-import React, { Suspense } from 'react';
-import { Canvas } from '@react-three/fiber';
+import React, { Suspense, useEffect, useLayoutEffect, useState } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Environment, useGLTF } from '@react-three/drei';
+import * as THREE from 'three';
 import './ModelViewer.css';
 
-// Компонент для загрузки 3D модели
-function Model({ url }) {
+// Компонент для загрузки 3D модели с авто-фитом
+function Model({ url, onComputed }) {
   const { scene } = useGLTF(url);
-  return <primitive object={scene} scale={3} />; // Увеличен масштаб в 3 раза
+
+  useLayoutEffect(() => {
+    if (!scene) return;
+
+    // Вычисляем bounding box модели
+    const box = new THREE.Box3().setFromObject(scene);
+    const size = new THREE.Vector3();
+    const center = new THREE.Vector3();
+    box.getSize(size);
+    box.getCenter(center);
+
+    // Центрируем модель в (0,0,0)
+    scene.position.sub(center);
+
+    // Нормализуем масштаб: целевой размер 2.0 по максимальному измерению
+    const maxDimension = Math.max(size.x, size.y, size.z) || 1;
+    const targetSize = 2.0;
+    const uniformScale = targetSize / maxDimension;
+    scene.scale.setScalar(uniformScale);
+
+    // Пересчитываем bounding sphere после масштабирования
+    const fittedBox = new THREE.Box3().setFromObject(scene);
+    const sphere = new THREE.Sphere();
+    fittedBox.getBoundingSphere(sphere);
+
+    // Передаём радиус для настройки камеры/контролов
+    onComputed?.({ radius: sphere.radius });
+  }, [scene, onComputed]);
+
+  return <primitive object={scene} />;
+}
+
+// Компонент для автоматической настройки камеры
+function FitCamera({ radius }) {
+  const { camera } = useThree();
+
+  useEffect(() => {
+    if (!radius) return;
+    
+    const fovRadians = (camera.fov * Math.PI) / 180;
+    const distance = (radius / Math.sin(fovRadians / 2)) * 1.2;
+
+    camera.near = Math.max(distance / 100, 0.01);
+    camera.far = Math.max(distance * 100, camera.near + 1);
+    camera.position.set(0, 0, distance);
+    camera.updateProjectionMatrix();
+  }, [radius, camera]);
+
+  return null;
 }
 
 // Компонент загрузки (пока не используется)
@@ -27,6 +76,8 @@ function Model({ url }) {
 // }
 
 const ModelViewer = ({ modelUrl }) => {
+  const [radius, setRadius] = useState(null);
+
   return (
     <div className="model-viewer">
       <div className="viewer-container">
@@ -40,13 +91,15 @@ const ModelViewer = ({ modelUrl }) => {
           gl={{ preserveDrawingBuffer: true }}
         >
           <Suspense fallback={null}>
-            <Model url={modelUrl} />
+            <FitCamera radius={radius} />
+            <Model url={modelUrl} onComputed={({ radius: r }) => setRadius(r)} />
             <OrbitControls
               enablePan={true}
               enableZoom={true}
               enableRotate={true}
-              minDistance={1}
-              maxDistance={8}
+              target={[0, 0, 0]}
+              minDistance={radius ? Math.max(0.05, radius * 0.2) : 0.1}
+              maxDistance={radius ? radius * 10 : 100}
             />
             <Environment preset="studio" />
             <ambientLight intensity={0.5} />
