@@ -20,63 +20,6 @@ const ARView = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modelId]);
 
-  // 🎯 ПРАВИЛЬНЫЙ расчёт ar-scale для Scene Viewer (Android)
-  // КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: умножаем размеры на 2, так как GLB модель изначально в 2 раза меньше!
-  const arScaleAttr = model?.dimensions 
-    ? (() => {
-        const { length, width, height, unit } = model.dimensions;
-        
-        console.log('🚀 ARView.js: Начинаем расчёт ar-scale, model.dimensions:', { length, width, height, unit });
-        
-        let lengthM, widthM, heightM;
-        
-        if (unit === 'mm') {
-          lengthM = length / 1000;
-          widthM = width / 1000;
-          heightM = height / 1000;
-        } else if (unit === 'cm') {
-          lengthM = length / 100;
-          widthM = width / 100;
-          heightM = height / 100;
-        } else if (unit === 'm') {
-          lengthM = length;
-          widthM = width;
-          heightM = height;
-        } else {
-          lengthM = length / 100;
-          widthM = width / 100;
-          heightM = height / 100;
-        }
-        
-        console.log('📏 После конвертации в метры:', { lengthM, widthM, heightM });
-        
-        // 🔥 КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: умножаем на 2, так как модель в 2 раза меньше!
-        const AR_SCALE_MULTIPLIER = 2.0;
-        lengthM *= AR_SCALE_MULTIPLIER;
-        widthM *= AR_SCALE_MULTIPLIER;
-        heightM *= AR_SCALE_MULTIPLIER;
-        
-        console.log('🔥 После умножения на', AR_SCALE_MULTIPLIER + ':', { lengthM, widthM, heightM });
-        
-        // Scene Viewer принимает "length width height" в метрах
-        const scaleString = `${lengthM.toFixed(3)} ${widthM.toFixed(3)} ${heightM.toFixed(3)}`;
-        
-        console.log('✅ ФИНАЛЬНЫЙ ar-scale:', scaleString);
-        console.log('📏 AR Scale (Scene Viewer):', {
-          input: `${length} × ${width} × ${height} ${unit}`,
-          metersConverted: `${(lengthM/AR_SCALE_MULTIPLIER).toFixed(3)} × ${(widthM/AR_SCALE_MULTIPLIER).toFixed(3)} × ${(heightM/AR_SCALE_MULTIPLIER).toFixed(3)} m`,
-          multiplier: AR_SCALE_MULTIPLIER,
-          finalScale: `${lengthM.toFixed(3)} × ${widthM.toFixed(3)} × ${heightM.toFixed(3)} m`,
-          arScale: scaleString
-        });
-        
-        return scaleString;
-      })()
-    : (() => {
-        console.log('⚠️ ARView.js: Нет model.dimensions, используем ar-scale="auto"');
-        return 'auto';
-      })();
-
   useEffect(() => {
     const modelViewer = modelViewerRef.current;
     if (modelViewer && model) {
@@ -90,7 +33,11 @@ const ARView = () => {
       
       modelViewer.setAttribute('alt', title);
       
-      // Создаём правильный Intent URL для Scene Viewer
+      // ✅ GLB УЖЕ МАСШТАБИРОВАН НА БЭКЕНДЕ!
+      // Никаких ar-scale параметров не нужно
+      // Модель загружается в правильном размере сразу!
+      
+      // Создаём Scene Viewer URL без параметров масштаба
       const sceneViewerUrl = new URL('https://arvr.google.com/scene-viewer/1.1');
       sceneViewerUrl.searchParams.set('file', model.modelUrl);
       sceneViewerUrl.searchParams.set('mode', 'ar_preferred');
@@ -98,14 +45,6 @@ const ARView = () => {
       sceneViewerUrl.searchParams.set('link', link);
       sceneViewerUrl.searchParams.set('resizable', 'true');
       sceneViewerUrl.searchParams.set('enable_vertical_placement', 'true');
-      
-      // 🔥 КЛЮЧЕВОЙ ПАРАМЕТР: передаём масштаб через Scene Viewer Intent!
-      // Scene Viewer НЕ читает ar-scale из HTML, используем параметр scale в URL
-      if (arScaleAttr && arScaleAttr !== 'auto') {
-        console.log('🎯 Добавляем параметр scale в Scene Viewer URL:', arScaleAttr);
-        // Формат: "length width height" - Scene Viewer ожидает размеры в метрах
-        sceneViewerUrl.searchParams.set('scale', arScaleAttr);
-      }
       
       console.log('📱 Scene Viewer URL:', sceneViewerUrl.toString());
       
