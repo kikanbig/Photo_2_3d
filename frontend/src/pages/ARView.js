@@ -373,65 +373,8 @@ const ARView = () => {
     );
   }
 
-  // 🎯 ПРАВИЛЬНЫЙ расчёт масштаба для AR
-  // Проблема: ar-scale работает по-разному в Scene Viewer и WebXR
-  // Решение: используем атрибут scale для точного контроля размера
-  
-  const calculateModelScale = () => {
-    if (!model?.dimensions) {
-      console.log('⚠️ Нет dimensions, используем scale = 1');
-      return '1 1 1';
-    }
-    
-    const { length, width, height, unit } = model.dimensions;
-    
-    // Конвертируем в метры в зависимости от единицы измерения
-    let lengthM, widthM, heightM;
-    
-    if (unit === 'mm') {
-      // Миллиметры → метры: делим на 1000
-      lengthM = length / 1000;
-      widthM = width / 1000;
-      heightM = height / 1000;
-    } else if (unit === 'cm') {
-      // Сантиметры → метры: делим на 100
-      lengthM = length / 100;
-      widthM = width / 100;
-      heightM = height / 100;
-    } else if (unit === 'm') {
-      // Уже в метрах
-      lengthM = length;
-      widthM = width;
-      heightM = height;
-    } else {
-      // По умолчанию считаем см
-      lengthM = length / 100;
-      widthM = width / 100;
-      heightM = height / 100;
-    }
-    
-    // Берём максимальный размер как reference
-    const maxDimension = Math.max(lengthM, widthM, heightM);
-    
-    // 🔥 ЭКСПЕРИМЕНТАЛЬНЫЙ множитель - если модель в 2 раза меньше, ставим 2.0
-    const scaleFactor = 2.0; // Попробуем удвоить размер
-    
-    const finalScale = maxDimension * scaleFactor;
-    
-    console.log('🎯 Model scale calculation:', {
-      input: `${length} × ${width} × ${height} ${unit}`,
-      metersConverted: `${lengthM.toFixed(3)} × ${widthM.toFixed(3)} × ${heightM.toFixed(3)} m`,
-      maxDimension: maxDimension.toFixed(3),
-      scaleFactor,
-      finalScale: finalScale.toFixed(3),
-      scaleString: `${finalScale.toFixed(3)} ${finalScale.toFixed(3)} ${finalScale.toFixed(3)}`
-    });
-    
-    // Возвращаем единый масштаб для всех осей
-    return `${finalScale.toFixed(3)} ${finalScale.toFixed(3)} ${finalScale.toFixed(3)}`;
-  };
-  
-  // ar-scale для Scene Viewer (Android)
+  // 🎯 ПРАВИЛЬНЫЙ расчёт ar-scale для Scene Viewer (Android)
+  // КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: умножаем размеры на 2, так как GLB модель изначально в 2 раза меньше!
   const arScaleAttr = model.dimensions 
     ? (() => {
         const { length, width, height, unit } = model.dimensions;
@@ -456,12 +399,20 @@ const ARView = () => {
           heightM = height / 100;
         }
         
+        // 🔥 КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: умножаем на 2, так как модель в 2 раза меньше!
+        const AR_SCALE_MULTIPLIER = 2.0;
+        lengthM *= AR_SCALE_MULTIPLIER;
+        widthM *= AR_SCALE_MULTIPLIER;
+        heightM *= AR_SCALE_MULTIPLIER;
+        
         // Scene Viewer принимает "length width height" в метрах
         const scaleString = `${lengthM.toFixed(3)} ${widthM.toFixed(3)} ${heightM.toFixed(3)}`;
         
         console.log('📏 AR Scale (Scene Viewer):', {
           input: `${length} × ${width} × ${height} ${unit}`,
-          meters: `${lengthM.toFixed(3)} × ${widthM.toFixed(3)} × ${heightM.toFixed(3)} m`,
+          metersConverted: `${(lengthM/AR_SCALE_MULTIPLIER).toFixed(3)} × ${(widthM/AR_SCALE_MULTIPLIER).toFixed(3)} × ${(heightM/AR_SCALE_MULTIPLIER).toFixed(3)} m`,
+          multiplier: AR_SCALE_MULTIPLIER,
+          finalScale: `${lengthM.toFixed(3)} × ${widthM.toFixed(3)} × ${heightM.toFixed(3)} m`,
           arScale: scaleString
         });
         
@@ -547,7 +498,6 @@ const ARView = () => {
           shadow-intensity="1"
           environment-image="neutral"
           exposure="2"
-          scale={calculateModelScale()}
           ar-scale={arScaleAttr}
           ar-placement="floor"
           ios-src={model.modelUrl}
