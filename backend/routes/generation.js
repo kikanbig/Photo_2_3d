@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs-extra');
 const { v4: uuidv4 } = require('uuid');
 const GenAPIService = require('../services/genapi');
+const { scaleGLB } = require('../services/glb-scaler');
 
 const router = express.Router();
 const genapiService = new GenAPIService();
@@ -258,16 +259,21 @@ async function generate3DModelAsync(taskId, imagePath) {
       const glbBuffer = await fs.readFile(tempPath);
       console.log(`📦 GLB прочитан: ${(glbBuffer.length / 1024 / 1024).toFixed(2)} MB`);
 
-      // Сохраняем в БД
+      // 🔄 МАСШТАБИРУЕМ GLB В 2 РАЗА (потому что модель генерируется в половинном размере)
+      console.log('🔄 Масштабируем GLB файл в 2 раза...');
+      const scaledGLBBuffer = scaleGLB(glbBuffer, 2.0);
+      console.log(`✅ GLB масштабирован: ${(scaledGLBBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+
+      // Сохраняем масштабированный GLB в БД
       const Model3D = require('../models/Model3D');
       await Model3D.create({
         name: `Model ${taskId}`,
         modelUrl: `/api/models/${taskId}/download`,
-        glbFile: glbBuffer,
+        glbFile: scaledGLBBuffer,  // Используем масштабированный буфер!
         taskId: taskId,
         status: 'active'
       });
-      console.log(`💾 GLB сохранён в БД для задачи: ${taskId}`);
+      console.log(`💾 Масштабированный GLB сохранён в БД для задачи: ${taskId}`);
 
       // Удаляем временный файл
       await fs.remove(tempPath);
@@ -337,15 +343,20 @@ async function generate3DModelAsync(taskId, imagePath) {
           const glbBuffer = await fs.readFile(tempPath);
           console.log(`📦 GLB прочитан: ${(glbBuffer.length / 1024 / 1024).toFixed(2)} MB`);
           
+          // 🔄 МАСШТАБИРУЕМ GLB В 2 РАЗА (потому что модель генерируется в половинном размере)
+          console.log('🔄 Масштабируем GLB файл в 2 раза...');
+          const scaledGLBBuffer = scaleGLB(glbBuffer, 2.0);
+          console.log(`✅ GLB масштабирован: ${(scaledGLBBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+
           const Model3D = require('../models/Model3D');
           await Model3D.create({
             name: `Model ${taskId}`,
             modelUrl: `/api/models/${taskId}/download`,
-            glbFile: glbBuffer,
+            glbFile: scaledGLBBuffer,  // Используем масштабированный буфер!
             taskId: taskId,
             status: 'active'
           });
-          console.log(`💾 GLB сохранён в БД для задачи: ${taskId}`);
+          console.log(`💾 Масштабированный GLB сохранён в БД для задачи: ${taskId}`);
           
           // Удаляем временный файл
           await fs.remove(tempPath);
@@ -448,16 +459,21 @@ async function pollTaskStatus(taskId, requestId) {
           // Читаем и сохраняем в БД
           const glbBuffer = await fs.readFile(tempPath);
           console.log(`📦 GLB прочитан: ${(glbBuffer.length / 1024 / 1024).toFixed(2)} MB`);
-          
+
+          // 🔄 МАСШТАБИРУЕМ GLB В 2 РАЗА (потому что модель генерируется в половинном размере)
+          console.log('🔄 Масштабируем GLB файл в 2 раза...');
+          const scaledGLBBuffer = scaleGLB(glbBuffer, 2.0);
+          console.log(`✅ GLB масштабирован: ${(scaledGLBBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+
           const Model3D = require('../models/Model3D');
           await Model3D.create({
             name: `Model ${taskId}`,
             modelUrl: `/api/models/${taskId}/download`,
-            glbFile: glbBuffer,
+            glbFile: scaledGLBBuffer,  // Используем масштабированный буфер!
             taskId: taskId,
             status: 'active'
           });
-          console.log(`💾 GLB сохранён в БД для задачи: ${taskId}`);
+          console.log(`💾 Масштабированный GLB сохранён в БД для задачи: ${taskId}`);
           
           // Удаляем временный файл
           await fs.remove(tempPath);
