@@ -454,7 +454,7 @@ const ARView = () => {
           ar
           ar-modes="scene-viewer webxr quick-look"
           camera-controls
-          touch-action="pan-y"
+          touch-action="auto"
           auto-rotate
           auto-rotate-delay="0"
           rotation-per-second="30deg"
