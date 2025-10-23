@@ -22,9 +22,9 @@ function Model({ url, onComputed }) {
     // Центрируем модель в (0,0,0)
     scene.position.sub(center);
 
-    // Нормализуем масштаб: целевой размер 2.0 по максимальному измерению
+    // Нормализуем масштаб: целевой размер 1.5 по максимальному измерению (влезает в окно)
     const maxDimension = Math.max(size.x, size.y, size.z) || 1;
-    const targetSize = 2.0;
+    const targetSize = 1.5;
     const uniformScale = targetSize / maxDimension;
     scene.scale.setScalar(uniformScale);
 
@@ -49,7 +49,7 @@ function FitCamera({ radius }) {
     if (!radius) return;
     
     const fovRadians = (camera.fov * Math.PI) / 180;
-    const distance = (radius / Math.sin(fovRadians / 2)) * 1.2;
+    const distance = (radius / Math.sin(fovRadians / 2)) * 1.8; // увеличен отступ
 
     camera.near = Math.max(distance / 100, 0.01);
     camera.far = Math.max(distance * 100, camera.near + 1);
@@ -88,7 +88,7 @@ const ModelViewer = ({ modelUrl }) => {
     <div className="model-viewer">
       <div className="viewer-container">
         <Canvas
-          camera={{ position: [0, 0, 3], fov: 60 }}
+          camera={{ position: [0, 0, 5], fov: 50 }}
           style={{ 
             width: '100%', 
             height: '100%', 
