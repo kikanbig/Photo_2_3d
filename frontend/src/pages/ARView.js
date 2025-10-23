@@ -89,7 +89,6 @@ const ARView = () => {
       const link = window.location.href;
       
       modelViewer.setAttribute('alt', title);
-      modelViewer.setAttribute('ar-scale', arScaleAttr);
       
       // Создаём правильный Intent URL для Scene Viewer
       const sceneViewerUrl = new URL('https://arvr.google.com/scene-viewer/1.1');
@@ -97,8 +96,16 @@ const ARView = () => {
       sceneViewerUrl.searchParams.set('mode', 'ar_preferred');
       sceneViewerUrl.searchParams.set('title', title);
       sceneViewerUrl.searchParams.set('link', link);
-      sceneViewerUrl.searchParams.set('resizable', 'true'); // !!!КЛЮЧЕВОЙ ПАРАМЕТР!!!
+      sceneViewerUrl.searchParams.set('resizable', 'true');
       sceneViewerUrl.searchParams.set('enable_vertical_placement', 'true');
+      
+      // 🔥 КЛЮЧЕВОЙ ПАРАМЕТР: передаём масштаб через Scene Viewer Intent!
+      // Scene Viewer НЕ читает ar-scale из HTML, используем параметр scale в URL
+      if (arScaleAttr && arScaleAttr !== 'auto') {
+        console.log('🎯 Добавляем параметр scale в Scene Viewer URL:', arScaleAttr);
+        // Формат: "length width height" - Scene Viewer ожидает размеры в метрах
+        sceneViewerUrl.searchParams.set('scale', arScaleAttr);
+      }
       
       console.log('📱 Scene Viewer URL:', sceneViewerUrl.toString());
       
@@ -515,7 +522,6 @@ const ARView = () => {
           shadow-intensity="1"
           environment-image="neutral"
           exposure="2"
-          ar-scale={arScaleAttr}
           ar-placement="floor"
           ios-src={model.modelUrl}
           loading="eager"
