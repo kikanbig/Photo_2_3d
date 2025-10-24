@@ -167,8 +167,35 @@ const Home = () => {
               selectedImage={selectedImage}
               isGenerating={isGenerating}
             />
+          </div>
 
-            {/* Блок действий под размерами */}
+          <div className="result-section-wrapper">
+            <div className="result-section">
+              {isGenerating && (
+                <div className="loading-container">
+                  <LoadingSpinner />
+                  <p className="loading-text">{taskStatus?.message || 'Генерация 3D модели...'}</p>
+                </div>
+              )}
+
+              {taskStatus?.status === 'completed' && taskStatus?.result?.url && (
+                <ModelViewer modelUrl={taskStatus.result.url} />
+              )}
+
+              {!isGenerating && !taskStatus && !error && (
+                <div className="placeholder-container">
+                  <p className="placeholder-text">👈 Загрузите фото для генерации 3D модели</p>
+                </div>
+              )}
+
+              {error && (
+                <div className="error-container">
+                  <p className="error-text">{error}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Блок действий под моделью */}
             {taskStatus && !isGenerating && (
               <div className="actions-panel">
                 <StatusCard
@@ -185,31 +212,6 @@ const Home = () => {
                     Сохранить модель
                   </button>
                 )}
-              </div>
-            )}
-          </div>
-
-          <div className="result-section">
-            {isGenerating && (
-              <div className="loading-container">
-                <LoadingSpinner />
-                <p className="loading-text">{taskStatus?.message || 'Генерация 3D модели...'}</p>
-              </div>
-            )}
-
-            {taskStatus?.status === 'completed' && taskStatus?.result?.url && (
-              <ModelViewer modelUrl={taskStatus.result.url} />
-            )}
-
-            {!isGenerating && !taskStatus && !error && (
-              <div className="placeholder-container">
-                <p className="placeholder-text">👈 Загрузите фото для генерации 3D модели</p>
-              </div>
-            )}
-
-            {error && (
-              <div className="error-container">
-                <p className="error-text">{error}</p>
               </div>
             )}
           </div>

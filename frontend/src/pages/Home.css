@@ -38,14 +38,22 @@
   flex-wrap: wrap;
 }
 
-/* Actions Panel - отображается под размерами */
+/* Actions Panel - отображается под моделью */
 .actions-panel {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  border-radius: 24px;
+  padding: 1.5rem;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-xl);
+  transition: all 0.3s ease;
+}
+
+.actions-panel:hover {
+  border-color: rgba(87, 68, 226, 0.3);
+  box-shadow: 0 0 40px rgba(87, 68, 226, 0.2);
 }
 
 /* Upload Section */
@@ -66,7 +74,15 @@
   box-shadow: 0 0 40px rgba(87, 68, 226, 0.2);
 }
 
-/* Result Section */
+/* Result Section Wrapper - содержит модель и actions-panel */
+.result-section-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  height: 100%;
+}
+
+/* Result Section - уменьшена высота */
 .result-section {
   background: var(--bg-secondary);
   border-radius: 24px;
@@ -75,7 +91,9 @@
   box-shadow: var(--shadow-xl);
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
+  min-height: 400px;
+  max-height: 500px;
   overflow: hidden;
   transition: all 0.3s ease;
 }

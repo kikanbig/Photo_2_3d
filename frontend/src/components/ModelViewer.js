@@ -22,9 +22,9 @@ function Model({ url, onComputed }) {
     // Центрируем модель в (0,0,0)
     scene.position.sub(center);
 
-    // Нормализуем масштаб: целевой размер 0.7 по максимальному измерению (влезает в окно)
+    // Нормализуем масштаб: целевой размер 0.5 по максимальному измерению (влезает в окно)
     const maxDimension = Math.max(size.x, size.y, size.z) || 1;
-    const targetSize = 0.7;
+    const targetSize = 0.5;
     const uniformScale = targetSize / maxDimension;
     scene.scale.setScalar(uniformScale);
 
@@ -49,7 +49,7 @@ function FitCamera({ radius }) {
     if (!radius) return;
     
     const fovRadians = (camera.fov * Math.PI) / 180;
-    const distance = (radius / Math.sin(fovRadians / 2)) * 2.5; // увеличен отступ для меньшей модели
+    const distance = (radius / Math.sin(fovRadians / 2)) * 3.0; // увеличен отступ для меньшей модели
 
     camera.near = Math.max(distance / 100, 0.01);
     camera.far = Math.max(distance * 100, camera.near + 1);
