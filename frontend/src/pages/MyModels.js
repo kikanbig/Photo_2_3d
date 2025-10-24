@@ -94,43 +94,54 @@ const MyModels = () => {
           </button>
         </div>
       ) : (
-        <div className="models-grid">
+        <div className="models-list">
           {models.map((model) => (
-            <div key={model.id} className="model-card">
-              <div className="model-preview">
-                {/* Всегда показываем иконку 3D модели как превью */}
-                <div className="model-preview-icon">
-                  <Package size={64} />
-                  <span className="model-format">GLB</span>
-                </div>
-                <div className="model-overlay">
-                  <button
-                    className="overlay-btn"
-                    onClick={() => handleView(model.id)}
-                    title="Просмотр"
-                  >
-                    <Eye size={20} />
-                  </button>
-                  <button
-                    className="overlay-btn delete"
-                    onClick={() => handleDelete(model.id)}
-                    title="Удалить"
-                  >
-                    <Trash2 size={20} />
-                  </button>
-                </div>
+            <div key={model.id} className="model-row" onClick={() => handleView(model.id)}>
+              <div className="model-thumbnail">
+                {model.imageUrl ? (
+                  <img src={model.imageUrl} alt={model.name} />
+                ) : (
+                  <div className="thumbnail-placeholder">
+                    <Package size={32} />
+                  </div>
+                )}
               </div>
-              <div className="model-info">
+              
+              <div className="model-details">
                 <h3 className="model-name">{model.name}</h3>
                 {model.dimensions && (
                   <p className="model-dimensions">
                     {model.dimensions.length} × {model.dimensions.width} × {model.dimensions.height} {model.dimensions.unit}
                   </p>
                 )}
-                <div className="model-meta">
-                  <Calendar size={14} />
-                  <span>{formatDate(model.createdAt)}</span>
-                </div>
+              </div>
+
+              <div className="model-date">
+                <Calendar size={16} />
+                <span>{formatDate(model.createdAt)}</span>
+              </div>
+
+              <div className="model-actions">
+                <button
+                  className="action-btn view-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleView(model.id);
+                  }}
+                  title="Просмотр"
+                >
+                  <Eye size={18} />
+                </button>
+                <button
+                  className="action-btn delete-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(model.id);
+                  }}
+                  title="Удалить"
+                >
+                  <Trash2 size={18} />
+                </button>
               </div>
             </div>
           ))}

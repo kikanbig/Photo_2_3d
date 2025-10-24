@@ -114,6 +114,14 @@
   font-weight: 600;
   transition: all 0.3s ease;
   font-family: inherit;
+  -moz-appearance: textfield; /* Firefox */
+}
+
+/* Убираем стрелочки в Chrome, Safari, Edge, Opera */
+.input-wrapper input::-webkit-outer-spin-button,
+.input-wrapper input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .input-wrapper input:focus {
