@@ -191,12 +191,6 @@ const ARView = () => {
         
         console.log('🎯 Is in AR mode:', isInArMode);
         setIsInAR(isInArMode);
-        
-        // Скрываем блок размеров в AR режиме на мобильных
-        const dimensionsCard = document.querySelector('.ar-dimensions-card');
-        if (dimensionsCard) {
-          dimensionsCard.style.display = isInArMode ? 'none' : 'block';
-        }
       };
       
       // Перехватываем AR клик для добавления параметров Scene Viewer
@@ -428,33 +422,6 @@ const ARView = () => {
           </div>
         )}
 
-        {/* Постоянная карточка с размерами - ВСЕГДА видна */}
-        {model.dimensions && (
-          <div className="ar-dimensions-card">
-            <div className="dimensions-header">
-              <span className="dimensions-icon">📏</span>
-              <span className="dimensions-title">Реальные размеры</span>
-            </div>
-            <div className="dimensions-values">
-              <div className="dimension-item">
-                <span className="dimension-label">Длина:</span>
-                <span className="dimension-value">{model.dimensions.length} {model.dimensions.unit}</span>
-              </div>
-              <div className="dimension-item">
-                <span className="dimension-label">Ширина:</span>
-                <span className="dimension-value">{model.dimensions.width} {model.dimensions.unit}</span>
-              </div>
-              <div className="dimension-item">
-                <span className="dimension-label">Высота:</span>
-                <span className="dimension-value">{model.dimensions.height} {model.dimensions.unit}</span>
-              </div>
-            </div>
-            <div className="dimensions-hint">
-              💡 Используйте жест «щипок» для масштабирования в AR
-            </div>
-          </div>
-        )}
-        
         <model-viewer
           ref={modelViewerRef}
           ar
@@ -479,7 +446,7 @@ const ARView = () => {
           alt={model.name || '3D Model'}
         >
           <button slot="ar-button" className="ar-button">
-            👁️ Посмотреть в AR
+            🏠 Примерить в комнате
           </button>
           
           <div className="ar-prompt" slot="ar-prompt">
@@ -566,20 +533,6 @@ const ARView = () => {
         </div>
       </div>
 
-      <div className="ar-instructions">
-        <h3>📱 Управление:</h3>
-        <ol>
-          <li><strong>Мобильные устройства:</strong> Нажмите кнопку "Посмотреть в AR" для просмотра в дополненной реальности</li>
-          <li><strong>Десктоп:</strong> Вращайте мышью, зумируйте колёсиком</li>
-          <li><strong>AR на телефоне:</strong> Наведите камеру на поверхность и разместите модель</li>
-        </ol>
-        
-        <div className="ar-compatibility">
-          <p>✅ iOS 12+ (Quick Look)</p>
-          <p>✅ Android 7.0+ (Scene Viewer)</p>
-          <p>💻 Desktop (Preview only)</p>
-        </div>
-      </div>
     </div>
   );
 };
