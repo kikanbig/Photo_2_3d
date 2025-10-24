@@ -191,6 +191,12 @@ const ARView = () => {
         
         console.log('🎯 Is in AR mode:', isInArMode);
         setIsInAR(isInArMode);
+        
+        // Скрываем блок размеров в AR режиме на мобильных
+        const dimensionsCard = document.querySelector('.ar-dimensions-card');
+        if (dimensionsCard) {
+          dimensionsCard.style.display = isInArMode ? 'none' : 'block';
+        }
       };
       
       // Перехватываем AR клик для добавления параметров Scene Viewer

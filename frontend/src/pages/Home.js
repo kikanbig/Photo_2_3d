@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Save } from 'lucide-react';
+import { Save, Play } from 'lucide-react';
 import { saveModel } from '../services/api';
 import ImageUpload from '../components/ImageUpload';
+import ModelSettings from '../components/ModelSettings';
 import ModelViewer from '../components/ModelViewer';
 import LoadingSpinner from '../components/LoadingSpinner';
 import StatusCard from '../components/StatusCard';
@@ -13,7 +14,7 @@ const Home = () => {
   const [taskStatus, setTaskStatus] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState(null);
-  const [dimensions, setDimensions] = useState(null);
+  const [modelSettings, setModelSettings] = useState({ name: '', dimensions: null });
 
   const handleImageSelect = (image) => {
     setSelectedImage(image);
@@ -22,17 +23,21 @@ const Home = () => {
     setError(null);
   };
 
-  const handleGenerate = async (imageFile, dims) => {
+  const handleGenerate = async () => {
+    if (!selectedImage || !selectedImage.file) {
+      setError('Выберите изображение');
+      return;
+    }
+
     setIsGenerating(true);
     setError(null);
-    setDimensions(dims);
 
     try {
       const formData = new FormData();
-      formData.append('image', imageFile);
+      formData.append('image', selectedImage.file);
       
-      if (dims) {
-        formData.append('dimensions', JSON.stringify(dims));
+      if (modelSettings.dimensions) {
+        formData.append('dimensions', JSON.stringify(modelSettings.dimensions));
       }
 
       const apiUrl = process.env.REACT_APP_BACKEND_URL || window.location.origin;
@@ -58,6 +63,10 @@ const Home = () => {
       setError(err.message);
       setIsGenerating(false);
     }
+  };
+
+  const handleSettingsChange = (settings) => {
+    setModelSettings(settings);
   };
 
   const pollTaskStatus = async (currentTaskId) => {
@@ -120,14 +129,16 @@ const Home = () => {
       try {
         // Модель уже сохранена в БД при генерации, просто обновляем метаданные
         const apiUrl = process.env.REACT_APP_BACKEND_URL || window.location.origin;
+        const modelName = modelSettings.name || selectedImage?.file?.name?.replace(/\.[^/.]+$/, "") || `Model ${Date.now()}`;
+        
         const response = await fetch(`${apiUrl}/api/models/update-metadata/${taskId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            name: selectedImage?.file?.name?.replace(/\.[^/.]+$/, "") || `Model ${Date.now()}`,
-            dimensions: dimensions,
+            name: modelName,
+            dimensions: modelSettings.dimensions,
             metadata: {
               originalFileName: selectedImage?.file?.name,
               fileSize: selectedImage?.file?.size,
@@ -160,15 +171,31 @@ const Home = () => {
     <main className="home-page">
       <div className="container">
         <div className="workspace">
+          {/* Левая колонка - Загрузка изображения */}
           <div className="upload-section">
             <ImageUpload
               onImageSelect={handleImageSelect}
-              onGenerate={handleGenerate}
               selectedImage={selectedImage}
-              isGenerating={isGenerating}
             />
           </div>
 
+          {/* Средняя колонка - Настройки модели */}
+          <div className="settings-section">
+            <ModelSettings onSettingsChange={handleSettingsChange} />
+            
+            {selectedImage && (
+              <button
+                className="btn generate-btn"
+                onClick={handleGenerate}
+                disabled={isGenerating || !selectedImage}
+              >
+                <Play size={20} />
+                {isGenerating ? 'Генерация...' : 'Создать 3D модель'}
+              </button>
+            )}
+          </div>
+
+          {/* Правая колонка - Просмотр модели */}
           <div className="result-section-wrapper">
             <div className="result-section">
               {isGenerating && (
@@ -184,7 +211,7 @@ const Home = () => {
 
               {!isGenerating && !taskStatus && !error && (
                 <div className="placeholder-container">
-                  <p className="placeholder-text">👈 Загрузите фото для генерации 3D модели</p>
+                  <p className="placeholder-text">👈 Загрузите фото и настройте параметры</p>
                 </div>
               )}
 

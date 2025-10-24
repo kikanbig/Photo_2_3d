@@ -1,12 +1,10 @@
 import React, { useRef, useState } from 'react';
-import { Upload, Image as ImageIcon, X, Play } from 'lucide-react';
-import DimensionsInput from './DimensionsInput';
+import { Upload, Image as ImageIcon, X } from 'lucide-react';
 import './ImageUpload.css';
 
-const ImageUpload = ({ onImageSelect, onGenerate, selectedImage, isGenerating }) => {
+const ImageUpload = ({ onImageSelect, selectedImage }) => {
   const fileInputRef = useRef(null);
   const [dragActive, setDragActive] = useState(false);
-  const [dimensions, setDimensions] = useState(null);
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -46,16 +44,6 @@ const ImageUpload = ({ onImageSelect, onGenerate, selectedImage, isGenerating })
       });
     };
     reader.readAsDataURL(file);
-  };
-
-  const handleGenerate = () => {
-    if (selectedImage && selectedImage.file) {
-      onGenerate(selectedImage.file, dimensions);
-    }
-  };
-
-  const handleDimensionsChange = (newDimensions) => {
-    setDimensions(newDimensions);
   };
 
   const handleRemoveImage = () => {
@@ -105,7 +93,6 @@ const ImageUpload = ({ onImageSelect, onGenerate, selectedImage, isGenerating })
             <button
               className="remove-btn"
               onClick={handleRemoveImage}
-              disabled={isGenerating}
             >
               <X size={20} />
             </button>
@@ -119,18 +106,6 @@ const ImageUpload = ({ onImageSelect, onGenerate, selectedImage, isGenerating })
               <span>Размер: {(selectedImage.file.size / 1024 / 1024).toFixed(2)} MB</span>
             </div>
           </div>
-
-          {/* Поля для ввода размеров */}
-          <DimensionsInput onDimensionsChange={handleDimensionsChange} />
-
-          <button
-            className="btn generate-btn"
-            onClick={handleGenerate}
-            disabled={isGenerating}
-          >
-            <Play size={20} />
-            {isGenerating ? 'Генерация...' : 'Создать 3D модель'}
-          </button>
         </div>
       )}
 

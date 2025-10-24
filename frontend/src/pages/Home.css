@@ -19,9 +19,9 @@
 
 .workspace {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 2rem;
-  align-items: stretch;
+  align-items: start;
   flex: 1;
   min-height: 600px;
 }
@@ -65,13 +65,59 @@
   box-shadow: var(--shadow-xl);
   display: flex;
   flex-direction: column;
-  height: 100%;
   transition: all 0.3s ease;
 }
 
 .upload-section:hover {
   border-color: rgba(87, 68, 226, 0.3);
   box-shadow: 0 0 40px rgba(87, 68, 226, 0.2);
+}
+
+/* Settings Section */
+.settings-section {
+  background: var(--bg-secondary);
+  border-radius: 24px;
+  padding: 2rem;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-xl);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.settings-section:hover {
+  border-color: rgba(87, 68, 226, 0.3);
+  box-shadow: 0 0 40px rgba(87, 68, 226, 0.2);
+}
+
+.generate-btn {
+  margin-top: auto;
+  padding: 1rem 1.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: var(--gradient-primary);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 20px rgba(87, 68, 226, 0.3);
+}
+
+.generate-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(87, 68, 226, 0.4);
+}
+
+.generate-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* Result Section Wrapper - содержит модель и actions-panel */
@@ -159,6 +205,17 @@
 }
 
 /* Responsive */
+@media (max-width: 1400px) {
+  .workspace {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  
+  .settings-section {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 1024px) {
   .workspace {
     grid-template-columns: 1fr;

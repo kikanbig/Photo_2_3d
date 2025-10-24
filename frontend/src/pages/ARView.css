@@ -202,6 +202,20 @@ model-viewer canvas {
   animation: slideUp 0.3s ease-out;
 }
 
+/* Скрыть блок размеров в AR режиме на мобильных */
+@media (max-width: 768px) and (display-mode: standalone),
+       (max-width: 768px) and (display-mode: fullscreen) {
+  .ar-dimensions-card {
+    display: none !important;
+  }
+}
+
+/* Также скрыть когда model-viewer в AR режиме */
+model-viewer[ar-status="session-started"] ~ .ar-dimensions-card,
+model-viewer[ar-status="object-placed"] ~ .ar-dimensions-card {
+  display: none !important;
+}
+
 .dimensions-header {
   display: flex;
   align-items: center;
