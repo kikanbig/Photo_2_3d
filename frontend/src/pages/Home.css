@@ -38,6 +38,16 @@
   flex-wrap: wrap;
 }
 
+/* Actions Panel - отображается под размерами */
+.actions-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
 /* Upload Section */
 .upload-section {
   background: var(--bg-secondary);

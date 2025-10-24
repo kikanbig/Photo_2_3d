@@ -167,6 +167,26 @@ const Home = () => {
               selectedImage={selectedImage}
               isGenerating={isGenerating}
             />
+
+            {/* Блок действий под размерами */}
+            {taskStatus && !isGenerating && (
+              <div className="actions-panel">
+                <StatusCard
+                  status={taskStatus.status}
+                  message={taskStatus.message}
+                  error={taskStatus.error}
+                  onDownload={handleDownload}
+                  onReset={handleReset}
+                  canDownload={taskStatus.status === 'completed'}
+                />
+                {taskStatus.status === 'completed' && (
+                  <button className="btn btn-success" onClick={handleSave}>
+                    <Save size={20} />
+                    Сохранить модель
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="result-section">
@@ -194,25 +214,6 @@ const Home = () => {
             )}
           </div>
         </div>
-
-        {taskStatus && !isGenerating && (
-          <div className="actions-bar">
-            <StatusCard
-              status={taskStatus.status}
-              message={taskStatus.message}
-              error={taskStatus.error}
-              onDownload={handleDownload}
-              onReset={handleReset}
-              canDownload={taskStatus.status === 'completed'}
-            />
-            {taskStatus.status === 'completed' && (
-              <button className="btn btn-success" onClick={handleSave}>
-                <Save size={20} />
-                Сохранить модель
-              </button>
-            )}
-          </div>
-        )}
       </div>
     </main>
   );
