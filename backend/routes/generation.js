@@ -354,7 +354,7 @@ async function generate3DModelAsync(taskId, imagePath) {
             name: `Model ${taskId}`,
             modelUrl: `/api/models/${taskId}/download`,
             glbFile: scaledGLBBuffer,  // Используем масштабированный буфер!
-            originalImageUrl: `/uploads/input/${path.basename(imagePath)}`, // Сохраняем путь к исходному изображению
+            originalImageUrl: task.imagePath ? `/${task.imagePath.replace(/\\/g, '/')}` : null, // Сохраняем путь к исходному изображению
             taskId: taskId,
             status: 'active'
           });
@@ -472,7 +472,7 @@ async function pollTaskStatus(taskId, requestId) {
             name: `Model ${taskId}`,
             modelUrl: `/api/models/${taskId}/download`,
             glbFile: scaledGLBBuffer,  // Используем масштабированный буфер!
-            originalImageUrl: `/uploads/input/${path.basename(imagePath)}`, // Сохраняем путь к исходному изображению
+            originalImageUrl: task.imagePath ? `/${task.imagePath.replace(/\\/g, '/')}` : null, // Сохраняем путь к исходному изображению
             taskId: taskId,
             status: 'active'
           });
