@@ -14,6 +14,7 @@ router.get('/', async (req, res) => {
       where: {
         status: status
       },
+      attributes: { exclude: ['glbFile'] }, // Исключаем огромный BLOB для быстрой загрузки
       order: [['createdAt', 'DESC']],
       limit: parseInt(limit),
       offset: parseInt(offset)
@@ -23,9 +24,18 @@ router.get('/', async (req, res) => {
       where: { status: status }
     });
 
+    // Добавляем imageUrl для обратной совместимости
+    const modelsWithImageUrl = models.map(model => {
+      const modelData = model.toJSON();
+      return {
+        ...modelData,
+        imageUrl: modelData.originalImageUrl || modelData.previewImageUrl
+      };
+    });
+
     res.json({
       success: true,
-      data: models,
+      data: modelsWithImageUrl,
       pagination: {
         total,
         limit: parseInt(limit),
