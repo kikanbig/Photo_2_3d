@@ -23,14 +23,9 @@ const ARView = () => {
   useEffect(() => {
     const modelViewer = modelViewerRef.current;
     if (modelViewer && model) {
-      // Преобразуем относительный URL в абсолютный для AR
-      const apiUrl = process.env.REACT_APP_BACKEND_URL || window.location.origin;
-      const absoluteModelUrl = model.modelUrl.startsWith('http') 
-        ? model.modelUrl 
-        : `${apiUrl}${model.modelUrl}`;
-      
-      console.log('🎨 Setting model src:', absoluteModelUrl);
-      modelViewer.setAttribute('src', absoluteModelUrl);
+      // Принудительно устанавливаем src через setAttribute
+      console.log('🎨 Setting model src:', model.modelUrl);
+      modelViewer.setAttribute('src', model.modelUrl);
       
       // Настройка Scene Viewer согласно документации Google
       const title = model.name || '3D Model';
@@ -44,7 +39,7 @@ const ARView = () => {
       
       // Создаём Scene Viewer URL без параметров масштаба
       const sceneViewerUrl = new URL('https://arvr.google.com/scene-viewer/1.1');
-      sceneViewerUrl.searchParams.set('file', absoluteModelUrl);
+      sceneViewerUrl.searchParams.set('file', model.modelUrl);
       sceneViewerUrl.searchParams.set('mode', 'ar_preferred');
       sceneViewerUrl.searchParams.set('title', title);
       sceneViewerUrl.searchParams.set('link', link);

@@ -25,12 +25,32 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' })); // Увеличиваем лимит для base64 изображений
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// ВАЖНО: Раздача GLB файлов ПЕРЕД статическими файлами фронтенда!
+// ВАЖНО: Раздача файлов ПЕРЕД статическими файлами фронтенда!
+// Раздаём GLB модели
 app.use('/uploads/models', express.static(path.join(__dirname, uploadDir, 'models'), {
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.glb')) {
       res.setHeader('Content-Type', 'model/gltf-binary');
       res.setHeader('Access-Control-Allow-Origin', '*');
+    }
+  }
+}));
+
+// Раздаём исходные изображения для превью
+app.use('/uploads/input', express.static(path.join(__dirname, uploadDir, 'input'), {
+  setHeaders: (res, filePath) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    // Устанавливаем правильный Content-Type для изображений
+    const ext = path.extname(filePath).toLowerCase();
+    const imageTypes = {
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.png': 'image/png',
+      '.gif': 'image/gif',
+      '.webp': 'image/webp'
+    };
+    if (imageTypes[ext]) {
+      res.setHeader('Content-Type', imageTypes[ext]);
     }
   }
 }));
