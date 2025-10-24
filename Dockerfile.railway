@@ -13,7 +13,14 @@ RUN cd backend && npm install --production
 # Устанавливаем зависимости для фронтенда
 RUN cd frontend && npm install --production
 
-# Собираем фронтенд
+# Собираем фронтенд с переменными окружения
+# ARG позволяет передавать значения при сборке
+ARG RAILWAY_PUBLIC_DOMAIN
+ARG RAILWAY_STATIC_URL
+
+# Устанавливаем REACT_APP_BACKEND_URL для сборки
+ENV REACT_APP_BACKEND_URL=https://${RAILWAY_PUBLIC_DOMAIN}
+
 RUN cd frontend && \
     # Создаем папку public
     mkdir -p public && \
