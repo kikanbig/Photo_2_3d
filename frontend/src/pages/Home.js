@@ -171,7 +171,7 @@ const Home = () => {
     <main className="home-page">
       <div className="container">
         <div className="workspace">
-          {/* Левая колонка - Загрузка изображения */}
+          {/* Левая верхняя - Загрузка изображения */}
           <div className="upload-section">
             <ImageUpload
               onImageSelect={handleImageSelect}
@@ -179,7 +179,33 @@ const Home = () => {
             />
           </div>
 
-          {/* Средняя колонка - Настройки модели */}
+          {/* Правая верхняя - Просмотр модели */}
+          <div className="result-section">
+            {isGenerating && (
+              <div className="loading-container">
+                <LoadingSpinner />
+                <p className="loading-text">{taskStatus?.message || 'Генерация 3D модели...'}</p>
+              </div>
+            )}
+
+            {taskStatus?.status === 'completed' && taskStatus?.result?.url && (
+              <ModelViewer modelUrl={taskStatus.result.url} />
+            )}
+
+            {!isGenerating && !taskStatus && !error && (
+              <div className="placeholder-container">
+                <p className="placeholder-text">👈 Загрузите фото и настройте параметры</p>
+              </div>
+            )}
+
+            {error && (
+              <div className="error-container">
+                <p className="error-text">{error}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Левая нижняя - Настройки модели */}
           <div className="settings-section">
             <ModelSettings onSettingsChange={handleSettingsChange} />
             
@@ -195,36 +221,10 @@ const Home = () => {
             )}
           </div>
 
-          {/* Правая колонка - Просмотр модели */}
-          <div className="result-section-wrapper">
-            <div className="result-section">
-              {isGenerating && (
-                <div className="loading-container">
-                  <LoadingSpinner />
-                  <p className="loading-text">{taskStatus?.message || 'Генерация 3D модели...'}</p>
-                </div>
-              )}
-
-              {taskStatus?.status === 'completed' && taskStatus?.result?.url && (
-                <ModelViewer modelUrl={taskStatus.result.url} />
-              )}
-
-              {!isGenerating && !taskStatus && !error && (
-                <div className="placeholder-container">
-                  <p className="placeholder-text">👈 Загрузите фото и настройте параметры</p>
-                </div>
-              )}
-
-              {error && (
-                <div className="error-container">
-                  <p className="error-text">{error}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Блок действий под моделью */}
-            {taskStatus && !isGenerating && (
-              <div className="actions-panel">
+          {/* Правая нижняя - Блок действий */}
+          <div className="actions-section">
+            {taskStatus && !isGenerating ? (
+              <>
                 <StatusCard
                   status={taskStatus.status}
                   message={taskStatus.message}
@@ -239,6 +239,10 @@ const Home = () => {
                     Сохранить модель
                   </button>
                 )}
+              </>
+            ) : (
+              <div className="actions-placeholder">
+                <p>После генерации здесь появятся действия</p>
               </div>
             )}
           </div>
