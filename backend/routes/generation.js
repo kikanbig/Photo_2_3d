@@ -86,6 +86,33 @@ router.post('/upload', upload.single('image'), async (req, res) => {
 
     console.log(`[Задача ${taskId}] Создана новая задача для файла: ${imagePath}`);
 
+    // Гарантируем, что файл доступен для статической раздачи
+    const publicImagePath = path.join(process.env.UPLOAD_DIR || 'uploads', 'input', path.basename(imagePath));
+    console.log(`[Задача ${taskId}] Публичный путь к изображению: ${publicImagePath}`);
+    console.log(`[Задача ${taskId}] Имя файла: ${path.basename(imagePath)}`);
+
+    try {
+      await fs.ensureDir(path.dirname(publicImagePath));
+      if (imagePath !== publicImagePath) {
+        await fs.copy(imagePath, publicImagePath);
+        console.log(`[Задача ${taskId}] Файл скопирован в публичную папку: ${publicImagePath}`);
+      } else {
+        console.log(`[Задача ${taskId}] Файл уже в публичной папке: ${publicImagePath}`);
+      }
+
+      // Проверяем, что файл существует
+      const fileExists = await fs.pathExists(publicImagePath);
+      console.log(`[Задача ${taskId}] Файл существует в публичной папке: ${fileExists}`);
+
+      if (fileExists) {
+        const stats = await fs.stat(publicImagePath);
+        console.log(`[Задача ${taskId}] Размер файла: ${stats.size} байт`);
+      }
+
+    } catch (copyError) {
+      console.warn(`[Задача ${taskId}] Не удалось скопировать файл в публичную папку:`, copyError);
+    }
+
     // Сохраняем информацию о задаче
     tasks.set(taskId, {
       id: taskId,
@@ -271,6 +298,7 @@ async function generate3DModelAsync(taskId, imagePath) {
         modelUrl: `/api/models/${taskId}/download`,
         glbFile: scaledGLBBuffer,  // Используем масштабированный буфер!
         originalImageUrl: `/uploads/input/${path.basename(imagePath)}`, // Сохраняем путь к исходному изображению
+        console.log(`[Задача ${taskId}] Сохраняем originalImageUrl: /uploads/input/${path.basename(imagePath)}`),
         taskId: taskId,
         status: 'active'
       });
