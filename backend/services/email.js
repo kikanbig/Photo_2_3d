@@ -3,7 +3,7 @@ const nodemailer = require('nodemailer');
 // Создаем транспорт для отправки email
 const createTransporter = () => {
   // Используем Gmail SMTP (простой вариант для начала)
-  const transporter = nodemailer.createTransporter({
+  const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
       user: process.env.EMAIL_USER, // Ваш Gmail адрес
