@@ -93,11 +93,13 @@ const upload = multer({
 });
 
 // Импорт роутов
+const authRoutes = require('./routes/auth');
 const generationRoutes = require('./routes/generation');
 const userRoutes = require('./routes/users');
 const modelsRoutes = require('./routes/models');
 
 // Роуты
+app.use('/api/auth', authRoutes.router);
 app.use('/api/generation', generationRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/models', modelsRoutes);

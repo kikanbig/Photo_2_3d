@@ -4,14 +4,16 @@ const Model3D = require('../models/Model3D');
 const { Op } = require('sequelize');
 const path = require('path');
 const fs = require('fs-extra');
+const { authenticateToken } = require('./auth');
 
-// Получить все модели
-router.get('/', async (req, res) => {
+// Получить модели пользователя
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const { status = 'active', limit = 100, offset = 0 } = req.query;
 
     const models = await Model3D.findAll({
       where: {
+        userId: req.user.userId, // Фильтруем по пользователю
         status: status
       },
       attributes: { exclude: ['glbFile'] }, // Исключаем огромный BLOB для быстрой загрузки
@@ -21,7 +23,10 @@ router.get('/', async (req, res) => {
     });
 
     const total = await Model3D.count({
-      where: { status: status }
+      where: {
+        userId: req.user.userId,
+        status: status
+      }
     });
 
     // Добавляем imageUrl для обратной совместимости

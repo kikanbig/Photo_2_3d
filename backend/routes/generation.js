@@ -5,6 +5,9 @@ const fs = require('fs-extra');
 const { v4: uuidv4 } = require('uuid');
 const GenAPIService = require('../services/genapi');
 const { scaleGLB } = require('../services/glb-scaler');
+const { authenticateToken, deductCredits } = require('./auth');
+const User = require('../models/User');
+const Model3D = require('../models/Model3D');
 
 const router = express.Router();
 const genapiService = new GenAPIService();
@@ -64,7 +67,7 @@ function saveTasks() {
 }
 
 // Загрузка изображения и запуск генерации
-router.post('/upload', upload.single('image'), async (req, res) => {
+router.post('/upload', authenticateToken, deductCredits(1), upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Файл изображения не предоставлен' });
@@ -126,6 +129,7 @@ router.post('/upload', upload.single('image'), async (req, res) => {
       status: 'processing',
       imagePath: imagePath,
       dimensions: dimensions,
+      userId: req.user.userId,
       createdAt: new Date(),
       result: null,
       error: null
@@ -300,13 +304,15 @@ async function generate3DModelAsync(taskId, imagePath) {
 
       // Сохраняем масштабированный GLB в БД
       const Model3D = require('../models/Model3D');
-      console.log(`[Задача ${taskId}] Сохраняем originalImageUrl: /uploads/input/${path.basename(imagePath)}`);
+      const task = tasks.get(taskId);
+      console.log(`[Задача ${taskId}] Сохраняем originalImageUrl: /uploads/input/${path.basename(task.imagePath)}`);
       await Model3D.create({
         name: `Model ${taskId}`,
         modelUrl: `/api/models/${taskId}/download`,
         glbFile: scaledGLBBuffer,  // Используем масштабированный буфер!
-        originalImageUrl: `/uploads/input/${path.basename(imagePath)}`, // Сохраняем путь к исходному изображению
+        originalImageUrl: `/uploads/input/${path.basename(task.imagePath)}`, // Сохраняем путь к исходному изображению
         taskId: taskId,
+        userId: task.userId, // Привязываем к пользователю
         status: 'active'
       });
       console.log(`💾 Масштабированный GLB сохранён в БД для задачи: ${taskId}`);
@@ -367,7 +373,7 @@ async function generate3DModelAsync(taskId, imagePath) {
         const modelUrl = findModelUrl(response);
         if (modelUrl) {
           console.log(`[Задача ${taskId}] Найден URL модели в нестандартном формате ответа: ${modelUrl}`);
-          
+
           // Скачиваем во временную папку
           const outputDir = path.join(process.env.UPLOAD_DIR || 'uploads', 'temp');
           await fs.ensureDir(outputDir);
@@ -385,12 +391,14 @@ async function generate3DModelAsync(taskId, imagePath) {
           console.log(`✅ GLB масштабирован: ${(scaledGLBBuffer.length / 1024 / 1024).toFixed(2)} MB`);
 
           const Model3D = require('../models/Model3D');
+          const task = tasks.get(taskId);
           await Model3D.create({
             name: `Model ${taskId}`,
             modelUrl: `/api/models/${taskId}/download`,
             glbFile: scaledGLBBuffer,  // Используем масштабированный буфер!
             originalImageUrl: task.imagePath ? `/uploads/input/${path.basename(task.imagePath)}` : null, // Сохраняем путь к исходному изображению
             taskId: taskId,
+            userId: task.userId, // Привязываем к пользователю
             status: 'active'
           });
           console.log(`💾 Масштабированный GLB сохранён в БД для задачи: ${taskId}`);
@@ -503,12 +511,14 @@ async function pollTaskStatus(taskId, requestId) {
           console.log(`✅ GLB масштабирован: ${(scaledGLBBuffer.length / 1024 / 1024).toFixed(2)} MB`);
 
           const Model3D = require('../models/Model3D');
+          const task = tasks.get(taskId);
           await Model3D.create({
             name: `Model ${taskId}`,
             modelUrl: `/api/models/${taskId}/download`,
             glbFile: scaledGLBBuffer,  // Используем масштабированный буфер!
             originalImageUrl: task.imagePath ? `/uploads/input/${path.basename(task.imagePath)}` : null, // Сохраняем путь к исходному изображению
             taskId: taskId,
+            userId: task.userId, // Привязываем к пользователю
             status: 'active'
           });
           console.log(`💾 Масштабированный GLB сохранён в БД для задачи: ${taskId}`);
