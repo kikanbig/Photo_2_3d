@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -13,29 +13,29 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import VerifyEmail from './pages/VerifyEmail';
 
-// Компонент для защищенных маршрутов
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="loading-screen">
-        <div className="loading-spinner">
-          <div className="spinner-ring"></div>
-          <p>Проверка авторизации...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
-};
-
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
+  };
+
+  // Компонент для защищенных маршрутов
+  const ProtectedRoute = ({ children }) => {
+    const { isAuthenticated, loading } = useAuth();
+
+    if (loading) {
+      return (
+        <div className="loading-screen">
+          <div className="loading-spinner">
+            <div className="spinner-ring"></div>
+            <p>Проверка авторизации...</p>
+          </div>
+        </div>
+      );
+    }
+
+    return isAuthenticated ? children : <Navigate to="/login" replace />;
   };
 
   return (
