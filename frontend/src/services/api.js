@@ -2,14 +2,24 @@
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || window.location.origin;
 
-// Получить все модели
+// Получить JWT токен из localStorage
+const getAuthToken = () => localStorage.getItem('auth_token');
+
+// Создать headers с авторизацией
+const getAuthHeaders = () => {
+  const token = getAuthToken();
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` })
+  };
+};
+
+// Получить все модели пользователя
 export const getModels = async () => {
   try {
     const response = await fetch(`${API_URL}/api/models`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
+      headers: getAuthHeaders()
     });
 
     const data = await response.json();
@@ -124,13 +134,11 @@ export const searchModels = async (query) => {
   try {
     const response = await fetch(`${API_URL}/api/models/search?q=${encodeURIComponent(query)}`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
+      headers: getAuthHeaders()
     });
 
     const data = await response.json();
-    
+
     if (!data.success) {
       throw new Error(data.error || 'Ошибка поиска моделей');
     }
@@ -140,5 +148,156 @@ export const searchModels = async (query) => {
     console.error('Ошибка searchModels:', error);
     throw error;
   }
+};
+
+// ========== АУТЕНТИФИКАЦИЯ ==========
+
+// Регистрация пользователя
+export const registerUser = async (email, password) => {
+  try {
+    const response = await fetch(`${API_URL}/api/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Ошибка регистрации');
+    }
+
+    return data.data;
+  } catch (error) {
+    console.error('Ошибка registerUser:', error);
+    throw error;
+  }
+};
+
+// Подтверждение email
+export const verifyEmail = async (token) => {
+  try {
+    const response = await fetch(`${API_URL}/api/auth/verify-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ token })
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Ошибка подтверждения email');
+    }
+
+    return data.data;
+  } catch (error) {
+    console.error('Ошибка verifyEmail:', error);
+    throw error;
+  }
+};
+
+// Повторная отправка письма подтверждения
+export const resendVerification = async (email) => {
+  try {
+    const response = await fetch(`${API_URL}/api/auth/resend-verification`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email })
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Ошибка отправки письма');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Ошибка resendVerification:', error);
+    throw error;
+  }
+};
+
+// Вход в систему
+export const loginUser = async (email, password) => {
+  try {
+    const response = await fetch(`${API_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Ошибка входа');
+    }
+
+    // Сохраняем токен
+    if (data.data.token) {
+      localStorage.setItem('auth_token', data.data.token);
+    }
+
+    return data.data;
+  } catch (error) {
+    console.error('Ошибка loginUser:', error);
+    throw error;
+  }
+};
+
+// Получение профиля пользователя
+export const getUserProfile = async () => {
+  try {
+    const response = await fetch(`${API_URL}/api/auth/profile`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Ошибка получения профиля');
+    }
+
+    return data.data;
+  } catch (error) {
+    console.error('Ошибка getUserProfile:', error);
+    throw error;
+  }
+};
+
+// Выход из системы
+export const logoutUser = () => {
+  localStorage.removeItem('auth_token');
+  localStorage.removeItem('user_data');
+};
+
+// Проверка авторизации
+export const isAuthenticated = () => {
+  return !!getAuthToken();
+};
+
+// Получить текущего пользователя
+export const getCurrentUser = () => {
+  try {
+    const userData = localStorage.getItem('user_data');
+    return userData ? JSON.parse(userData) : null;
+  } catch (error) {
+    console.error('Ошибка getCurrentUser:', error);
+    return null;
+  }
+};
+
+// Сохранить данные пользователя
+export const setCurrentUser = (userData) => {
+  localStorage.setItem('user_data', JSON.stringify(userData));
 };
 

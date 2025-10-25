@@ -224,3 +224,84 @@
   animation: fadeInDown 0.5s ease-out;
 }
 
+/* Выпадающее меню пользователя */
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  min-width: 220px;
+  z-index: 1000;
+  animation: fadeInDown 0.3s ease-out;
+}
+
+.user-details {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.user-email {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.user-credits {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.menu-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 0.25rem 0;
+}
+
+.menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+.menu-item:hover {
+  background: rgba(87, 68, 226, 0.1);
+  color: var(--accent-primary);
+}
+
+.menu-item.logout {
+  color: #dc3545;
+}
+
+.menu-item.logout:hover {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+.menu-item svg {
+  flex-shrink: 0;
+}
+
+/* Overlay для закрытия меню */
+.menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+}
+
