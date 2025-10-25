@@ -336,14 +336,14 @@ async function generate3DModelAsync(taskId, imagePath) {
           // Скачиваем во временную папку
           const outputDir = path.join(process.env.UPLOAD_DIR || 'uploads', 'temp');
           await fs.ensureDir(outputDir);
-          
+
           const tempPath = path.join(outputDir, `${taskId}.glb`);
           await genapiService.downloadResult(modelUrl, tempPath);
-          
+
           // Читаем и сохраняем в БД
           const glbBuffer = await fs.readFile(tempPath);
           console.log(`📦 GLB прочитан: ${(glbBuffer.length / 1024 / 1024).toFixed(2)} MB`);
-          
+
           // 🔄 МАСШТАБИРУЕМ GLB В 2 РАЗА (потому что модель генерируется в половинном размере)
           console.log('🔄 Масштабируем GLB файл в 2 раза...');
           const scaledGLBBuffer = scaleGLB(glbBuffer, 2.0);
@@ -354,7 +354,7 @@ async function generate3DModelAsync(taskId, imagePath) {
             name: `Model ${taskId}`,
             modelUrl: `/api/models/${taskId}/download`,
             glbFile: scaledGLBBuffer,  // Используем масштабированный буфер!
-            originalImageUrl: task.imagePath ? `/${task.imagePath.replace(/\\/g, '/')}` : null, // Сохраняем путь к исходному изображению
+            originalImageUrl: task.imagePath ? `/uploads/input/${path.basename(task.imagePath)}` : null, // Сохраняем путь к исходному изображению
             taskId: taskId,
             status: 'active'
           });
@@ -447,17 +447,17 @@ async function pollTaskStatus(taskId, requestId) {
             resultUrl = firstResponse.url;
           }
         }
-        
+
         if (resultUrl) {
           console.log(`[Задача ${taskId}] Найден URL модели: ${resultUrl}`);
-          
+
           // Скачиваем во временную папку
           const outputDir = path.join(process.env.UPLOAD_DIR || 'uploads', 'temp');
           await fs.ensureDir(outputDir);
-          
+
           const tempPath = path.join(outputDir, `${taskId}.glb`);
           await genapiService.downloadResult(resultUrl, tempPath);
-          
+
           // Читаем и сохраняем в БД
           const glbBuffer = await fs.readFile(tempPath);
           console.log(`📦 GLB прочитан: ${(glbBuffer.length / 1024 / 1024).toFixed(2)} MB`);
@@ -472,7 +472,7 @@ async function pollTaskStatus(taskId, requestId) {
             name: `Model ${taskId}`,
             modelUrl: `/api/models/${taskId}/download`,
             glbFile: scaledGLBBuffer,  // Используем масштабированный буфер!
-            originalImageUrl: task.imagePath ? `/${task.imagePath.replace(/\\/g, '/')}` : null, // Сохраняем путь к исходному изображению
+            originalImageUrl: task.imagePath ? `/uploads/input/${path.basename(task.imagePath)}` : null, // Сохраняем путь к исходному изображению
             taskId: taskId,
             status: 'active'
           });
