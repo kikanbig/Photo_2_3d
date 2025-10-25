@@ -61,32 +61,33 @@ router.post('/register', async (req, res) => {
       console.log(`✅ Регистрация без email подтверждения: ${user.email}`);
     } else {
       // Отправляем email подтверждения
-    try {
-      const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
+      try {
+        const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
 
-      await sendEmail({
-        to: user.email,
-        subject: 'Подтвердите ваш email - Photo to 3D',
-        html: `
-          <h1>Добро пожаловать в Photo to 3D!</h1>
-          <p>Вам начислено <strong>100 бесплатных кредитов</strong> для генерации 3D моделей.</p>
-          <p>Для активации аккаунта нажмите на ссылку ниже:</p>
-          <a href="${verificationUrl}" style="background: #5743E8; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Подтвердить email</a>
-          <p>Ссылка действительна 24 часа.</p>
-          <p>Если кнопка не работает, скопируйте ссылку: ${verificationUrl}</p>
-        `
-      });
+        await sendEmail({
+          to: user.email,
+          subject: 'Подтвердите ваш email - Photo to 3D',
+          html: `
+            <h1>Добро пожаловать в Photo to 3D!</h1>
+            <p>Вам начислено <strong>100 бесплатных кредитов</strong> для генерации 3D моделей.</p>
+            <p>Для активации аккаунта нажмите на ссылку ниже:</p>
+            <a href="${verificationUrl}" style="background: #5743E8; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Подтвердить email</a>
+            <p>Ссылка действительна 24 часа.</p>
+            <p>Если кнопка не работает, скопируйте ссылку: ${verificationUrl}</p>
+          `
+        });
 
-      console.log(`📧 Email подтверждения отправлен: ${user.email}`);
+        console.log(`📧 Email подтверждения отправлен: ${user.email}`);
 
-    } catch (emailError) {
-      console.error('❌ Ошибка отправки email:', emailError);
-      // Не возвращаем ошибку, пользователь создан, просто email не отправлен
+      } catch (emailError) {
+        console.error('❌ Ошибка отправки email:', emailError);
+        // Не возвращаем ошибку, пользователь создан, просто email не отправлен
+      }
     }
 
     res.json({
       success: true,
-      message: 'Пользователь зарегистрирован. Проверьте email для подтверждения.',
+      message: skipEmailVerification ? 'Пользователь зарегистрирован успешно.' : 'Пользователь зарегистрирован. Проверьте email для подтверждения.',
       data: {
         userId: user.id,
         email: user.email,
