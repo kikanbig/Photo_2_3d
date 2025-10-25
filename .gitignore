@@ -103,3 +103,6 @@ uploads/
 
 # Build artifacts
 *.log
+*.backup
+*.bak
+backend/.env
