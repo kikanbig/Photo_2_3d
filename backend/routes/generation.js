@@ -266,11 +266,13 @@ async function generate3DModelAsync(taskId, imagePath) {
 
       // Сохраняем масштабированный GLB в БД
       const Model3D = require('../models/Model3D');
+      // Формируем правильный относительный путь к изображению
+      const relativeImagePath = imagePath.replace(/\\/g, '/').replace(/^.*\/uploads\/input\//, '');
       await Model3D.create({
         name: `Model ${taskId}`,
         modelUrl: `/api/models/${taskId}/download`,
         glbFile: scaledGLBBuffer,  // Используем масштабированный буфер!
-        originalImageUrl: `/uploads/input/${path.basename(imagePath)}`, // Сохраняем путь к исходному изображению
+        originalImageUrl: `/uploads/input/${relativeImagePath}`, // Сохраняем правильный относительный путь
         taskId: taskId,
         status: 'active'
       });
@@ -339,22 +341,24 @@ async function generate3DModelAsync(taskId, imagePath) {
           
           const tempPath = path.join(outputDir, `${taskId}.glb`);
           await genapiService.downloadResult(modelUrl, tempPath);
-          
+
           // Читаем и сохраняем в БД
           const glbBuffer = await fs.readFile(tempPath);
           console.log(`📦 GLB прочитан: ${(glbBuffer.length / 1024 / 1024).toFixed(2)} MB`);
-          
+
           // 🔄 МАСШТАБИРУЕМ GLB В 2 РАЗА (потому что модель генерируется в половинном размере)
           console.log('🔄 Масштабируем GLB файл в 2 раза...');
           const scaledGLBBuffer = scaleGLB(glbBuffer, 2.0);
           console.log(`✅ GLB масштабирован: ${(scaledGLBBuffer.length / 1024 / 1024).toFixed(2)} MB`);
 
           const Model3D = require('../models/Model3D');
+          // Формируем правильный относительный путь к изображению
+          const relativeImagePath = task.imagePath ? task.imagePath.replace(/\\/g, '/').replace(/^.*\/uploads\/input\//, '') : null;
           await Model3D.create({
             name: `Model ${taskId}`,
             modelUrl: `/api/models/${taskId}/download`,
             glbFile: scaledGLBBuffer,  // Используем масштабированный буфер!
-            originalImageUrl: task.imagePath ? `/${task.imagePath.replace(/\\/g, '/')}` : null, // Сохраняем путь к исходному изображению
+            originalImageUrl: relativeImagePath ? `/uploads/input/${relativeImagePath}` : null, // Сохраняем правильный относительный путь
             taskId: taskId,
             status: 'active'
           });
@@ -450,14 +454,14 @@ async function pollTaskStatus(taskId, requestId) {
         
         if (resultUrl) {
           console.log(`[Задача ${taskId}] Найден URL модели: ${resultUrl}`);
-          
+
           // Скачиваем во временную папку
           const outputDir = path.join(process.env.UPLOAD_DIR || 'uploads', 'temp');
           await fs.ensureDir(outputDir);
-          
+
           const tempPath = path.join(outputDir, `${taskId}.glb`);
           await genapiService.downloadResult(resultUrl, tempPath);
-          
+
           // Читаем и сохраняем в БД
           const glbBuffer = await fs.readFile(tempPath);
           console.log(`📦 GLB прочитан: ${(glbBuffer.length / 1024 / 1024).toFixed(2)} MB`);
@@ -468,11 +472,13 @@ async function pollTaskStatus(taskId, requestId) {
           console.log(`✅ GLB масштабирован: ${(scaledGLBBuffer.length / 1024 / 1024).toFixed(2)} MB`);
 
           const Model3D = require('../models/Model3D');
+          // Формируем правильный относительный путь к изображению
+          const relativeImagePath = task.imagePath ? task.imagePath.replace(/\\/g, '/').replace(/^.*\/uploads\/input\//, '') : null;
           await Model3D.create({
             name: `Model ${taskId}`,
             modelUrl: `/api/models/${taskId}/download`,
             glbFile: scaledGLBBuffer,  // Используем масштабированный буфер!
-            originalImageUrl: task.imagePath ? `/${task.imagePath.replace(/\\/g, '/')}` : null, // Сохраняем путь к исходному изображению
+            originalImageUrl: relativeImagePath ? `/uploads/input/${relativeImagePath}` : null, // Сохраняем правильный относительный путь
             taskId: taskId,
             status: 'active'
           });
