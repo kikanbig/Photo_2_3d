@@ -44,16 +44,23 @@ router.post('/register', async (req, res) => {
     const verificationToken = crypto.randomBytes(32).toString('hex');
     const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 часа
 
+    // ВРЕМЕННО: отключаем email подтверждение для тестирования
+    const skipEmailVerification = process.env.SKIP_EMAIL_VERIFICATION === 'true';
+
     // Создаем пользователя
     const user = await User.create({
       email: email.toLowerCase(),
       password: hashedPassword,
-      emailVerificationToken: verificationToken,
-      emailVerificationExpires: verificationExpires,
+      emailVerified: skipEmailVerification, // true если пропускаем подтверждение
+      emailVerificationToken: skipEmailVerification ? null : verificationToken,
+      emailVerificationExpires: skipEmailVerification ? null : verificationExpires,
       credits: 100 // Стартовые кредиты
     });
 
-    // Отправляем email подтверждения
+    if (skipEmailVerification) {
+      console.log(`✅ Регистрация без email подтверждения: ${user.email}`);
+    } else {
+      // Отправляем email подтверждения
     try {
       const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
 

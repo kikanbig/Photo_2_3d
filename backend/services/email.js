@@ -1,14 +1,40 @@
 const nodemailer = require('nodemailer');
 
+// Альтернативный транспорт для Yandex.Mail (если Gmail не работает)
+const createYandexTransporter = () => {
+  const transporter = nodemailer.createTransport({
+    host: 'smtp.yandex.com',
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.EMAIL_USER, // yandex.ru email
+      pass: process.env.EMAIL_APP_PASSWORD // Пароль приложения Yandex
+    },
+    connectionTimeout: 10000,
+    greetingTimeout: 5000,
+    socketTimeout: 10000
+  });
+  return transporter;
+};
+
 // Создаем транспорт для отправки email
 const createTransporter = () => {
-  // Используем Gmail SMTP (простой вариант для начала)
+  // Используем Gmail SMTP с дополнительными настройками
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USER, // Ваш Gmail адрес
-      pass: process.env.EMAIL_APP_PASSWORD // App Password, не обычный пароль
-    }
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_APP_PASSWORD
+    },
+    // Дополнительные настройки для стабильности
+    secure: true, // Использовать SSL
+    pool: true, // Connection pooling
+    maxConnections: 1, // Максимум 1 соединение
+    maxMessages: 5, // Максимум 5 сообщений на соединение
+    // Таймауты
+    connectionTimeout: 10000, // 10 секунд на подключение
+    greetingTimeout: 5000,   // 5 секунд на приветствие
+    socketTimeout: 10000     // 10 секунд на сокет
   });
 
   return transporter;
@@ -20,8 +46,17 @@ const sendEmail = async ({ to, subject, html, text }) => {
     console.log(`📧 ПОПЫТКА отправки email: ${to} - ${subject}`);
     console.log(`   EMAIL_USER: ${process.env.EMAIL_USER}`);
     console.log(`   EMAIL_APP_PASSWORD: ${process.env.EMAIL_APP_PASSWORD ? 'Установлен' : 'НЕ установлен'}`);
+    console.log(`   EMAIL_PROVIDER: ${process.env.EMAIL_PROVIDER || 'gmail'}`);
 
-    const transporter = createTransporter();
+    // Выбираем провайдер email
+    let transporter;
+    if (process.env.EMAIL_PROVIDER === 'yandex') {
+      console.log('📧 Используем Yandex.Mail');
+      transporter = createYandexTransporter();
+    } else {
+      console.log('📧 Используем Gmail');
+      transporter = createTransporter();
+    }
 
     const mailOptions = {
       from: `"Photo to 3D" <${process.env.EMAIL_USER}>`,
