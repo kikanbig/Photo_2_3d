@@ -96,7 +96,9 @@ const sendEmail = async ({ to, subject, html, text }) => {
       text: text || html.replace(/<[^>]*>/g, '') // Убираем HTML теги для text версии
     };
 
-    console.log(`📧 Отправка email через Gmail SMTP...`);
+    const providerName = process.env.EMAIL_PROVIDER === 'sendgrid' ? 'SendGrid API' :
+                         process.env.EMAIL_PROVIDER === 'yandex' ? 'Yandex SMTP' : 'Gmail SMTP';
+    console.log(`📧 Отправка email через ${providerName}...`);
     const result = await transporter.sendMail(mailOptions);
 
     console.log(`✅ Email отправлен успешно: ${to} - ${subject}`);
