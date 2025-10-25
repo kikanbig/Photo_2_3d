@@ -293,12 +293,12 @@ async function generate3DModelAsync(taskId, imagePath) {
 
       // Сохраняем масштабированный GLB в БД
       const Model3D = require('../models/Model3D');
+      console.log(`[Задача ${taskId}] Сохраняем originalImageUrl: /uploads/input/${path.basename(imagePath)}`);
       await Model3D.create({
         name: `Model ${taskId}`,
         modelUrl: `/api/models/${taskId}/download`,
         glbFile: scaledGLBBuffer,  // Используем масштабированный буфер!
         originalImageUrl: `/uploads/input/${path.basename(imagePath)}`, // Сохраняем путь к исходному изображению
-        console.log(`[Задача ${taskId}] Сохраняем originalImageUrl: /uploads/input/${path.basename(imagePath)}`),
         taskId: taskId,
         status: 'active'
       });
