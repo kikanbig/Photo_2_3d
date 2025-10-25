@@ -17,6 +17,10 @@ const createTransporter = () => {
 // Функция отправки email
 const sendEmail = async ({ to, subject, html, text }) => {
   try {
+    console.log(`📧 ПОПЫТКА отправки email: ${to} - ${subject}`);
+    console.log(`   EMAIL_USER: ${process.env.EMAIL_USER}`);
+    console.log(`   EMAIL_APP_PASSWORD: ${process.env.EMAIL_APP_PASSWORD ? 'Установлен' : 'НЕ установлен'}`);
+
     const transporter = createTransporter();
 
     const mailOptions = {
@@ -27,14 +31,17 @@ const sendEmail = async ({ to, subject, html, text }) => {
       text: text || html.replace(/<[^>]*>/g, '') // Убираем HTML теги для text версии
     };
 
+    console.log(`📧 Отправка email через Gmail SMTP...`);
     const result = await transporter.sendMail(mailOptions);
 
-    console.log(`📧 Email отправлен: ${to} - ${subject}`);
+    console.log(`✅ Email отправлен успешно: ${to} - ${subject}`);
     console.log(`   Message ID: ${result.messageId}`);
+    console.log(`   Response: ${result.response}`);
 
     return result;
   } catch (error) {
-    console.error('❌ Ошибка отправки email:', error);
+    console.error('❌ Ошибка отправки email:', error.message);
+    console.error('   Полная ошибка:', error);
     throw error;
   }
 };
