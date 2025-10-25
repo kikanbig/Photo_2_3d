@@ -85,10 +85,14 @@ router.post('/upload', upload.single('image'), async (req, res) => {
     }
 
     console.log(`[Задача ${taskId}] Создана новая задача для файла: ${imagePath}`);
+    console.log(`[Задача ${taskId}] Абсолютный путь к файлу: ${path.resolve(imagePath)}`);
+    console.log(`[Задача ${taskId}] UPLOAD_DIR: ${process.env.UPLOAD_DIR || 'uploads (default)'}`);
 
     // Гарантируем, что файл доступен для статической раздачи
     const publicImagePath = path.join(process.env.UPLOAD_DIR || 'uploads', 'input', path.basename(imagePath));
     console.log(`[Задача ${taskId}] Публичный путь к изображению: ${publicImagePath}`);
+    console.log(`[Задача ${taskId}] Абсолютный публичный путь: ${path.resolve(publicImagePath)}`);
+    console.log(`[Задача ${taskId}] __dirname: ${__dirname}`);
     console.log(`[Задача ${taskId}] Имя файла: ${path.basename(imagePath)}`);
 
     try {

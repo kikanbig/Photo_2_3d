@@ -37,7 +37,10 @@ app.use('/uploads/models', express.static(path.join(__dirname, uploadDir, 'model
 }));
 
 // Раздаём исходные изображения для превью
-app.use('/uploads/input', express.static(path.join(__dirname, uploadDir, 'input'), {
+const staticPath = path.join(__dirname, uploadDir, 'input');
+console.log(`[STATIC] Раздача /uploads/input из: ${staticPath}`);
+console.log(`[STATIC] Абсолютный путь: ${path.resolve(staticPath)}`);
+app.use('/uploads/input', express.static(staticPath, {
   setHeaders: (res, filePath) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     // Устанавливаем правильный Content-Type для изображений
