@@ -74,6 +74,11 @@
   font-size: 1rem;
   transition: all 0.3s ease;
   background: #fafbfc;
+  color: #333;
+}
+
+.form-group input::placeholder {
+  color: #999;
 }
 
 .form-group input:focus {
