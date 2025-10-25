@@ -72,7 +72,9 @@ router.post('/upload', upload.single('image'), async (req, res) => {
 
     const taskId = uuidv4();
     const imagePath = req.file.path;
-    
+    console.log(`[ЗАГРУЗКА] Multer сохранил файл в: ${imagePath}`);
+    console.log(`[ЗАГРУЗКА] Абсолютный путь: ${path.resolve(imagePath)}`);
+
     // Получаем размеры из запроса если они есть
     let dimensions = null;
     if (req.body.dimensions) {
@@ -85,17 +87,18 @@ router.post('/upload', upload.single('image'), async (req, res) => {
     }
 
     console.log(`[Задача ${taskId}] Создана новая задача для файла: ${imagePath}`);
-    console.log(`[Задача ${taskId}] Абсолютный путь к файлу: ${path.resolve(imagePath)}`);
-    console.log(`[Задача ${taskId}] UPLOAD_DIR: ${process.env.UPLOAD_DIR || 'uploads (default)'}`);
 
     // Гарантируем, что файл доступен для статической раздачи
     const publicImagePath = path.join(process.env.UPLOAD_DIR || 'uploads', 'input', path.basename(imagePath));
-    console.log(`[Задача ${taskId}] Публичный путь к изображению: ${publicImagePath}`);
-    console.log(`[Задача ${taskId}] Абсолютный публичный путь: ${path.resolve(publicImagePath)}`);
-    console.log(`[Задача ${taskId}] __dirname: ${__dirname}`);
-    console.log(`[Задача ${taskId}] Имя файла: ${path.basename(imagePath)}`);
 
     try {
+      // Проверяем, что исходный файл существует
+      const sourceExists = await fs.pathExists(imagePath);
+      if (!sourceExists) {
+        console.error(`[Задача ${taskId}] Исходный файл НЕ найден: ${imagePath}`);
+        return res.status(500).json({ error: 'Исходный файл не найден' });
+      }
+
       await fs.ensureDir(path.dirname(publicImagePath));
       if (imagePath !== publicImagePath) {
         await fs.copy(imagePath, publicImagePath);
@@ -106,15 +109,15 @@ router.post('/upload', upload.single('image'), async (req, res) => {
 
       // Проверяем, что файл существует
       const fileExists = await fs.pathExists(publicImagePath);
-      console.log(`[Задача ${taskId}] Файл существует в публичной папке: ${fileExists}`);
-
       if (fileExists) {
         const stats = await fs.stat(publicImagePath);
-        console.log(`[Задача ${taskId}] Размер файла: ${stats.size} байт`);
+        console.log(`[Задача ${taskId}] Файл готов для раздачи: ${path.basename(publicImagePath)} (${stats.size} байт)`);
+      } else {
+        console.error(`[Задача ${taskId}] Файл НЕ найден после копирования: ${publicImagePath}`);
       }
 
     } catch (copyError) {
-      console.warn(`[Задача ${taskId}] Не удалось скопировать файл в публичную папку:`, copyError);
+      console.error(`[Задача ${taskId}] Ошибка копирования файла:`, copyError);
     }
 
     // Сохраняем информацию о задаче
