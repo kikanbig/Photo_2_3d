@@ -2,6 +2,7 @@ const nodemailer = require('nodemailer');
 
 // Альтернативный транспорт для Yandex.Mail (если Gmail не работает)
 const createYandexTransporter = () => {
+  console.log('🔧 Создаем Yandex SMTP транспорт');
   const transporter = nodemailer.createTransport({
     host: 'smtp.yandex.com',
     port: 465,
@@ -14,6 +15,32 @@ const createYandexTransporter = () => {
     greetingTimeout: 5000,
     socketTimeout: 10000
   });
+  return transporter;
+};
+
+// SendGrid транспорт (надежный вариант, 100 email/день бесплатно)
+const createSendGridTransporter = () => {
+  console.log('🔧 Создаем SendGrid транспорт');
+  // Для SendGrid используем прямой API вызов вместо nodemailer
+  const sgMail = require('@sendgrid/mail');
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+  // Создаем nodemailer совместимый транспорт
+  const transporter = nodemailer.createTransport({
+    send: (mail, callback) => {
+      const msg = {
+        to: mail.data.to,
+        from: process.env.EMAIL_USER, // Используем EMAIL_USER как отправителя
+        subject: mail.data.subject,
+        html: mail.data.html || mail.data.text,
+      };
+
+      sgMail.send(msg)
+        .then(() => callback(null, { messageId: 'sendgrid-' + Date.now() }))
+        .catch(callback);
+    }
+  });
+
   return transporter;
 };
 
@@ -50,7 +77,10 @@ const sendEmail = async ({ to, subject, html, text }) => {
 
     // Выбираем провайдер email
     let transporter;
-    if (process.env.EMAIL_PROVIDER === 'yandex') {
+    if (process.env.EMAIL_PROVIDER === 'sendgrid') {
+      console.log('📧 Используем SendGrid');
+      transporter = createSendGridTransporter();
+    } else if (process.env.EMAIL_PROVIDER === 'yandex') {
       console.log('📧 Используем Yandex.Mail');
       transporter = createYandexTransporter();
     } else {
