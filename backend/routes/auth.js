@@ -289,7 +289,7 @@ router.post('/login', async (req, res) => {
 router.get('/profile', authenticateToken, async (req, res) => {
   try {
     const user = await User.findByPk(req.user.userId, {
-      attributes: ['id', 'email', 'credits', 'emailVerified', 'lastLoginAt', 'createdAt', 'profile']
+      attributes: ['id', 'email', 'username', 'credits', 'lastLoginAt', 'createdAt', 'profile']
     });
 
     if (!user) {
