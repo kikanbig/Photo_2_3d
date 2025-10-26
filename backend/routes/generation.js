@@ -326,7 +326,7 @@ async function generate3DModelAsync(taskId, imagePath) {
       console.log(`[Задача ${taskId}] Сохраняем originalImageUrl: /uploads/input/${path.basename(task.imagePath)}`);
       await Model3D.create({
         name: `Model ${taskId}`,
-        modelUrl: `/api/models/${taskId}/download`,
+        modelUrl: `/api/models/${taskId}/download-glb`,
         glbFile: scaledGLBBuffer,  // Используем масштабированный буфер!
         originalImageUrl: `/uploads/input/${path.basename(task.imagePath)}`, // Сохраняем путь к исходному изображению
         taskId: taskId,
@@ -423,7 +423,7 @@ async function generate3DModelAsync(taskId, imagePath) {
           const task = tasks.get(taskId);
           await Model3D.create({
             name: `Model ${taskId}`,
-            modelUrl: `/api/models/${taskId}/download`,
+            modelUrl: `/api/models/${taskId}/download-glb`,
             glbFile: scaledGLBBuffer,  // Используем масштабированный буфер!
             originalImageUrl: task.imagePath ? `/uploads/input/${path.basename(task.imagePath)}` : null, // Сохраняем путь к исходному изображению
             taskId: taskId,
@@ -554,7 +554,7 @@ async function pollTaskStatus(taskId, requestId) {
           const task = tasks.get(taskId);
           await Model3D.create({
             name: `Model ${taskId}`,
-            modelUrl: `/api/models/${taskId}/download`,
+            modelUrl: `/api/models/${taskId}/download-glb`,
             glbFile: scaledGLBBuffer,  // Используем масштабированный буфер!
             originalImageUrl: task.imagePath ? `/uploads/input/${path.basename(task.imagePath)}` : null, // Сохраняем путь к исходному изображению
             taskId: taskId,

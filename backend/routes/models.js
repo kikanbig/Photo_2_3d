@@ -108,37 +108,38 @@ router.get('/:id/glb', async (req, res) => {
       return res.status(404).send('GLB файл не найден');
     }
 
-    // Заголовки для AR поддержки - мобильные браузеры откроют в AR режиме
-    res.setHeader('Content-Type', 'model/gltf-binary');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Headers', 'Range');
-    res.setHeader('Accept-Ranges', 'bytes');
-    res.setHeader('Content-Disposition', 'inline'); // Не attachment, чтобы открывалось в браузере
+    // Создаем полный URL для AR
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const glbUrl = `${baseUrl}/api/models/${id}/download-glb`;
+    const arUrl = `https://arvr.google.com/scene-viewer/1.1?file=${encodeURIComponent(glbUrl)}&mode=ar_preferred&title=${encodeURIComponent(model.name || '3D Model')}`;
 
-    // Специальные заголовки для AR
-    res.setHeader('intent', 'https://arvr.google.com/scene-viewer/1.1');
-    res.setHeader('X-Frame-Options', 'ALLOWALL');
-    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
-    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-
-    res.send(model.glbFile);
-
-    console.log(`📱 GLB файл отдан для AR (публичный доступ): модель ${id}, файл: ${model.name || 'без имени'}`);
+    // Перенаправляем на Google Scene Viewer для прямого AR открытия
+    console.log(`📱 Перенаправление на AR: ${arUrl}`);
+    res.redirect(302, arUrl);
   } catch (error) {
     console.error('Ошибка получения GLB для AR:', error);
     res.status(500).send('Ошибка получения файла');
   }
 });
 
-// Скачать GLB файл модели из БД
-router.get('/:id/download', async (req, res) => {
+// Скачать GLB файл модели из БД для AR
+router.get('/:id/download-glb', async (req, res) => {
   try {
     const { id } = req.params;
 
-    const model = await Model3D.findOne({
-      where: { taskId: id }, // Ищем по taskId
+    // Сначала пытаемся найти по ID модели, если не нашли - по taskId (для обратной совместимости)
+    let model = await Model3D.findOne({
+      where: { id: id, status: 'active' },
       attributes: ['glbFile', 'name']
     });
+
+    if (!model) {
+      // Для обратной совместимости - ищем по taskId
+      model = await Model3D.findOne({
+        where: { taskId: id, status: 'active' },
+        attributes: ['glbFile', 'name']
+      });
+    }
 
     if (!model || !model.glbFile) {
       return res.status(404).send('GLB файл не найден');

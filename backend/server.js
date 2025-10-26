@@ -42,6 +42,19 @@ console.log(`[STATIC] Раздача /uploads/input из: ${staticPath}`);
 console.log(`[STATIC] Абсолютный путь: ${path.resolve(staticPath)}`);
 console.log(`[STATIC] Директория существует: ${require('fs').existsSync(staticPath)}`);
 
+// Проверяем содержимое директории uploads/input
+try {
+  const fs = require('fs');
+  if (fs.existsSync(staticPath)) {
+    const files = fs.readdirSync(staticPath);
+    console.log(`[STATIC] Файлы в uploads/input (${files.length}):`, files.slice(0, 5)); // Показываем первые 5 файлов
+  } else {
+    console.error(`[STATIC] Директория uploads/input НЕ существует: ${staticPath}`);
+  }
+} catch (error) {
+  console.error(`[STATIC] Ошибка проверки директории uploads/input:`, error);
+}
+
 app.use('/uploads/input', express.static(staticPath, {
   setHeaders: (res, filePath) => {
     console.log(`[STATIC] Запрос файла: ${filePath}`);
