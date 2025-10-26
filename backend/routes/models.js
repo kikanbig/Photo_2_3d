@@ -91,6 +91,45 @@ router.get('/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// Получить GLB файл модели для AR (прямая ссылка)
+router.get('/:id/glb', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const model = await Model3D.findOne({
+      where: {
+        id: id,
+        userId: req.user.userId // Проверяем, что модель принадлежит пользователю
+      },
+      attributes: ['glbFile', 'name']
+    });
+
+    if (!model || !model.glbFile) {
+      return res.status(404).send('GLB файл не найден');
+    }
+
+    // Заголовки для AR поддержки - мобильные браузеры откроют в AR режиме
+    res.setHeader('Content-Type', 'model/gltf-binary');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Range');
+    res.setHeader('Accept-Ranges', 'bytes');
+    res.setHeader('Content-Disposition', 'inline'); // Не attachment, чтобы открывалось в браузере
+
+    // Специальные заголовки для AR
+    res.setHeader('intent', 'https://arvr.google.com/scene-viewer/1.1');
+    res.setHeader('X-Frame-Options', 'ALLOWALL');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+
+    res.send(model.glbFile);
+
+    console.log(`📱 GLB файл отдан для AR: модель ${id}`);
+  } catch (error) {
+    console.error('Ошибка получения GLB для AR:', error);
+    res.status(500).send('Ошибка получения файла');
+  }
+});
+
 // Скачать GLB файл модели из БД
 router.get('/:id/download', async (req, res) => {
   try {

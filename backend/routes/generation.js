@@ -115,9 +115,11 @@ router.post('/upload', authenticateToken, upload.single('image'), async (req, re
       }
 
       await fs.ensureDir(path.dirname(publicImagePath));
+      console.log(`[Задача ${taskId}] Директория создана: ${path.dirname(publicImagePath)}`);
+
       if (imagePath !== publicImagePath) {
         await fs.copy(imagePath, publicImagePath);
-        console.log(`[Задача ${taskId}] Файл скопирован в публичную папку: ${publicImagePath}`);
+        console.log(`[Задача ${taskId}] Файл скопирован: ${imagePath} -> ${publicImagePath}`);
       } else {
         console.log(`[Задача ${taskId}] Файл уже в публичной папке: ${publicImagePath}`);
       }
@@ -127,12 +129,16 @@ router.post('/upload', authenticateToken, upload.single('image'), async (req, re
       if (fileExists) {
         const stats = await fs.stat(publicImagePath);
         console.log(`[Задача ${taskId}] Файл готов для раздачи: ${path.basename(publicImagePath)} (${stats.size} байт)`);
+        console.log(`[Задача ${taskId}] Полный путь к файлу: ${path.resolve(publicImagePath)}`);
       } else {
         console.error(`[Задача ${taskId}] Файл НЕ найден после копирования: ${publicImagePath}`);
+        console.error(`[Задача ${taskId}] Абсолютный путь: ${path.resolve(publicImagePath)}`);
       }
 
     } catch (copyError) {
       console.error(`[Задача ${taskId}] Ошибка копирования файла:`, copyError);
+      console.error(`[Задача ${taskId}] Исходный путь: ${imagePath}`);
+      console.error(`[Задача ${taskId}] Целевой путь: ${publicImagePath}`);
     }
 
     // Сохраняем информацию о задаче

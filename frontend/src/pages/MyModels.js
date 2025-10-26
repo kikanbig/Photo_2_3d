@@ -99,12 +99,26 @@ const MyModels = () => {
             <div key={model.id} className="model-row" onClick={() => handleView(model.id)}>
               <div className="model-thumbnail">
                 {model.imageUrl ? (
-                  <img src={model.imageUrl} alt={model.name} />
-                ) : (
-                  <div className="thumbnail-placeholder">
-                    <Package size={32} />
-                  </div>
-                )}
+                  <img
+                    src={model.imageUrl}
+                    alt={model.name}
+                    onError={(e) => {
+                      console.log('❌ Ошибка загрузки изображения:', model.imageUrl);
+                      console.log('📊 Данные модели:', {
+                        id: model.id,
+                        name: model.name,
+                        imageUrl: model.imageUrl,
+                        originalImageUrl: model.originalImageUrl,
+                        previewImageUrl: model.previewImageUrl
+                      });
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div className="thumbnail-placeholder" style={{ display: model.imageUrl ? 'none' : 'flex' }}>
+                  <Package size={32} />
+                </div>
               </div>
               
               <div className="model-details">

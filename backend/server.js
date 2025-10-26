@@ -38,8 +38,13 @@ app.use('/uploads/models', express.static(path.join(__dirname, uploadDir, 'model
 
 // Раздаём исходные изображения для превью
 const staticPath = path.join(__dirname, '..', uploadDir, 'input');
+console.log(`[STATIC] Раздача /uploads/input из: ${staticPath}`);
+console.log(`[STATIC] Абсолютный путь: ${path.resolve(staticPath)}`);
+console.log(`[STATIC] Директория существует: ${require('fs').existsSync(staticPath)}`);
+
 app.use('/uploads/input', express.static(staticPath, {
   setHeaders: (res, filePath) => {
+    console.log(`[STATIC] Запрос файла: ${filePath}`);
     res.setHeader('Access-Control-Allow-Origin', '*');
     // Устанавливаем правильный Content-Type для изображений
     const ext = path.extname(filePath).toLowerCase();
