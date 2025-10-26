@@ -77,7 +77,7 @@ const Register = () => {
 
       if (result.success) {
         setShowSuccess(true);
-        setMessage('Регистрация успешна! Теперь вы можете войти в систему.');
+        setMessage(result.message || 'Регистрация успешна! Теперь вы можете войти в систему.');
         setMessageType('success');
         // Перенаправляем на страницу входа через 2 секунды
         setTimeout(() => {
@@ -88,8 +88,9 @@ const Register = () => {
         setMessageType('error');
       }
     } catch (error) {
-      setMessage(error.message);
+      setMessage('Неожиданная ошибка при регистрации');
       setMessageType('error');
+      console.error('Registration error:', error);
     } finally {
       setLoading(false);
     }

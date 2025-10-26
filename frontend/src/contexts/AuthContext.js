@@ -60,9 +60,9 @@ export const AuthProvider = ({ children }) => {
   const register = async (email, password, username) => {
     try {
       const result = await registerUser(email, password, username);
-      return result;
+      return { success: true, message: result.message, data: result.data };
     } catch (error) {
-      throw error;
+      return { success: false, error: error.message };
     }
   };
 

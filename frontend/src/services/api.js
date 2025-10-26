@@ -174,7 +174,7 @@ export const registerUser = async (email, password, username) => {
       throw new Error(data.error || 'Ошибка регистрации');
     }
 
-    return data.data;
+    return data; // Возвращаем полный объект ответа сервера
   } catch (error) {
     console.error('Ошибка registerUser:', error);
     throw error;
