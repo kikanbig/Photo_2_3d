@@ -91,15 +91,15 @@ router.get('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Получить GLB файл модели для AR (прямая ссылка)
-router.get('/:id/glb', authenticateToken, async (req, res) => {
+// Получить GLB файл модели для AR (прямая ссылка) - публичный доступ для QR кодов
+router.get('/:id/glb', async (req, res) => {
   try {
     const { id } = req.params;
 
     const model = await Model3D.findOne({
       where: {
         id: id,
-        userId: req.user.userId // Проверяем, что модель принадлежит пользователю
+        status: 'active' // Только активные модели доступны публично
       },
       attributes: ['glbFile', 'name']
     });
@@ -123,7 +123,7 @@ router.get('/:id/glb', authenticateToken, async (req, res) => {
 
     res.send(model.glbFile);
 
-    console.log(`📱 GLB файл отдан для AR: модель ${id}`);
+    console.log(`📱 GLB файл отдан для AR (публичный доступ): модель ${id}, файл: ${model.name || 'без имени'}`);
   } catch (error) {
     console.error('Ошибка получения GLB для AR:', error);
     res.status(500).send('Ошибка получения файла');
