@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Save, Play } from 'lucide-react';
 import { saveModel, getAuthToken } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import ImageUpload from '../components/ImageUpload';
 import ModelSettings from '../components/ModelSettings';
 import ModelViewer from '../components/ModelViewer';
@@ -9,6 +10,7 @@ import StatusCard from '../components/StatusCard';
 import './Home.css';
 
 const Home = () => {
+  const { refreshProfile } = useAuth();
   const [selectedImage, setSelectedImage] = useState(null);
   const [taskId, setTaskId] = useState(null);
   const [taskStatus, setTaskStatus] = useState(null);
@@ -58,6 +60,9 @@ const Home = () => {
       const data = await response.json();
 
       if (data.success) {
+        // Обновляем профиль пользователя после списания кредитов
+        await refreshProfile();
+
         setTaskId(data.taskId);
         setTaskStatus({
           status: 'processing',
