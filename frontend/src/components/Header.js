@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Zap, User, Menu, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -6,14 +6,6 @@ import './Header.css';
 
 const Header = ({ onMenuToggle }) => {
   const { user, logout } = useAuth();
-
-  // Логируем изменения пользователя
-  useEffect(() => {
-    console.log('👤 Header: пользователь обновился:', user);
-    if (user) {
-      console.log('💰 Header: кредиты пользователя:', user.credits);
-    }
-  }, [user]);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
 
