@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Save, Play } from 'lucide-react';
-import { saveModel } from '../services/api';
+import { saveModel, getAuthToken } from '../services/api';
 import ImageUpload from '../components/ImageUpload';
 import ModelSettings from '../components/ModelSettings';
 import ModelViewer from '../components/ModelViewer';
@@ -41,10 +41,19 @@ const Home = () => {
       }
 
       const apiUrl = process.env.REACT_APP_BACKEND_URL || window.location.origin;
+      // Получить токен для аутентификации
+      const token = getAuthToken();
+      console.log('🔐 Токен для генерации:', token ? 'присутствует' : 'отсутствует');
+
       const response = await fetch(`${apiUrl}/api/generation/upload`, {
         method: 'POST',
+        headers: {
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
         body: formData,
       });
+
+      console.log('📡 Ответ сервера:', response.status, response.statusText);
 
       const data = await response.json();
 
