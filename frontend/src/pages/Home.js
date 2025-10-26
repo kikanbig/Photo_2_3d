@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Save, Play } from 'lucide-react';
 import { saveModel, getAuthToken } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -17,6 +17,20 @@ const Home = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState(null);
   const [modelSettings, setModelSettings] = useState({ name: '', dimensions: null });
+
+  // Синхронизируем профиль пользователя при загрузке страницы
+  useEffect(() => {
+    const syncProfile = async () => {
+      try {
+        await refreshProfile();
+        console.log('🔄 Профиль синхронизирован с БД при загрузке страницы');
+      } catch (error) {
+        console.error('❌ Ошибка синхронизации профиля:', error);
+      }
+    };
+
+    syncProfile();
+  }, [refreshProfile]);
 
   const handleImageSelect = (image) => {
     setSelectedImage(image);
@@ -60,9 +74,6 @@ const Home = () => {
       const data = await response.json();
 
       if (data.success) {
-        // Обновляем профиль пользователя после списания кредитов
-        await refreshProfile();
-
         setTaskId(data.taskId);
         setTaskStatus({
           status: 'processing',
@@ -101,6 +112,17 @@ const Home = () => {
 
           if (task.status === 'completed' || task.status === 'failed' || task.status === 'timeout') {
             setIsGenerating(false);
+
+            // Обновляем профиль после завершения генерации (кредиты могли измениться)
+            if (task.status === 'completed') {
+              try {
+                await refreshProfile();
+                console.log('🔄 Профиль обновлен после успешной генерации');
+              } catch (error) {
+                console.error('❌ Ошибка обновления профиля после генерации:', error);
+              }
+            }
+
             return;
           }
 

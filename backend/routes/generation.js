@@ -155,16 +155,9 @@ router.post('/upload', authenticateToken, upload.single('image'), async (req, re
     // Запускаем генерацию в фоновом режиме
     generate3DModelAsync(taskId, imagePath);
 
-    // Списываем кредиты после успешного запуска генерации
-    user.credits -= requiredCredits;
-    await user.save();
-
-    console.log(`💰 Списано ${requiredCredits} кредитов у ${user.email}. Остаток: ${user.credits}`);
-
     res.json({
       success: true,
       taskId: taskId,
-      credits: user.credits, // Возвращаем обновленное количество кредитов
       message: 'Генерация 3D модели запущена'
     });
 
@@ -336,6 +329,17 @@ async function generate3DModelAsync(taskId, imagePath) {
       });
       console.log(`💾 Масштабированный GLB сохранён в БД для задачи: ${taskId}`);
 
+      // Списываем кредиты ТОЛЬКО после успешного сохранения модели
+      const User = require('../models/User');
+      const user = await User.findByPk(task.userId);
+      const requiredCredits = 50;
+
+      if (user && user.credits >= requiredCredits) {
+        user.credits -= requiredCredits;
+        await user.save();
+        console.log(`💰 Списано ${requiredCredits} кредитов у ${user.email} после успешной генерации. Остаток: ${user.credits}`);
+      }
+
       // Удаляем временный файл
       await fs.remove(tempPath);
 
@@ -421,7 +425,18 @@ async function generate3DModelAsync(taskId, imagePath) {
             status: 'active'
           });
           console.log(`💾 Масштабированный GLB сохранён в БД для задачи: ${taskId}`);
-          
+
+          // Списываем кредиты ТОЛЬКО после успешного сохранения модели
+          const User = require('../models/User');
+          const user = await User.findByPk(task.userId);
+          const requiredCredits = 50;
+
+          if (user && user.credits >= requiredCredits) {
+            user.credits -= requiredCredits;
+            await user.save();
+            console.log(`💰 Списано ${requiredCredits} кредитов у ${user.email} после успешной генерации. Остаток: ${user.credits}`);
+          }
+
           // Удаляем временный файл
           await fs.remove(tempPath);
           
@@ -541,7 +556,18 @@ async function pollTaskStatus(taskId, requestId) {
             status: 'active'
           });
           console.log(`💾 Масштабированный GLB сохранён в БД для задачи: ${taskId}`);
-          
+
+          // Списываем кредиты ТОЛЬКО после успешного сохранения модели
+          const User = require('../models/User');
+          const user = await User.findByPk(task.userId);
+          const requiredCredits = 50;
+
+          if (user && user.credits >= requiredCredits) {
+            user.credits -= requiredCredits;
+            await user.save();
+            console.log(`💰 Списано ${requiredCredits} кредитов у ${user.email} после успешной генерации. Остаток: ${user.credits}`);
+          }
+
           // Удаляем временный файл
           await fs.remove(tempPath);
           
