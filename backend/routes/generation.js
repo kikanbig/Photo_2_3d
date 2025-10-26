@@ -5,7 +5,7 @@ const fs = require('fs-extra');
 const { v4: uuidv4 } = require('uuid');
 const GenAPIService = require('../services/genapi');
 const { scaleGLB } = require('../services/glb-scaler');
-const { authenticateToken, deductCredits } = require('./auth');
+const { authenticateToken } = require('./auth');
 const User = require('../models/User');
 const Model3D = require('../models/Model3D');
 
@@ -67,10 +67,22 @@ function saveTasks() {
 }
 
 // Загрузка изображения и запуск генерации
-router.post('/upload', authenticateToken, deductCredits(50), upload.single('image'), async (req, res) => {
+router.post('/upload', authenticateToken, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Файл изображения не предоставлен' });
+    }
+
+    // Проверяем кредиты пользователя
+    const User = require('../models/User');
+    const user = await User.findByPk(req.user.userId);
+    const requiredCredits = 50;
+
+    if (user.credits < requiredCredits) {
+      return res.status(402).json({
+        success: false,
+        error: `Недостаточно кредитов. Доступно: ${user.credits}`
+      });
     }
 
     const taskId = uuidv4();
@@ -143,9 +155,16 @@ router.post('/upload', authenticateToken, deductCredits(50), upload.single('imag
     // Запускаем генерацию в фоновом режиме
     generate3DModelAsync(taskId, imagePath);
 
+    // Списываем кредиты после успешного запуска генерации
+    user.credits -= requiredCredits;
+    await user.save();
+
+    console.log(`💰 Списано ${requiredCredits} кредитов у ${user.email}. Остаток: ${user.credits}`);
+
     res.json({
       success: true,
       taskId: taskId,
+      credits: user.credits, // Возвращаем обновленное количество кредитов
       message: 'Генерация 3D модели запущена'
     });
 

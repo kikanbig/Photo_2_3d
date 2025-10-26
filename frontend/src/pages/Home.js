@@ -61,13 +61,7 @@ const Home = () => {
 
       if (data.success) {
         // Обновляем профиль пользователя после списания кредитов
-        console.log('🔄 Обновляем профиль пользователя после списания кредитов...');
-        try {
-          const updatedProfile = await refreshProfile();
-          console.log('✅ Профиль обновлен:', updatedProfile);
-        } catch (error) {
-          console.error('❌ Ошибка обновления профиля:', error);
-        }
+        await refreshProfile();
 
         setTaskId(data.taskId);
         setTaskStatus({
