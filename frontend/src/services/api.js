@@ -3,7 +3,7 @@
 const API_URL = process.env.REACT_APP_BACKEND_URL || window.location.origin;
 
 // Получить JWT токен из localStorage
-const getAuthToken = () => localStorage.getItem('auth_token');
+export const getAuthToken = () => localStorage.getItem('auth_token');
 
 // Создать headers с авторизацией
 const getAuthHeaders = () => {
