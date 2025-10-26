@@ -8,7 +8,7 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import MyModels from './pages/MyModels';
 import ModelView from './pages/ModelView';
-import ARView from './pages/ARView';
+// import ARView from './pages/ARView'; // Убираем - используем прямые ссылки на GLB
 import Login from './pages/Login';
 import Register from './pages/Register';
 
@@ -45,8 +45,8 @@ function App() {
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
 
-          {/* AR View - без сайдбара и футера */}
-          <Route path="/ar-view/:modelId" element={<ARView />} />
+                  {/* AR View - теперь используем прямые ссылки на GLB файлы */}
+                  {/* <Route path="/ar-view/:modelId" element={<ARView />} /> */}
 
           {/* Защищенные страницы с сайдбаром */}
           <Route path="*" element={

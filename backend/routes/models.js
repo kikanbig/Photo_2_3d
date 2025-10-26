@@ -102,7 +102,14 @@ router.get('/:id/download', async (req, res) => {
 
     res.setHeader('Content-Type', 'model/gltf-binary');
     res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Range');
+    res.setHeader('Accept-Ranges', 'bytes');
     res.setHeader('Content-Disposition', `inline; filename="${model.name || 'model'}.glb"`);
+
+    // Дополнительные заголовки для AR поддержки
+    res.setHeader('X-Frame-Options', 'ALLOWALL');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
     res.send(model.glbFile);
     
     console.log(`📤 GLB файл отдан из БД: ${id}`);

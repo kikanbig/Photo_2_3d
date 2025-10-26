@@ -24,9 +24,8 @@ const ModelView = () => {
       const data = await getModel(modelId);
       setModel(data);
       
-      // Создаем URL для AR просмотра
-      const baseUrl = window.location.origin;
-      const arViewUrl = `${baseUrl}/ar-view/${modelId}`;
+      // Создаем прямую ссылку на GLB файл для AR просмотра
+      const arViewUrl = model.modelUrl; // Прямая ссылка на GLB файл
       setArUrl(arViewUrl);
     } catch (error) {
       console.error('Ошибка загрузки модели:', error);
@@ -121,9 +120,13 @@ const ModelView = () => {
               <ol className="ar-instructions">
                 <li>Откройте камеру на телефоне</li>
                 <li>Наведите на QR код</li>
-                <li>Нажмите на уведомление</li>
-                <li>Модель откроется в AR режиме</li>
+                <li>Нажмите на ссылку или скачайте файл</li>
+                <li>GLB файл откроется в Google Model Viewer</li>
+                <li>Наслаждайтесь полной AR функциональностью!</li>
               </ol>
+              <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '1rem' }}>
+                💡 <strong>Преимущества:</strong> Рамки по размерам, полупрозрачность при перекрытии, точное позиционирование
+              </p>
             </div>
 
             <button className="btn btn-primary download-qr-btn" onClick={downloadQR}>
@@ -133,10 +136,13 @@ const ModelView = () => {
           </div>
 
           <div className="ar-preview-link">
-            <p>Или откройте ссылку напрямую:</p>
+            <p>📱 <strong>Прямая ссылка на GLB файл:</strong></p>
             <a href={arUrl} target="_blank" rel="noopener noreferrer" className="ar-link">
-              {arUrl}
+              📄 Открыть GLB файл в AR
             </a>
+            <p style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.5rem' }}>
+              Файл откроется в Google Model Viewer с полной AR функциональностью
+            </p>
           </div>
         </div>
       </div>
