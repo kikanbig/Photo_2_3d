@@ -87,12 +87,16 @@ export const AuthProvider = ({ children }) => {
   // Обновление профиля
   const refreshProfile = async () => {
     try {
+      console.log('🔄 Вызываем getUserProfile...');
       const profile = await getUserProfile();
+      console.log('📊 Получен профиль:', profile);
+      console.log('💰 Кредиты в профиле:', profile.credits);
       setUser(profile);
       setCurrentUser(profile);
+      console.log('✅ AuthContext обновлен');
       return profile;
     } catch (error) {
-      console.error('Ошибка обновления профиля:', error);
+      console.error('❌ Ошибка обновления профиля:', error);
       throw error;
     }
   };
