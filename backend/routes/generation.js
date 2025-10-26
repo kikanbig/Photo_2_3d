@@ -67,7 +67,7 @@ function saveTasks() {
 }
 
 // Загрузка изображения и запуск генерации
-router.post('/upload', authenticateToken, deductCredits(1), upload.single('image'), async (req, res) => {
+router.post('/upload', authenticateToken, deductCredits(50), upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Файл изображения не предоставлен' });

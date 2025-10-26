@@ -32,7 +32,7 @@ const User = sequelize.define('User', {
     type: DataTypes.INTEGER,
     defaultValue: 100,
     allowNull: false,
-    comment: 'Количество кредитов пользователя (стартовые 100)'
+    comment: 'Количество кредитов пользователя (стартовые 100, генерация стоит 50)'
   },
   status: {
     type: DataTypes.ENUM('active', 'suspended', 'banned'),

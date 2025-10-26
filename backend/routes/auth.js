@@ -370,7 +370,7 @@ function checkCredits(requiredCredits = 1) {
   };
 }
 
-// Middleware для списания кредитов
+// Middleware для списания кредитов (генерация 3D модели стоит 50 кредитов)
 function deductCredits(requiredCredits = 1) {
   return async (req, res, next) => {
     try {
