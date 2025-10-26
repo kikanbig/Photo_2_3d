@@ -445,7 +445,22 @@ const ARView = () => {
           interpolation-decay="100"
           alt={model.name || '3D Model'}
         >
-          <button slot="ar-button" className="ar-button">
+          <button
+            slot="ar-button"
+            className="ar-button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+
+              // Создаем URL для Google Scene Viewer
+              const baseUrl = window.location.origin;
+              const glbUrl = `${baseUrl}/api/models/${model.id}/download-glb`;
+              const arUrl = `https://arvr.google.com/scene-viewer/1.1?file=${encodeURIComponent(glbUrl)}&mode=ar_preferred&title=${encodeURIComponent(model.name || '3D Model')}&link=${encodeURIComponent(window.location.href)}`;
+
+              console.log('🚀 Открываем Google Scene Viewer:', arUrl);
+              window.open(arUrl, '_blank');
+            }}
+          >
             🏠 Примерить в комнате
           </button>
           

@@ -29,9 +29,8 @@ const ModelView = () => {
 
       setModel(data);
 
-      // Создаем ссылку на GLB файл для AR через новый endpoint
-      const baseUrl = window.location.origin;
-      const arViewUrl = `${baseUrl}/api/models/${data.id}/glb`;
+      // Создаем ссылку на AR просмотр в нашем интерфейсе
+      const arViewUrl = `${window.location.origin}/ar-view/${data.id}`;
       setArUrl(arViewUrl);
     } catch (error) {
       console.error('Ошибка загрузки модели:', error);
