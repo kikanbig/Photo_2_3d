@@ -104,7 +104,11 @@ router.post('/upload', authenticateToken, upload.single('image'), async (req, re
     console.log(`[Задача ${taskId}] Создана новая задача для файла: ${imagePath}`);
 
     // Гарантируем, что файл доступен для статической раздачи
-    const publicImagePath = path.join(process.env.UPLOAD_DIR || 'uploads', 'input', path.basename(imagePath));
+    const uploadDir = process.env.UPLOAD_DIR || 'uploads';
+    const publicImagePath = path.join(uploadDir, 'input', path.basename(imagePath));
+    console.log(`[ЗАГРУЗКА] Исходный файл: ${imagePath}`);
+    console.log(`[ЗАГРУЗКА] Целевой путь: ${publicImagePath}`);
+    console.log(`[ЗАГРУЗКА] Upload dir: ${uploadDir}`);
 
     try {
       // Проверяем, что исходный файл существует
@@ -350,7 +354,7 @@ async function generate3DModelAsync(taskId, imagePath) {
       await fs.remove(tempPath);
 
       // URL для фронтенда
-      const apiModelUrl = `/api/models/${taskId}/download`;
+      const apiModelUrl = `/api/models/${taskId}/download-glb`;
 
       // Обновляем задачу
       task.status = 'completed';
@@ -446,7 +450,7 @@ async function generate3DModelAsync(taskId, imagePath) {
           // Удаляем временный файл
           await fs.remove(tempPath);
           
-          const apiModelUrl = `/api/models/${taskId}/download`;
+          const apiModelUrl = `/api/models/${taskId}/download-glb`;
           
           // Обновляем задачу
           task.status = 'completed';
@@ -577,7 +581,7 @@ async function pollTaskStatus(taskId, requestId) {
           // Удаляем временный файл
           await fs.remove(tempPath);
           
-          const apiModelUrl = `/api/models/${taskId}/download`;
+          const apiModelUrl = `/api/models/${taskId}/download-glb`;
           
           // Обновляем задачу
           task.status = 'completed';
