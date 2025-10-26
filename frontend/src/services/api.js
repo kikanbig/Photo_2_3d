@@ -153,14 +153,19 @@ export const searchModels = async (query) => {
 // ========== АУТЕНТИФИКАЦИЯ ==========
 
 // Регистрация пользователя
-export const registerUser = async (email, password) => {
+export const registerUser = async (email, password, username) => {
   try {
+    const requestData = { email, password };
+    if (username) {
+      requestData.username = username;
+    }
+
     const response = await fetch(`${API_URL}/api/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify(requestData)
     });
 
     const data = await response.json();

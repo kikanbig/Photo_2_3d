@@ -2,8 +2,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   loginUser,
   registerUser,
-  verifyEmail,
-  resendVerification,
   getUserProfile,
   logoutUser,
   isAuthenticated,
@@ -59,29 +57,9 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Регистрация
-  const register = async (email, password) => {
+  const register = async (email, password, username) => {
     try {
-      const result = await registerUser(email, password);
-      return result;
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  // Подтверждение email
-  const verify = async (token) => {
-    try {
-      const result = await verifyEmail(token);
-      return result;
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  // Повторная отправка подтверждения
-  const resendVerificationEmail = async (email) => {
-    try {
-      const result = await resendVerification(email);
+      const result = await registerUser(email, password, username);
       return result;
     } catch (error) {
       throw error;
@@ -125,8 +103,6 @@ export const AuthProvider = ({ children }) => {
     isAuthChecked,
     isAuthenticated: !!user,
     register,
-    verify,
-    resendVerificationEmail,
     login,
     logout,
     refreshProfile

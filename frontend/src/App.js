@@ -11,7 +11,6 @@ import ModelView from './pages/ModelView';
 import ARView from './pages/ARView';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import VerifyEmail from './pages/VerifyEmail';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -42,10 +41,9 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
-          {/* Страницы аутентификации - без сайдбара */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
+                  {/* Страницы аутентификации - без сайдбара */}
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
 
           {/* AR View - без сайдбара и футера */}
           <Route path="/ar-view/:modelId" element={<ARView />} />

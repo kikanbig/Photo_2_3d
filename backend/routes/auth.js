@@ -7,10 +7,10 @@ const { sendEmail } = require('../services/email');
 
 const router = express.Router();
 
-// Регистрация пользователя
+// Регистрация пользователя (упрощенная, без email подтверждения)
 router.post('/register', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, username } = req.body;
 
     // Валидация
     if (!email || !password) {
@@ -27,7 +27,7 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    // Проверяем, существует ли пользователь
+    // Проверяем, существует ли пользователь с таким email
     const existingUser = await User.findOne({ where: { email: email.toLowerCase() } });
     if (existingUser) {
       return res.status(400).json({
@@ -36,61 +36,39 @@ router.post('/register', async (req, res) => {
       });
     }
 
+    // Если указан username, проверяем его уникальность
+    if (username) {
+      const existingUsername = await User.findOne({ where: { username: username.toLowerCase() } });
+      if (existingUsername) {
+        return res.status(400).json({
+          success: false,
+          error: 'Пользователь с таким username уже существует'
+        });
+      }
+    }
+
     // Хешируем пароль
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Генерируем токен подтверждения
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 часа
-
-    // ВРЕМЕННО: отключаем email подтверждение для тестирования
-    const skipEmailVerification = process.env.SKIP_EMAIL_VERIFICATION === 'true';
-
     // Создаем пользователя
     const user = await User.create({
       email: email.toLowerCase(),
+      username: username ? username.toLowerCase() : null,
       password: hashedPassword,
-      emailVerified: skipEmailVerification, // true если пропускаем подтверждение
-      emailVerificationToken: skipEmailVerification ? null : verificationToken,
-      emailVerificationExpires: skipEmailVerification ? null : verificationExpires,
+      emailVerified: true, // Автоматически подтверждаем email
       credits: 100 // Стартовые кредиты
     });
 
-    if (skipEmailVerification) {
-      console.log(`✅ Регистрация без email подтверждения: ${user.email}`);
-    } else {
-      // Отправляем email подтверждения
-      try {
-        const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
-
-        await sendEmail({
-          to: user.email,
-          subject: 'Подтвердите ваш email - Photo to 3D',
-          html: `
-            <h1>Добро пожаловать в Photo to 3D!</h1>
-            <p>Вам начислено <strong>100 бесплатных кредитов</strong> для генерации 3D моделей.</p>
-            <p>Для активации аккаунта нажмите на ссылку ниже:</p>
-            <a href="${verificationUrl}" style="background: #5743E8; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Подтвердить email</a>
-            <p>Ссылка действительна 24 часа.</p>
-            <p>Если кнопка не работает, скопируйте ссылку: ${verificationUrl}</p>
-          `
-        });
-
-        console.log(`📧 Email подтверждения отправлен: ${user.email}`);
-
-      } catch (emailError) {
-        console.error('❌ Ошибка отправки email:', emailError);
-        // Не возвращаем ошибку, пользователь создан, просто email не отправлен
-      }
-    }
+    console.log(`✅ Пользователь зарегистрирован: ${user.email} (ID: ${user.id})`);
 
     res.json({
       success: true,
-      message: skipEmailVerification ? 'Пользователь зарегистрирован успешно.' : 'Пользователь зарегистрирован. Проверьте email для подтверждения.',
+      message: 'Пользователь зарегистрирован успешно!',
       data: {
         userId: user.id,
         email: user.email,
+        username: user.username,
         credits: user.credits,
         emailVerified: user.emailVerified
       }
@@ -257,14 +235,6 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Проверяем подтверждение email
-    if (!user.emailVerified) {
-      return res.status(401).json({
-        success: false,
-        error: 'Email не подтвержден. Проверьте почту.'
-      });
-    }
-
     // Проверяем статус пользователя
     if (user.status !== 'active') {
       return res.status(401).json({
@@ -281,7 +251,9 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign(
       {
         userId: user.id,
-        email: user.email
+        email: user.email,
+        username: user.username,
+        credits: user.credits
       },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '7d' }
@@ -297,8 +269,8 @@ router.post('/login', async (req, res) => {
         user: {
           id: user.id,
           email: user.email,
+          username: user.username,
           credits: user.credits,
-          emailVerified: user.emailVerified,
           lastLoginAt: user.lastLoginAt
         }
       }

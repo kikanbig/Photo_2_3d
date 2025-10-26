@@ -15,25 +15,18 @@ const User = sequelize.define('User', {
       isEmail: true
     }
   },
+  username: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      len: [3, 30] // от 3 до 30 символов
+    },
+    comment: 'Уникальное имя пользователя (опционально)'
+  },
   password: {
     type: DataTypes.STRING,
     allowNull: false,
     comment: 'Хешированный пароль (bcrypt)'
-  },
-  emailVerified: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false,
-    comment: 'Подтвержден ли email'
-  },
-  emailVerificationToken: {
-    type: DataTypes.STRING,
-    allowNull: true,
-    comment: 'Токен для подтверждения email'
-  },
-  emailVerificationExpires: {
-    type: DataTypes.DATE,
-    allowNull: true,
-    comment: 'Срок действия токена подтверждения'
   },
   credits: {
     type: DataTypes.INTEGER,
@@ -64,13 +57,17 @@ const User = sequelize.define('User', {
       unique: true
     },
     {
-      fields: ['emailVerificationToken']
+      fields: ['username'],
+      unique: true
     },
     {
       fields: ['status']
     },
     {
       fields: ['createdAt']
+    },
+    {
+      fields: ['lastLoginAt']
     }
   ]
 });

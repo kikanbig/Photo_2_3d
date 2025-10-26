@@ -331,4 +331,15 @@
   .success-card h1 {
     font-size: 1.5rem;
   }
+
+  .field-hint {
+    font-size: 0.75rem;
+  }
+}
+
+.field-hint {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: #6c757d;
 }

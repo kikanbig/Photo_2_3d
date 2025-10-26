@@ -7,6 +7,7 @@ import './Register.css';
 const Register = () => {
   const [formData, setFormData] = useState({
     email: '',
+    username: '',
     password: '',
     confirmPassword: ''
   });
@@ -27,7 +28,7 @@ const Register = () => {
 
   const validateForm = () => {
     if (!formData.email || !formData.password || !formData.confirmPassword) {
-      setMessage('Все поля обязательны для заполнения');
+      setMessage('Email, пароль и подтверждение пароля обязательны');
       setMessageType('error');
       return false;
     }
@@ -51,6 +52,12 @@ const Register = () => {
       return false;
     }
 
+    if (formData.username && (formData.username.length < 3 || formData.username.length > 30)) {
+      setMessage('Username должен быть от 3 до 30 символов');
+      setMessageType('error');
+      return false;
+    }
+
     return true;
   };
 
@@ -66,10 +73,20 @@ const Register = () => {
     setLoading(true);
 
     try {
-      await register(formData.email, formData.password);
-      setShowSuccess(true);
-      setMessage('Регистрация успешна! Проверьте email для подтверждения аккаунта.');
-      setMessageType('success');
+      const result = await register(formData.email, formData.password, formData.username || undefined);
+
+      if (result.success) {
+        setShowSuccess(true);
+        setMessage('Регистрация успешна! Теперь вы можете войти в систему.');
+        setMessageType('success');
+        // Перенаправляем на страницу входа через 2 секунды
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000);
+      } else {
+        setMessage(result.error || 'Ошибка регистрации');
+        setMessageType('error');
+      }
     } catch (error) {
       setMessage(error.message);
       setMessageType('error');
@@ -86,8 +103,7 @@ const Register = () => {
             <CheckCircle size={64} className="success-icon" />
             <h1>Регистрация успешна!</h1>
             <p>
-              Мы отправили письмо с подтверждением на адрес <strong>{formData.email}</strong>.
-              Перейдите по ссылке в письме для активации аккаунта.
+              Ваш аккаунт создан. Теперь вы можете войти в систему.
             </p>
             <div className="success-actions">
               <button
@@ -96,20 +112,6 @@ const Register = () => {
               >
                 Войти в аккаунт
               </button>
-              <button
-                onClick={() => setShowSuccess(false)}
-                className="success-btn secondary"
-              >
-                Зарегистрировать еще один
-              </button>
-            </div>
-            <div className="email-help">
-              <p><strong>Не получили письмо?</strong></p>
-              <ul>
-                <li>Проверьте папку "Спам"</li>
-                <li>Подождите 5-10 минут</li>
-                <li>Письмо может идти до 30 минут</li>
-              </ul>
             </div>
           </div>
         </div>
@@ -143,6 +145,25 @@ const Register = () => {
                 required
                 disabled={loading}
               />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="username">
+                <User size={18} />
+                Имя пользователя (опционально)
+              </label>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                placeholder="От 3 до 30 символов"
+                disabled={loading}
+                minLength={3}
+                maxLength={30}
+              />
+              <small className="field-hint">Оставьте пустым, если не хотите использовать username</small>
             </div>
 
             <div className="form-group">
