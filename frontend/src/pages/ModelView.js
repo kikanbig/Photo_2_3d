@@ -21,14 +21,24 @@ const ModelView = () => {
   const loadModel = async () => {
     try {
       setLoading(true);
+      console.log('🔍 Загружаем модель с ID:', modelId);
       const data = await getModel(modelId);
+      console.log('📦 Полученные данные модели:', data);
+      console.log('🔗 modelUrl:', data?.modelUrl);
+
+      if (!data) {
+        console.error('❌ Модель не найдена, возвращается null');
+        throw new Error('Модель не найдена');
+      }
+
       setModel(data);
-      
+
       // Создаем прямую ссылку на GLB файл для AR просмотра
-      const arViewUrl = model.modelUrl; // Прямая ссылка на GLB файл
+      const arViewUrl = data.modelUrl; // Прямая ссылка на GLB файл
       setArUrl(arViewUrl);
+      console.log('🎯 AR URL установлен:', arViewUrl);
     } catch (error) {
-      console.error('Ошибка загрузки модели:', error);
+      console.error('❌ Ошибка загрузки модели:', error);
       navigate('/my-models');
     } finally {
       setLoading(false);

@@ -6,6 +6,7 @@ import './ModelViewer.css';
 
 // Компонент для загрузки 3D модели с авто-фитом
 function Model({ url, onComputed }) {
+  console.log('🗂️ ModelViewer: пытаемся загрузить URL:', url);
   const { scene } = useGLTF(url);
   const computedRef = useRef(false);
 

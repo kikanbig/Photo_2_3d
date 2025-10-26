@@ -40,9 +40,7 @@ export const getModel = async (id) => {
   try {
     const response = await fetch(`${API_URL}/api/models/${id}`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
+      headers: getAuthHeaders()
     });
 
     const data = await response.json();

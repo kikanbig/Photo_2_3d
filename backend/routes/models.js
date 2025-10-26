@@ -57,16 +57,21 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // Получить одну модель по ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const model = await Model3D.findByPk(id);
+    const model = await Model3D.findOne({
+      where: {
+        id: id,
+        userId: req.user.userId // Проверяем, что модель принадлежит пользователю
+      }
+    });
 
     if (!model) {
       return res.status(404).json({
         success: false,
-        error: 'Модель не найдена'
+        error: 'Модель не найдена или доступ запрещен'
       });
     }
 
