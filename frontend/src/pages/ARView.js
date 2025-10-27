@@ -452,12 +452,45 @@ const ARView = () => {
               e.preventDefault();
               e.stopPropagation();
 
-              // Создаем URL для Google Scene Viewer
+              // Создаем URL для Google Scene Viewer с полными AR параметрами
               const baseUrl = window.location.origin;
               const glbUrl = `${baseUrl}/api/models/${model.id}/download-glb`;
-              const arUrl = `https://arvr.google.com/scene-viewer/1.1?file=${encodeURIComponent(glbUrl)}&mode=ar_preferred&title=${encodeURIComponent(model.name || '3D Model')}&link=${encodeURIComponent(window.location.href)}`;
 
-              console.log('🚀 Открываем Google Scene Viewer:', arUrl);
+              // Параметры для идеального AR поведения (как в Telegram)
+              const arParams = new URLSearchParams({
+                file: glbUrl,
+                mode: 'ar_preferred',
+                title: model.name || '3D Model',
+                link: window.location.href,
+                // Ключевые параметры для правильного AR поведения:
+                resizable: 'true',                    // Можно менять размер
+                enable_vertical_placement: 'false',   // Запрещаем вертикальное размещение (ТОЛЬКО ПОЛ!)
+                enable_horizontal_placement: 'true',  // Разрешаем размещение ТОЛЬКО на полу
+                disable_occlusion: 'false',          // Включаем окклюзию (прозрачность при пересечении)
+                // Дополнительные параметры для лучшего UX:
+                environment_image: 'neutral',        // Нейтральное окружение
+                disable_tap: 'false',               // Разрешаем тапы для взаимодействия
+                magic_window: 'false',              // Отключаем magic window режим
+                sound_name: '',                     // Без звука
+                cardboard_magnet: 'false'          // Для Cardboard VR
+              });
+
+              const arUrl = `https://arvr.google.com/scene-viewer/1.1?${arParams.toString()}`;
+
+              console.log('🚀 Открываем Google Scene Viewer с полными AR параметрами:', arUrl);
+              console.log('📋 Полные AR параметры (как в Telegram):', {
+                file: glbUrl,
+                mode: 'ar_preferred',
+                title: model.name || '3D Model',
+                resizable: true,                    // Масштабирование включено
+                enable_vertical_placement: false,   // ТОЛЬКО ПОЛ! (ключевой параметр)
+                enable_horizontal_placement: true, // Размещение на полу
+                disable_occlusion: false,          // Окклюзия ВКЛЮЧЕНА (прозрачность)
+                environment_image: 'neutral',      // Нейтральное окружение
+                magic_window: false               // Без magic window
+              });
+              console.log('🎯 Ожидаемое поведение: белый контур, полупрозрачность при пересечении, размещение на полу');
+
               window.open(arUrl, '_blank');
             }}
           >

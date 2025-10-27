@@ -176,16 +176,24 @@ router.get('/:id/download-glb', async (req, res) => {
       return res.status(404).send('GLB файл не найден');
     }
 
+    // Заголовки для правильного отображения в AR viewers
     res.setHeader('Content-Type', 'model/gltf-binary');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Headers', 'Range');
     res.setHeader('Accept-Ranges', 'bytes');
     res.setHeader('Content-Disposition', `inline; filename="${model.name || 'model'}.glb"`);
+    res.setHeader('Content-Length', model.glbFile.length);
 
-    // Дополнительные заголовки для AR поддержки
+    // Специальные заголовки для AR (Google Scene Viewer, Quick Look)
     res.setHeader('X-Frame-Options', 'ALLOWALL');
     res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+
+    // Дополнительные заголовки для лучшей AR совместимости
+    res.setHeader('Cache-Control', 'public, max-age=3600'); // Кеширование на 1 час
+    res.setHeader('ETag', `"${model.id}-${model.updatedAt?.getTime() || Date.now()}"`);
+
+    console.log(`📱 Отдаем GLB файл "${model.name || 'без имени'}" (${model.glbFile.length} байт) для AR`);
     res.send(model.glbFile);
     
     console.log(`📤 GLB файл отдан из БД: ${id}`);
