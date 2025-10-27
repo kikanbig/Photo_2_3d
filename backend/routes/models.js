@@ -56,31 +56,62 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
-// Получить одну модель по ID
-router.get('/:id', authenticateToken, async (req, res) => {
+// Получить одну модель по ID (публичный доступ для AR просмотра)
+router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    const isAuthenticated = !!(req.user && req.user.userId);
 
-    const model = await Model3D.findOne({
-      where: {
-        id: id,
-        userId: req.user.userId // Проверяем, что модель принадлежит пользователю
-      }
+    console.log(`🔍 Запрос модели ${id}, авторизован: ${isAuthenticated}`);
+
+    // Сначала пытаемся найти по ID модели, если не нашли - по taskId (для обратной совместимости)
+    let whereCondition = { id: id };
+
+    // Если пользователь авторизован, показываем его модели
+    // Если не авторизован, показываем только активные модели (для QR кодов)
+    if (isAuthenticated) {
+      whereCondition.userId = req.user.userId;
+      console.log(`🔐 Поиск модели пользователя ${req.user.userId}`);
+    } else {
+      whereCondition.status = 'active'; // Для публичного доступа - только активные модели
+      console.log(`🌐 Публичный доступ - поиск активной модели`);
+    }
+
+    let model = await Model3D.findOne({
+      where: whereCondition,
+      attributes: { exclude: ['glbFile'] } // Исключаем огромный BLOB
     });
 
+    // Для обратной совместимости - ищем по taskId
+    if (!model && !isAuthenticated) {
+      console.log(`🔄 Попытка поиска по taskId ${id}`);
+      model = await Model3D.findOne({
+        where: { taskId: id, status: 'active' },
+        attributes: { exclude: ['glbFile'] }
+      });
+    }
+
     if (!model) {
+      console.log(`❌ Модель ${id} не найдена`);
       return res.status(404).json({
         success: false,
         error: 'Модель не найдена или доступ запрещен'
       });
     }
 
+    console.log(`✅ Модель ${id} найдена: ${model.name || 'без имени'}`);
+
+    // Добавляем imageUrl для обратной совместимости
+    const modelData = model.toJSON();
+    const data = {
+      ...modelData,
+      imageUrl: modelData.originalImageUrl || modelData.previewImageUrl,
+      glbFile: undefined // Не отправляем бинарные данные
+    };
+
     res.json({
       success: true,
-      data: {
-        ...model.toJSON(),
-        glbFile: undefined // Не отправляем бинарные данные
-      }
+      data: data
     });
   } catch (error) {
     console.error('Ошибка получения модели:', error);
