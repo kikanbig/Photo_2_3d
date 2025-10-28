@@ -176,12 +176,18 @@ router.get('/:id/download-glb', async (req, res) => {
       return res.status(404).send('GLB файл не найден');
     }
 
+    // Очистка имени файла от специальных символов (для Content-Disposition)
+    const cleanFileName = (model.name || 'model')
+      .replace(/[^a-zA-Z0-9\-_\.\s]/g, '') // Убираем все кроме букв, цифр, дефиса, подчеркивания, точки и пробела
+      .replace(/\s+/g, '_') // Заменяем пробелы на подчеркивания
+      .substring(0, 50); // Ограничиваем длину
+
     // Заголовки для правильного отображения в AR viewers
     res.setHeader('Content-Type', 'model/gltf-binary');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Headers', 'Range');
     res.setHeader('Accept-Ranges', 'bytes');
-    res.setHeader('Content-Disposition', `inline; filename="${model.name || 'model'}.glb"`);
+    res.setHeader('Content-Disposition', `inline; filename="${cleanFileName}.glb"`);
     res.setHeader('Content-Length', model.glbFile.length);
 
     // Специальные заголовки для AR (Google Scene Viewer, Quick Look)
