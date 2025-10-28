@@ -91,7 +91,7 @@ const ModelView = () => {
           </div>
           <div className="model-viewer-container">
             {model.modelUrl ? (
-              <ModelViewer modelUrl={model.modelUrl} />
+              <ModelViewer modelUrl={`${window.location.origin}${model.modelUrl}`} />
             ) : (
               <div className="no-model">
                 <Info size={48} />
