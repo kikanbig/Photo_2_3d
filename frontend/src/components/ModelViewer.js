@@ -22,9 +22,9 @@ function Model({ url, onComputed }) {
     // Центрируем модель в (0,0,0)
     scene.position.sub(center);
 
-    // Нормализуем масштаб: целевой размер 0.5 по максимальному измерению (влезает в окно)
+    // Масштабируем модель для комфортного просмотра (1:1 натуральный размер)
     const maxDimension = Math.max(size.x, size.y, size.z) || 1;
-    const targetSize = 0.5;
+    const targetSize = 1.0; // Натуральная величина 1:1
     const uniformScale = targetSize / maxDimension;
     scene.scale.setScalar(uniformScale);
 
