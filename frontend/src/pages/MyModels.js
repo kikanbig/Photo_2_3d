@@ -1,12 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, Trash2, Eye, Calendar } from 'lucide-react';
-import { getModels, deleteModel } from '../services/api';
+import { Package, Trash2, Eye, Calendar, Edit } from 'lucide-react';
+import { getModels, deleteModel, updateModel } from '../services/api';
 import './MyModels.css';
 
 const MyModels = () => {
   const [models, setModels] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingModel, setEditingModel] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    dimensions: {
+      length: '',
+      width: '',
+      height: '',
+      unit: 'cm'
+    }
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -40,6 +50,61 @@ const MyModels = () => {
 
   const handleView = (modelId) => {
     navigate(`/model/${modelId}`);
+  };
+
+  const handleEdit = (model, e) => {
+    e.stopPropagation();
+    setEditingModel(model);
+    setEditForm({
+      name: model.name || '',
+      dimensions: {
+        length: model.dimensions?.length || '',
+        width: model.dimensions?.width || '',
+        height: model.dimensions?.height || '',
+        unit: model.dimensions?.unit || 'cm'
+      }
+    });
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const updatedData = {
+        name: editForm.name,
+        dimensions: {
+          length: parseFloat(editForm.dimensions.length),
+          width: parseFloat(editForm.dimensions.width),
+          height: parseFloat(editForm.dimensions.height),
+          unit: editForm.dimensions.unit
+        }
+      };
+
+      await updateModel(editingModel.id, updatedData);
+
+      // Обновляем модель в списке
+      setModels(models.map(m =>
+        m.id === editingModel.id
+          ? { ...m, ...updatedData }
+          : m
+      ));
+
+      setEditingModel(null);
+      setEditForm({
+        name: '',
+        dimensions: { length: '', width: '', height: '', unit: 'cm' }
+      });
+    } catch (error) {
+      console.error('Ошибка обновления модели:', error);
+      alert('Ошибка обновления модели: ' + error.message);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditingModel(null);
+    setEditForm({
+      name: '',
+      dimensions: { length: '', width: '', height: '', unit: 'cm' }
+    });
   };
 
   const formatDate = (dateString) => {
@@ -147,6 +212,13 @@ const MyModels = () => {
                   <Eye size={18} />
                 </button>
                 <button
+                  className="action-btn edit-btn"
+                  onClick={(e) => handleEdit(model, e)}
+                  title="Редактировать"
+                >
+                  <Edit size={18} />
+                </button>
+                <button
                   className="action-btn delete-btn"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -159,6 +231,111 @@ const MyModels = () => {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Модальное окно редактирования */}
+      {editingModel && (
+        <div className="modal-overlay" onClick={handleEditCancel}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Редактировать модель</h3>
+              <button className="modal-close" onClick={handleEditCancel}>×</button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="edit-form">
+              <div className="form-group">
+                <label htmlFor="name">Название модели</label>
+                <input
+                  type="text"
+                  id="name"
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  placeholder="Введите название модели"
+                  required
+                />
+              </div>
+
+              <div className="dimensions-section">
+                <h4>Размеры модели</h4>
+                <div className="dimensions-grid">
+                  <div className="form-group">
+                    <label htmlFor="length">Длина</label>
+                    <input
+                      type="number"
+                      id="length"
+                      step="0.01"
+                      value={editForm.dimensions.length}
+                      onChange={(e) => setEditForm({
+                        ...editForm,
+                        dimensions: { ...editForm.dimensions, length: e.target.value }
+                      })}
+                      placeholder="0.00"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="width">Ширина</label>
+                    <input
+                      type="number"
+                      id="width"
+                      step="0.01"
+                      value={editForm.dimensions.width}
+                      onChange={(e) => setEditForm({
+                        ...editForm,
+                        dimensions: { ...editForm.dimensions, width: e.target.value }
+                      })}
+                      placeholder="0.00"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="height">Высота</label>
+                    <input
+                      type="number"
+                      id="height"
+                      step="0.01"
+                      value={editForm.dimensions.height}
+                      onChange={(e) => setEditForm({
+                        ...editForm,
+                        dimensions: { ...editForm.dimensions, height: e.target.value }
+                      })}
+                      placeholder="0.00"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="unit">Единица измерения</label>
+                    <select
+                      id="unit"
+                      value={editForm.dimensions.unit}
+                      onChange={(e) => setEditForm({
+                        ...editForm,
+                        dimensions: { ...editForm.dimensions, unit: e.target.value }
+                      })}
+                    >
+                      <option value="cm">см</option>
+                      <option value="mm">мм</option>
+                      <option value="m">м</option>
+                      <option value="in">дюймы</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" className="btn btn-secondary" onClick={handleEditCancel}>
+                  Отмена
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Сохранить изменения
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
