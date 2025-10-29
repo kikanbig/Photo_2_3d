@@ -190,7 +190,7 @@ const MyModels = () => {
                 <h3 className="model-name">{model.name}</h3>
                 {model.dimensions && (
                   <p className="model-dimensions">
-                    {model.dimensions.length} × {model.dimensions.width} × {model.dimensions.height} {model.dimensions.unit}
+                    {model.dimensions.width} × {model.dimensions.height} × {model.dimensions.length} {model.dimensions.unit}
                   </p>
                 )}
               </div>
@@ -260,7 +260,7 @@ const MyModels = () => {
                 <h4>Размеры модели</h4>
                 <div className="dimensions-grid">
                   <div className="form-group">
-                    <label htmlFor="length">Длина</label>
+                    <label htmlFor="length">Глубина</label>
                     <input
                       type="number"
                       id="length"

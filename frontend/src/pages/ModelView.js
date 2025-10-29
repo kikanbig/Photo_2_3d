@@ -85,7 +85,7 @@ const ModelView = () => {
             <h2>3D Модель</h2>
             {model.dimensions && (
               <div className="dimensions-badge">
-                {model.dimensions.length} × {model.dimensions.width} × {model.dimensions.height} {model.dimensions.unit}
+                {model.dimensions.width} × {model.dimensions.height} × {model.dimensions.length} {model.dimensions.unit}
               </div>
             )}
           </div>

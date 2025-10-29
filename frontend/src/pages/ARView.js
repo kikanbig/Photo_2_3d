@@ -387,7 +387,7 @@ const ARView = () => {
   const getDimensionsText = () => {
     if (!model.dimensions) return 'Размеры не указаны';
     const { length, width, height, unit } = model.dimensions;
-    return `${length} × ${width} × ${height} ${unit}`;
+    return `${width} × ${height} × ${length} ${unit}`;
   };
 
   return (
@@ -396,7 +396,7 @@ const ARView = () => {
         <h1>{model.name}</h1>
         {model.dimensions && (
           <p className="ar-dimensions">
-            {model.dimensions.length} × {model.dimensions.width} × {model.dimensions.height} {model.dimensions.unit}
+            {model.dimensions.width} × {model.dimensions.height} × {model.dimensions.length} {model.dimensions.unit}
           </p>
         )}
       </div>

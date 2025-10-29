@@ -41,7 +41,7 @@ const Model3D = sequelize.define('Model3D', {
   dimensions: {
     type: DataTypes.JSONB,
     allowNull: true,
-    comment: 'Объект с полями: length, width, height, unit'
+    comment: 'Объект с полями: width, height, depth, unit'
   },
   // ID задачи генерации
   taskId: {

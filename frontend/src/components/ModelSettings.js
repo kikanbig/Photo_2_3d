@@ -78,7 +78,7 @@ const ModelSettings = ({ onSettingsChange }) => {
 
         <div className="dimensions-fields">
           <div className="dimension-field">
-            <label htmlFor="length">Длина</label>
+            <label htmlFor="length">Глубина</label>
             <div className="input-wrapper">
               <input
                 id="length"
