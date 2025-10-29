@@ -112,25 +112,32 @@ const ARView = () => {
                 currentScale: modelViewer.scale
               });
               
-              // Проверяем, насколько модель отличается от ожидаемого размера
+              // Проверяем размеры модели в AR (информационно)
               if (model.dimensions && dimensions) {
-                const expectedMaxM = Math.max(
-                  model.dimensions.length / 100,
-                  model.dimensions.width / 100,
-                  model.dimensions.height / 100
-                );
-                
-                const actualMaxM = Math.max(dimensions.x, dimensions.y, dimensions.z);
-                
-                const sizeDifference = actualMaxM / expectedMaxM;
-                
-                console.log('🔍 Size analysis:', {
-                  expectedMax: expectedMaxM.toFixed(3) + 'm',
-                  actualMax: actualMaxM.toFixed(3) + 'm',
-                  ratio: sizeDifference.toFixed(3),
-                  verdict: sizeDifference < 0.9 ? '⚠️ Модель меньше ожидаемого!' : 
-                           sizeDifference > 1.1 ? '⚠️ Модель больше ожидаемого!' : 
-                           '✅ Размер соответствует'
+                const expectedSizes = {
+                  width: model.dimensions.width / 100,   // X ось
+                  height: model.dimensions.height / 100, // Y ось
+                  depth: model.dimensions.length / 100   // Z ось
+                };
+
+                const actualSizes = {
+                  x: dimensions.x,
+                  y: dimensions.y,
+                  z: dimensions.z
+                };
+
+                console.log('📐 AR размеры модели:', {
+                  expected: {
+                    'Ширина (X)': expectedSizes.width.toFixed(3) + 'm',
+                    'Высота (Y)': expectedSizes.height.toFixed(3) + 'm',
+                    'Глубина (Z)': expectedSizes.depth.toFixed(3) + 'm'
+                  },
+                  actual: {
+                    'X': actualSizes.x.toFixed(3) + 'm',
+                    'Y': actualSizes.y.toFixed(3) + 'm',
+                    'Z': actualSizes.z.toFixed(3) + 'm'
+                  },
+                  note: 'Реальные размеры зависят от ориентации модели в AR'
                 });
               }
             } catch (e) {
