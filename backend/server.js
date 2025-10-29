@@ -16,6 +16,8 @@ fs.ensureDirSync(uploadDir);
 fs.ensureDirSync(path.join(uploadDir, 'input'));
 fs.ensureDirSync(path.join(uploadDir, 'output'));
 fs.ensureDirSync(path.join(uploadDir, 'models'));
+fs.ensureDirSync(path.join(uploadDir, 'models', 'previews'));
+fs.ensureDirSync(path.join(uploadDir, 'temp'));
 
 // Middleware
 app.use(cors({
@@ -58,6 +60,28 @@ try {
 app.use('/uploads/input', express.static(staticPath, {
   setHeaders: (res, filePath) => {
     console.log(`[STATIC] Запрос файла: ${filePath}`);
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    // Устанавливаем правильный Content-Type для изображений
+    const ext = path.extname(filePath).toLowerCase();
+    const imageTypes = {
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.png': 'image/png',
+      '.gif': 'image/gif',
+      '.webp': 'image/webp'
+    };
+    if (imageTypes[ext]) {
+      res.setHeader('Content-Type', imageTypes[ext]);
+    }
+  }
+}));
+
+// Раздача превью изображений моделей
+const modelsStaticPath = path.join(__dirname, '..', uploadDir, 'models');
+console.log(`[STATIC] Раздача /uploads/models из: ${modelsStaticPath}`);
+app.use('/uploads/models', express.static(modelsStaticPath, {
+  setHeaders: (res, filePath) => {
+    console.log(`[STATIC] Запрос превью: ${filePath}`);
     res.setHeader('Access-Control-Allow-Origin', '*');
     // Устанавливаем правильный Content-Type для изображений
     const ext = path.extname(filePath).toLowerCase();

@@ -325,6 +325,23 @@ async function generate3DModelAsync(taskId, imagePath) {
       const scaledGLBBuffer = glbBuffer; // Без масштабирования
       console.log(`✅ GLB масштабирован: ${(scaledGLBBuffer.length / 1024 / 1024).toFixed(2)} MB`);
 
+      // Создаем превью изображение
+      const { createPreviewImage, getPreviewUrl } = require('../utils/imageProcessor');
+      const originalImagePath = path.join(process.env.UPLOAD_DIR || 'uploads', 'input', path.basename(task.imagePath));
+      const previewUrl = getPreviewUrl(originalImagePath, taskId);
+      const previewPath = path.join(process.env.UPLOAD_DIR || 'uploads', previewUrl.replace('/uploads/', ''));
+
+      let previewImageUrl = null;
+      try {
+        await createPreviewImage(originalImagePath, previewPath, 300, 300);
+        previewImageUrl = previewUrl;
+        console.log(`[Задача ${taskId}] Превью создано: ${previewUrl}`);
+      } catch (error) {
+        console.warn(`[Задача ${taskId}] Не удалось создать превью:`, error.message);
+        // Используем оригинальное изображение как превью если не удалось создать миниатюру
+        previewImageUrl = `/uploads/input/${path.basename(task.imagePath)}`;
+      }
+
       // Сохраняем масштабированный GLB в БД
       const Model3D = require('../models/Model3D');
       const task = tasks.get(taskId);
@@ -333,6 +350,7 @@ async function generate3DModelAsync(taskId, imagePath) {
         name: `Model ${taskId}`,
         modelUrl: `/api/models/${taskId}/download-glb`,
         glbFile: scaledGLBBuffer,  // Используем масштабированный буфер!
+        previewImageUrl: previewImageUrl, // Добавляем превью
         originalImageUrl: `/uploads/input/${path.basename(task.imagePath)}`, // Сохраняем путь к исходному изображению
         taskId: taskId,
         userId: task.userId, // Привязываем к пользователю
@@ -557,12 +575,30 @@ async function pollTaskStatus(taskId, requestId) {
           const scaledGLBBuffer = glbBuffer; // Без масштабирования
           console.log(`✅ GLB готов к сохранению: ${(scaledGLBBuffer.length / 1024 / 1024).toFixed(2)} MB`);
 
+          // Создаем превью изображение
+          const { createPreviewImage, getPreviewUrl } = require('../utils/imageProcessor');
+          const originalImagePath = path.join(process.env.UPLOAD_DIR || 'uploads', 'input', path.basename(task.imagePath));
+          const previewUrl = getPreviewUrl(originalImagePath, taskId);
+          const previewPath = path.join(process.env.UPLOAD_DIR || 'uploads', previewUrl.replace('/uploads/', ''));
+
+          let previewImageUrl = null;
+          try {
+            await createPreviewImage(originalImagePath, previewPath, 300, 300);
+            previewImageUrl = previewUrl;
+            console.log(`[Задача ${taskId}] Превью создано: ${previewUrl}`);
+          } catch (error) {
+            console.warn(`[Задача ${taskId}] Не удалось создать превью:`, error.message);
+            // Используем оригинальное изображение как превью если не удалось создать миниатюру
+            previewImageUrl = task.imagePath ? `/uploads/input/${path.basename(task.imagePath)}` : null;
+          }
+
           const Model3D = require('../models/Model3D');
           const task = tasks.get(taskId);
           await Model3D.create({
             name: `Model ${taskId}`,
             modelUrl: `/api/models/${taskId}/download-glb`,
             glbFile: scaledGLBBuffer,  // Используем масштабированный буфер!
+            previewImageUrl: previewImageUrl, // Добавляем превью
             originalImageUrl: task.imagePath ? `/uploads/input/${path.basename(task.imagePath)}` : null, // Сохраняем путь к исходному изображению
             taskId: taskId,
             userId: task.userId, // Привязываем к пользователю
