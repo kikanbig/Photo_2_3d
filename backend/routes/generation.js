@@ -513,11 +513,11 @@ async function pollTaskStatus(taskId, requestId) {
 
   console.log(`[Задача ${taskId}] Запускаем опрос статуса для request_id: ${requestId}`);
 
-  const poll = async () => {
+  const poll = async (currentTask) => {
     try {
       attempts++;
       console.log(`[Задача ${taskId}] Попытка ${attempts}/${maxAttempts} проверки статуса...`);
-      
+
       const statusResponse = await genapiService.checkTaskStatus(requestId);
       console.log(`[Задача ${taskId}] ===== ПОЛНЫЙ ОТВЕТ ОТ API =====`);
       console.log(JSON.stringify(statusResponse, null, 2));
@@ -577,7 +577,7 @@ async function pollTaskStatus(taskId, requestId) {
 
           // Создаем превью изображение
           const { createPreviewImage, getPreviewUrl } = require('../utils/imageProcessor');
-          const originalImagePath = path.join(process.env.UPLOAD_DIR || 'uploads', 'input', path.basename(task.imagePath));
+          const originalImagePath = path.join(process.env.UPLOAD_DIR || 'uploads', 'input', path.basename(currentTask.imagePath));
           const previewUrl = getPreviewUrl(originalImagePath, taskId);
           const previewPath = path.join(process.env.UPLOAD_DIR || 'uploads', previewUrl.replace('/uploads/', ''));
 
@@ -589,26 +589,25 @@ async function pollTaskStatus(taskId, requestId) {
           } catch (error) {
             console.warn(`[Задача ${taskId}] Не удалось создать превью:`, error.message);
             // Используем оригинальное изображение как превью если не удалось создать миниатюру
-            previewImageUrl = task.imagePath ? `/uploads/input/${path.basename(task.imagePath)}` : null;
+            previewImageUrl = currentTask.imagePath ? `/uploads/input/${path.basename(currentTask.imagePath)}` : null;
           }
 
           const Model3D = require('../models/Model3D');
-          const task = tasks.get(taskId);
           await Model3D.create({
             name: `Model ${taskId}`,
             modelUrl: `/api/models/${taskId}/download-glb`,
             glbFile: scaledGLBBuffer,  // Используем масштабированный буфер!
             previewImageUrl: previewImageUrl, // Добавляем превью
-            originalImageUrl: task.imagePath ? `/uploads/input/${path.basename(task.imagePath)}` : null, // Сохраняем путь к исходному изображению
+            originalImageUrl: currentTask.imagePath ? `/uploads/input/${path.basename(currentTask.imagePath)}` : null, // Сохраняем путь к исходному изображению
             taskId: taskId,
-            userId: task.userId, // Привязываем к пользователю
+            userId: currentTask.userId, // Привязываем к пользователю
             status: 'active'
           });
           console.log(`💾 Масштабированный GLB сохранён в БД для задачи: ${taskId}`);
 
           // Списываем кредиты ТОЛЬКО после успешного сохранения модели
           const User = require('../models/User');
-          const user = await User.findByPk(task.userId);
+          const user = await User.findByPk(currentTask.userId);
           const requiredCredits = 50;
 
           if (user && user.credits >= requiredCredits) {
@@ -621,16 +620,16 @@ async function pollTaskStatus(taskId, requestId) {
           await fs.remove(tempPath);
           
           const apiModelUrl = `/api/models/${taskId}/download-glb`;
-          
+
           // Обновляем задачу
-          task.status = 'completed';
-          task.result = {
+          currentTask.status = 'completed';
+          currentTask.result = {
             url: apiModelUrl,
             externalUrl: resultUrl,
             downloadedAt: new Date(),
             modelUrl: apiModelUrl
           };
-          tasks.set(taskId, task);
+          tasks.set(taskId, currentTask);
           saveTasks();
           
           console.log(`✅ Задача ${taskId} завершена успешно. URL: ${apiModelUrl}`);
@@ -640,22 +639,22 @@ async function pollTaskStatus(taskId, requestId) {
         }
       } else if (statusResponse.status === 'failed' || statusResponse.status === 'error') {
         // Задача завершена с ошибкой
-        task.status = 'failed';
-        task.error = statusResponse.error || 'Неизвестная ошибка генерации';
-        tasks.set(taskId, task);
+        currentTask.status = 'failed';
+        currentTask.error = statusResponse.error || 'Неизвестная ошибка генерации';
+        tasks.set(taskId, currentTask);
         saveTasks(); // Сохраняем в файл
-        
-        console.log(`Задача ${taskId} завершена с ошибкой: ${task.error}`);
+
+        console.log(`Задача ${taskId} завершена с ошибкой: ${currentTask.error}`);
       } else if (statusResponse.status === 'processing') {
         // Задача еще выполняется
         if (attempts < maxAttempts) {
-          setTimeout(poll, 5000); // Повторяем через 5 секунд
+          setTimeout(() => poll(currentTask), 5000); // Повторяем через 5 секунд
         } else {
           // Превышено время ожидания
-          task.status = 'timeout';
-          task.error = 'Превышено время ожидания генерации';
-          tasks.set(taskId, task);
-          
+          currentTask.status = 'timeout';
+          currentTask.error = 'Превышено время ожидания генерации';
+          tasks.set(taskId, currentTask);
+
           console.log(`Задача ${taskId} превысила время ожидания`);
         }
       }
@@ -663,17 +662,17 @@ async function pollTaskStatus(taskId, requestId) {
       console.error(`Ошибка опроса статуса для задачи ${taskId}:`, error);
       
       if (attempts < maxAttempts) {
-        setTimeout(poll, 5000);
+        setTimeout(() => poll(currentTask), 5000);
       } else {
-        task.status = 'failed';
-        task.error = error.message;
-        tasks.set(taskId, task);
+        currentTask.status = 'failed';
+        currentTask.error = error.message;
+        tasks.set(taskId, currentTask);
       }
     }
   };
 
   // Начинаем опрос через 5 секунд
-  setTimeout(poll, 5000);
+  setTimeout(() => poll(task), 5000);
 }
 
 module.exports = router;
