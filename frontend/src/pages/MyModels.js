@@ -260,22 +260,6 @@ const MyModels = () => {
                 <h4>Размеры модели</h4>
                 <div className="dimensions-grid">
                   <div className="form-group">
-                    <label htmlFor="length">Глубина</label>
-                    <input
-                      type="number"
-                      id="length"
-                      step="0.01"
-                      value={editForm.dimensions.length}
-                      onChange={(e) => setEditForm({
-                        ...editForm,
-                        dimensions: { ...editForm.dimensions, length: e.target.value }
-                      })}
-                      placeholder="0.00"
-                      required
-                    />
-                  </div>
-
-                  <div className="form-group">
                     <label htmlFor="width">Ширина</label>
                     <input
                       type="number"
@@ -285,6 +269,22 @@ const MyModels = () => {
                       onChange={(e) => setEditForm({
                         ...editForm,
                         dimensions: { ...editForm.dimensions, width: e.target.value }
+                      })}
+                      placeholder="0.00"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="length">Глубина</label>
+                    <input
+                      type="number"
+                      id="length"
+                      step="0.01"
+                      value={editForm.dimensions.length}
+                      onChange={(e) => setEditForm({
+                        ...editForm,
+                        dimensions: { ...editForm.dimensions, length: e.target.value }
                       })}
                       placeholder="0.00"
                       required

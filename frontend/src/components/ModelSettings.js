@@ -78,22 +78,6 @@ const ModelSettings = ({ onSettingsChange }) => {
 
         <div className="dimensions-fields">
           <div className="dimension-field">
-            <label htmlFor="length">Глубина</label>
-            <div className="input-wrapper">
-              <input
-                id="length"
-                type="number"
-                placeholder="0"
-                value={settings.dimensions.length}
-                onChange={(e) => handleDimensionChange('length', e.target.value)}
-                min="0"
-                step="0.1"
-              />
-              <span className="unit-label">{settings.dimensions.unit}</span>
-            </div>
-          </div>
-
-          <div className="dimension-field">
             <label htmlFor="width">Ширина</label>
             <div className="input-wrapper">
               <input
@@ -102,6 +86,22 @@ const ModelSettings = ({ onSettingsChange }) => {
                 placeholder="0"
                 value={settings.dimensions.width}
                 onChange={(e) => handleDimensionChange('width', e.target.value)}
+                min="0"
+                step="0.1"
+              />
+              <span className="unit-label">{settings.dimensions.unit}</span>
+            </div>
+          </div>
+
+          <div className="dimension-field">
+            <label htmlFor="length">Глубина</label>
+            <div className="input-wrapper">
+              <input
+                id="length"
+                type="number"
+                placeholder="0"
+                value={settings.dimensions.length}
+                onChange={(e) => handleDimensionChange('length', e.target.value)}
                 min="0"
                 step="0.1"
               />
