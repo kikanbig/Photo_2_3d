@@ -446,7 +446,7 @@ const ARView = () => {
           </div>
         )}
 
-        {/* Для iOS используем model-viewer с USDZ поддержкой */}
+        {/* Для iOS используем model-viewer с activateAR() */}
         {isIOS ? (
           <model-viewer
             ref={modelViewerRef}
@@ -462,7 +462,7 @@ const ARView = () => {
             environment-image="neutral"
             exposure="2"
             ar-placement="floor"
-            ios-src={`${window.location.origin}/api/models/${model.id}/download-usdz`}
+            ios-src={`${window.location.origin}/api/models/${model.id}/download-glb`}
             loading="eager"
             reveal="auto"
             camera-orbit="45deg 75deg 2m"
@@ -472,10 +472,16 @@ const ARView = () => {
             interpolation-decay="100"
             alt={model.name || '3D Model'}
           >
-            {/* iOS AR Quick Look - используем встроенную кнопку model-viewer */}
+            {/* iOS AR Quick Look - используем activateAR() API */}
             <button
               slot="ar-button"
               className="ar-button"
+              onClick={() => {
+                if (modelViewerRef.current) {
+                  console.log('📱 Activating AR for iOS via model-viewer API');
+                  modelViewerRef.current.activateAR();
+                }
+              }}
               style={{
                 position: 'absolute',
                 bottom: '20px',
@@ -497,7 +503,7 @@ const ARView = () => {
                 cursor: 'pointer'
               }}
             >
-              <span>📱 Открыть в AR (USDZ)</span>
+              <span>📱 Открыть в AR</span>
             </button>
           </model-viewer>
         ) : (
