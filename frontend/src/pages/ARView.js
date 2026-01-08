@@ -474,26 +474,14 @@ const ARView = () => {
             >
             </model-viewer>
             
-            {/* iOS AR Quick Look - используем model-viewer для ВСЕХ iOS браузеров */}
+            {/* iOS AR Quick Look - открываем HTML страницу с rel="ar" */}
             <button
               className="ar-button"
               onClick={() => {
-                const modelViewer = modelViewerRef.current;
-                if (modelViewer) {
-                  // Принудительно активируем AR
-                  console.log('🎯 Активация AR для iOS...');
-                  console.log('📱 Model viewer AR modes:', modelViewer.arModes);
-                  console.log('📱 Can activate AR:', modelViewer.canActivateAR);
-                  
-                  if (modelViewer.canActivateAR) {
-                    modelViewer.activateAR();
-                  } else {
-                    // Fallback: открываем GLB напрямую
-                    const glbUrl = `${window.location.origin}/api/models/${model.id}/download-glb`;
-                    console.log('⚠️ AR не доступен, открываем GLB:', glbUrl);
-                    window.open(glbUrl, '_blank');
-                  }
-                }
+                // Открываем специальную HTML страницу для iOS AR Quick Look
+                const arQuickLookUrl = `${window.location.origin}/api/models/${model.id}/ar-quick-look`;
+                console.log('🎯 Открываем AR Quick Look страницу:', arQuickLookUrl);
+                window.location.href = arQuickLookUrl;
               }}
               style={{
                 position: 'absolute',

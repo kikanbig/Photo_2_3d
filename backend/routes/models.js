@@ -122,6 +122,87 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// iOS AR Quick Look - HTML страница с rel="ar" ссылкой
+router.get('/:id/ar-quick-look', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const model = await Model3D.findOne({
+      where: { id: id, status: 'active' },
+      attributes: ['name', 'previewImageUrl', 'originalImageUrl']
+    });
+
+    if (!model) {
+      return res.status(404).send('Модель не найдена');
+    }
+
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const glbUrl = `${baseUrl}/api/models/${id}/download-glb`;
+    const previewUrl = model.previewImageUrl || model.originalImageUrl || '';
+    const fullPreviewUrl = previewUrl.startsWith('http') ? previewUrl : `${baseUrl}${previewUrl}`;
+
+    // HTML страница с rel="ar" для iOS AR Quick Look
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${model.name || '3D Model'} - AR</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 { margin: 0 0 1rem 0; color: #333; }
+        .ar-link {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+        img { max-width: 100%; height: auto; border-radius: 12px; margin: 1rem 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 ${model.name || '3D Model'}</h1>
+        ${previewUrl ? `<img src="${fullPreviewUrl}" alt="Preview" />` : ''}
+        <a href="${glbUrl}" rel="ar" class="ar-link">
+            🚀 Открыть в AR
+        </a>
+        <p style="margin-top: 1rem; color: #666; font-size: 0.9rem;">
+            Нажмите кнопку выше для просмотра в дополненной реальности
+        </p>
+    </div>
+</body>
+</html>`;
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(html);
+  } catch (error) {
+    console.error('Ошибка AR Quick Look:', error);
+    res.status(500).send('Ошибка');
+  }
+});
+
 // Получить GLB файл модели для AR (прямая ссылка) - публичный доступ для QR кодов
 router.get('/:id/glb', async (req, res) => {
   try {
