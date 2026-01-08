@@ -35,31 +35,11 @@ const ARView = () => {
       
       modelViewer.setAttribute('src', fullModelUrl);
       
-      // Настройка Scene Viewer согласно документации Google
       const title = model.name || '3D Model';
-      const link = window.location.href;
-      
       modelViewer.setAttribute('alt', title);
       
-      // ✅ GLB УЖЕ МАСШТАБИРОВАН НА БЭКЕНДЕ!
-      // Никаких ar-scale параметров не нужно
-      // Модель загружается в правильном размере сразу!
-      
-      // Создаём Scene Viewer URL с полным абсолютным URL
-      const sceneViewerUrl = new URL('https://arvr.google.com/scene-viewer/1.1');
-      sceneViewerUrl.searchParams.set('file', fullModelUrl);
-      sceneViewerUrl.searchParams.set('mode', 'ar_preferred');
-      sceneViewerUrl.searchParams.set('title', title);
-      sceneViewerUrl.searchParams.set('link', link);
-      sceneViewerUrl.searchParams.set('resizable', 'true');
-      sceneViewerUrl.searchParams.set('enable_vertical_placement', 'true');
-      
-      console.log('📱 Scene Viewer URL:', sceneViewerUrl.toString());
-      
-      // Устанавливаем кастомный Intent для Android
-      if (modelViewer.canActivateAR) {
-        modelViewer.activateAR();
-      }
+      console.log('📱 AR Mode:', isIOS ? 'iOS Quick Look' : 'Android Scene Viewer / WebXR');
+      console.log('📱 GLB URL:', fullModelUrl);
       
       // Настраиваем WebXR DOM Overlay
       if (navigator.xr) {
@@ -208,27 +188,6 @@ const ARView = () => {
         setIsInAR(isInArMode);
       };
       
-      // Перехватываем AR клик для добавления параметров Scene Viewer
-      const handleArClick = (event) => {
-        console.log('🎯 AR button clicked');
-        
-        // Для Android Scene Viewer добавляем параметры
-        if (modelViewer && model.dimensions) {
-          const sceneViewerParams = {
-            resizable: true,
-            enable_vertical_placement: true,
-            disable_occlusion: false,
-            title: model.name || '3D Model',
-            link: window.location.href
-          };
-          
-          console.log('📱 Scene Viewer params:', sceneViewerParams);
-          
-          // Параметры будут добавлены через model-viewer автоматически
-          // если они поддерживаются в текущей версии
-        }
-      };
-      
       // WebXR Session started - настраиваем overlay
       const handleSessionStart = async (event) => {
         console.log('🚀 WebXR Session started!');
@@ -291,12 +250,6 @@ const ARView = () => {
       // WebXR события
       modelViewer.addEventListener('ar-session-start', handleSessionStart);
       modelViewer.addEventListener('ar-session-end', handleSessionEnd);
-      
-      // AR button click
-      const arButton = modelViewer.querySelector('[slot="ar-button"]');
-      if (arButton) {
-        arButton.addEventListener('click', handleArClick);
-      }
 
       return () => {
         clearTimeout(timeout);
@@ -308,11 +261,9 @@ const ARView = () => {
         modelViewer.removeEventListener('scale-change', handleScaleChange);
         modelViewer.removeEventListener('ar-session-start', handleSessionStart);
         modelViewer.removeEventListener('ar-session-end', handleSessionEnd);
-        if (arButton) {
-          arButton.removeEventListener('click', handleArClick);
-        }
       };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [model, isInAR]);
 
   const loadModel = async () => {
@@ -548,7 +499,7 @@ const ARView = () => {
         <model-viewer
           ref={modelViewerRef}
           ar
-          ar-modes="scene-viewer webxr quick-look"
+          ar-modes="webxr quick-look"
           camera-controls
           touch-action="pan-y"
           auto-rotate
@@ -571,53 +522,8 @@ const ARView = () => {
           <button
             slot="ar-button"
             className="ar-button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-
-              // Создаем URL для Google Scene Viewer с полными AR параметрами
-              const baseUrl = window.location.origin;
-              const glbUrl = `${baseUrl}/api/models/${model.id}/download-glb`;
-
-              // Параметры для идеального AR поведения (как в Telegram)
-              const arParams = new URLSearchParams({
-                file: glbUrl,
-                mode: 'ar_preferred',
-                title: model.name || '3D Model',
-                link: window.location.href,
-                // Ключевые параметры для правильного AR поведения:
-                resizable: 'true',                    // Можно менять размер
-                enable_vertical_placement: 'false',   // Запрещаем вертикальное размещение (ТОЛЬКО ПОЛ!)
-                enable_horizontal_placement: 'true',  // Разрешаем размещение ТОЛЬКО на полу
-                disable_occlusion: 'false',          // Включаем окклюзию (прозрачность при пересечении)
-                // Дополнительные параметры для лучшего UX:
-                environment_image: 'neutral',        // Нейтральное окружение
-                disable_tap: 'false',               // Разрешаем тапы для взаимодействия
-                magic_window: 'false',              // Отключаем magic window режим
-                sound_name: '',                     // Без звука
-                cardboard_magnet: 'false'          // Для Cardboard VR
-              });
-
-              const arUrl = `https://arvr.google.com/scene-viewer/1.1?${arParams.toString()}`;
-
-              console.log('🚀 Открываем Google Scene Viewer с полными AR параметрами:', arUrl);
-              console.log('📋 Полные AR параметры (как в Telegram):', {
-                file: glbUrl,
-                mode: 'ar_preferred',
-                title: model.name || '3D Model',
-                resizable: true,                    // Масштабирование включено
-                enable_vertical_placement: false,   // ТОЛЬКО ПОЛ! (ключевой параметр)
-                enable_horizontal_placement: true, // Размещение на полу
-                disable_occlusion: false,          // Окклюзия ВКЛЮЧЕНА (прозрачность)
-                environment_image: 'neutral',      // Нейтральное окружение
-                magic_window: false               // Без magic window
-              });
-              console.log('🎯 Ожидаемое поведение: белый контур, полупрозрачность при пересечении, размещение на полу');
-
-              window.open(arUrl, '_blank');
-            }}
           >
-            🏠 Примерить в комнате
+            {isIOS ? '📱 Открыть в AR' : '🏠 Примерить в комнате'}
           </button>
           
           <div className="ar-prompt" slot="ar-prompt">
