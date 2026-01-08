@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Play } from 'lucide-react';
-import { saveModel, getAuthToken } from '../services/api';
+import { getAuthToken } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import ImageUpload from '../components/ImageUpload';
 import ModelSettings from '../components/ModelSettings';

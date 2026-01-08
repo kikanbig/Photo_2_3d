@@ -24,8 +24,16 @@ const ARView = () => {
     const modelViewer = modelViewerRef.current;
     if (modelViewer && model) {
       // Принудительно устанавливаем src через setAttribute
-      console.log('🎨 Setting model src:', model.modelUrl);
-      modelViewer.setAttribute('src', model.modelUrl);
+      // Используем полный абсолютный URL для iOS
+      const fullModelUrl = model.modelUrl.startsWith('http') 
+        ? model.modelUrl 
+        : `${window.location.origin}${model.modelUrl}`;
+      
+      console.log('🎨 Setting model src:', fullModelUrl);
+      console.log('📱 User agent:', navigator.userAgent);
+      console.log('🍎 Is iOS:', /iPhone|iPad|iPod/.test(navigator.userAgent));
+      
+      modelViewer.setAttribute('src', fullModelUrl);
       
       // Настройка Scene Viewer согласно документации Google
       const title = model.name || '3D Model';
@@ -37,9 +45,9 @@ const ARView = () => {
       // Никаких ar-scale параметров не нужно
       // Модель загружается в правильном размере сразу!
       
-      // Создаём Scene Viewer URL без параметров масштаба
+      // Создаём Scene Viewer URL с полным абсолютным URL
       const sceneViewerUrl = new URL('https://arvr.google.com/scene-viewer/1.1');
-      sceneViewerUrl.searchParams.set('file', model.modelUrl);
+      sceneViewerUrl.searchParams.set('file', fullModelUrl);
       sceneViewerUrl.searchParams.set('mode', 'ar_preferred');
       sceneViewerUrl.searchParams.set('title', title);
       sceneViewerUrl.searchParams.set('link', link);
@@ -442,7 +450,7 @@ const ARView = () => {
           environment-image="neutral"
           exposure="2"
           ar-placement="floor"
-          ios-src={model.modelUrl}
+          ios-src={`${window.location.origin}/api/models/${model.id}/download-glb`}
           loading="eager"
           reveal="auto"
           camera-orbit="45deg 75deg 2m"

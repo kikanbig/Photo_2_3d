@@ -210,7 +210,7 @@ router.get('/status/:taskId', async (req, res) => {
   }
 });
 
-// Скачивание результата
+// Скачивание результата (редирект на БД версию)
 router.get('/download/:taskId', async (req, res) => {
   try {
     const { taskId } = req.params;
@@ -224,17 +224,8 @@ router.get('/download/:taskId', async (req, res) => {
       return res.status(400).json({ error: 'Задача еще не завершена' });
     }
 
-    if (!task.result || !task.result.filePath) {
-      return res.status(404).json({ error: 'Файл результата не найден' });
-    }
-
-    const filePath = task.result.filePath;
-    
-    if (!await fs.pathExists(filePath)) {
-      return res.status(404).json({ error: 'Файл не существует' });
-    }
-
-    res.download(filePath, `3d_model_${taskId}.glb`);
+    // Редирект на скачивание из БД
+    return res.redirect(`/api/models/${taskId}/download-glb`);
 
   } catch (error) {
     console.error('Ошибка скачивания:', error);

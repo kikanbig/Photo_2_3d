@@ -182,25 +182,40 @@ router.get('/:id/download-glb', async (req, res) => {
       .replace(/\s+/g, '_') // Заменяем пробелы на подчеркивания
       .substring(0, 50); // Ограничиваем длину
 
-    // Заголовки для правильного отображения в AR viewers
+    const fileSize = model.glbFile.length;
+    const range = req.headers.range;
+
+    // Заголовки для правильного отображения в AR viewers (включая iOS)
     res.setHeader('Content-Type', 'model/gltf-binary');
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Headers', 'Range');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type, Accept');
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges');
     res.setHeader('Accept-Ranges', 'bytes');
     res.setHeader('Content-Disposition', `inline; filename="${cleanFileName}.glb"`);
-    res.setHeader('Content-Length', model.glbFile.length);
-
-    // Специальные заголовки для AR (Google Scene Viewer, Quick Look)
-    res.setHeader('X-Frame-Options', 'ALLOWALL');
-    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
-    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-
-    // Дополнительные заголовки для лучшей AR совместимости
     res.setHeader('Cache-Control', 'public, max-age=3600'); // Кеширование на 1 час
     res.setHeader('ETag', `"${model.id}-${model.updatedAt?.getTime() || Date.now()}"`);
 
-    console.log(`📱 Отдаем GLB файл "${model.name || 'без имени'}" (${model.glbFile.length} байт) для AR`);
-    res.send(model.glbFile);
+    // Обработка Range requests для iOS Safari (важно для больших файлов)
+    if (range) {
+      const parts = range.replace(/bytes=/, '').split('-');
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      const chunkSize = (end - start) + 1;
+      const chunk = model.glbFile.slice(start, end + 1);
+
+      res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
+      res.setHeader('Content-Length', chunkSize);
+      res.status(206); // Partial Content
+
+      console.log(`📱 Отдаем часть GLB файла "${model.name || 'без имени'}" (${start}-${end}/${fileSize} байт) для iOS`);
+      res.send(chunk);
+    } else {
+      // Полный файл
+      res.setHeader('Content-Length', fileSize);
+      console.log(`📱 Отдаем полный GLB файл "${model.name || 'без имени'}" (${fileSize} байт) для AR`);
+      res.send(model.glbFile);
+    }
     
     console.log(`📤 GLB файл отдан из БД: ${id}`);
   } catch (error) {
