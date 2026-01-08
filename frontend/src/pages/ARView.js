@@ -352,29 +352,11 @@ const ARView = () => {
         <div className="ar-error">
           <h2>❌ {error || 'Модель не найдена'}</h2>
           
-          {/* Предупреждение для Chrome на iOS */}
-          {isIOS && isChrome && (
-            <div style={{
-              background: 'rgba(255, 165, 0, 0.1)',
-              border: '2px solid rgba(255, 165, 0, 0.5)',
-              borderRadius: '12px',
-              padding: '1rem',
-              marginBottom: '1.5rem'
-            }}>
-              <h3 style={{ margin: '0 0 0.5rem 0', color: '#ff9500' }}>⚠️ Используйте Safari</h3>
-              <p style={{ margin: 0, fontSize: '0.9rem' }}>
-                Chrome на iOS не поддерживает AR просмотр. 
-                Пожалуйста, откройте эту ссылку в Safari для полного функционала.
-              </p>
-            </div>
-          )}
-          
           <p>Возможные причины:</p>
           <ul style={{ textAlign: 'left', marginBottom: '1.5rem' }}>
             <li>Модель не сохранена или имеет статус "неактивна"</li>
             <li>Неверный ID модели в QR коде</li>
             <li>Ошибка подключения к серверу</li>
-            {isIOS && isChrome && <li><strong>Chrome на iOS не поддерживает AR (используйте Safari)</strong></li>}
           </ul>
           <p style={{ fontSize: '0.9rem', marginBottom: '2rem' }}>
             ID модели: <code style={{ 
@@ -384,29 +366,6 @@ const ARView = () => {
               fontSize: '0.85rem'
             }}>{modelId}</code>
           </p>
-          
-          {/* Кнопка "Открыть в Safari" для iOS Chrome */}
-          {isIOS && isChrome && (
-            <button 
-              className="btn"
-              onClick={() => {
-                // Копируем ссылку для открытия в Safari
-                const currentUrl = window.location.href;
-                navigator.clipboard.writeText(currentUrl).then(() => {
-                  alert('✅ Ссылка скопирована!\n\n1. Откройте Safari\n2. Вставьте ссылку в адресную строку\n3. Модель откроется с поддержкой AR');
-                });
-              }}
-              style={{
-                background: 'linear-gradient(135deg, #ff9500 0%, #ff6b00 100%)',
-                color: 'white',
-                border: 'none',
-                padding: '0.875rem 1.5rem',
-                marginBottom: '1rem'
-              }}
-            >
-              📋 Скопировать ссылку для Safari
-            </button>
-          )}
           
           <button 
             className="btn" 
@@ -446,42 +405,22 @@ const ARView = () => {
           </p>
         )}
         
-        {/* Предупреждение для Chrome на iOS */}
+        {/* Информация для Chrome на iOS - AR работает, но может попросить открыть в Safari */}
         {isIOS && isChrome && (
           <div style={{
-            background: 'rgba(255, 165, 0, 0.15)',
-            border: '2px solid rgba(255, 165, 0, 0.6)',
+            background: 'rgba(33, 150, 243, 0.1)',
+            border: '2px solid rgba(33, 150, 243, 0.3)',
             borderRadius: '12px',
             padding: '1rem',
             marginTop: '1rem',
             textAlign: 'center'
           }}>
-            <h3 style={{ margin: '0 0 0.5rem 0', color: '#ff9500', fontSize: '1rem' }}>
-              ⚠️ Ограниченная функциональность
+            <h3 style={{ margin: '0 0 0.5rem 0', color: '#2196F3', fontSize: '1rem' }}>
+              ℹ️ Chrome на iOS
             </h3>
             <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.9 }}>
-              Chrome на iOS не поддерживает AR просмотр. Для полного функционала откройте эту страницу в Safari.
+              AR работает в Chrome на iOS! При клике на кнопку AR система может предложить открыть в Safari - это нормально.
             </p>
-            <button 
-              onClick={() => {
-                const currentUrl = window.location.href;
-                navigator.clipboard.writeText(currentUrl).then(() => {
-                  alert('✅ Ссылка скопирована! Откройте Safari и вставьте ссылку.');
-                });
-              }}
-              style={{
-                background: '#ff9500',
-                color: 'white',
-                border: 'none',
-                padding: '0.5rem 1rem',
-                borderRadius: '8px',
-                fontSize: '0.85rem',
-                marginTop: '0.75rem',
-                cursor: 'pointer'
-              }}
-            >
-              📋 Скопировать ссылку
-            </button>
           </div>
         )}
       </div>
