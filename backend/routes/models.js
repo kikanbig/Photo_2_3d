@@ -141,7 +141,7 @@ router.get('/:id/ar-quick-look', async (req, res) => {
     const previewUrl = model.previewImageUrl || model.originalImageUrl || '';
     const fullPreviewUrl = previewUrl.startsWith('http') ? previewUrl : `${baseUrl}${previewUrl}`;
 
-    // HTML страница с rel="ar" для iOS AR Quick Look
+    // HTML страница с rel="ar" для iOS AR Quick Look + автоматический клик
     const html = `<!DOCTYPE html>
 <html>
 <head>
@@ -179,19 +179,45 @@ router.get('/:id/ar-quick-look', async (req, res) => {
             margin-top: 1rem;
         }
         img { max-width: 100%; height: auto; border-radius: 12px; margin: 1rem 0; }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📱 ${model.name || '3D Model'}</h1>
-        ${previewUrl ? `<img src="${fullPreviewUrl}" alt="Preview" />` : ''}
-        <a href="${glbUrl}" rel="ar" class="ar-link">
+        <div class="spinner"></div>
+        <h1>📱 Запуск AR...</h1>
+        ${previewUrl ? `<img src="${fullPreviewUrl}" alt="Preview" style="max-width: 200px;" />` : ''}
+        <a href="${glbUrl}" rel="ar" id="ar-link" class="ar-link" style="display: none;">
             🚀 Открыть в AR
         </a>
         <p style="margin-top: 1rem; color: #666; font-size: 0.9rem;">
-            Нажмите кнопку выше для просмотра в дополненной реальности
+            Если AR не открылся автоматически, <a href="${glbUrl}" rel="ar" style="color: #667eea; font-weight: 600;">нажмите здесь</a>
         </p>
     </div>
+    <script>
+        // Автоматически кликаем по AR ссылке
+        window.onload = function() {
+            setTimeout(function() {
+                var link = document.getElementById('ar-link');
+                if (link) {
+                    console.log('🚀 Автоматический клик по AR ссылке');
+                    link.click();
+                }
+            }, 500);
+        };
+    </script>
 </body>
 </html>`;
 
