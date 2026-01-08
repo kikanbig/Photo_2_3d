@@ -99,8 +99,13 @@ app.use('/uploads/models', express.static(modelsStaticPath, {
 }));
 
 // Обслуживание статических файлов фронтенда
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../frontend/build')));
+const frontendBuildPath = path.join(__dirname, '../frontend/build');
+const hasFrontendBuild = fs.existsSync(frontendBuildPath);
+console.log(`[FRONTEND] Build path: ${frontendBuildPath}`);
+console.log(`[FRONTEND] Build exists: ${hasFrontendBuild}`);
+
+if (hasFrontendBuild) {
+  app.use(express.static(frontendBuildPath));
 } else {
   app.use(express.static('public'));
 }
@@ -168,14 +173,15 @@ app.get('/api/check-api-key', (req, res) => {
 });
 
 // Обслуживание React приложения для всех остальных маршрутов
-// ВАЖНО: Исключаем /uploads/* чтобы не перехватывать статические файлы
-if (process.env.NODE_ENV === 'production') {
+// ВАЖНО: Исключаем /uploads/* и /api/* чтобы не перехватывать статические файлы и API
+if (hasFrontendBuild) {
   app.get('*', (req, res, next) => {
-    // Пропускаем запросы к статическим файлам
-    if (req.path.startsWith('/uploads/')) {
+    // Пропускаем запросы к статическим файлам и API
+    if (req.path.startsWith('/uploads/') || req.path.startsWith('/api/')) {
       return next();
     }
-    res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+    console.log(`[FRONTEND] SPA route: ${req.path}`);
+    res.sendFile(path.join(frontendBuildPath, 'index.html'));
   });
 }
 
