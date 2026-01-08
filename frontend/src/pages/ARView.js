@@ -446,11 +446,13 @@ const ARView = () => {
           </div>
         )}
 
-        {/* Для iOS используем прямую ссылку с rel="ar" */}
+        {/* Для iOS используем model-viewer с AR поддержкой */}
         {isIOS ? (
           <>
             <model-viewer
               ref={modelViewerRef}
+              ar
+              ar-modes="quick-look"
               camera-controls
               touch-action="pan-y"
               auto-rotate
@@ -459,6 +461,8 @@ const ARView = () => {
               shadow-intensity="1"
               environment-image="neutral"
               exposure="2"
+              ar-placement="floor"
+              ios-src={`${window.location.origin}/api/models/${model.id}/download-glb`}
               loading="eager"
               reveal="auto"
               camera-orbit="45deg 75deg 2m"
@@ -470,20 +474,26 @@ const ARView = () => {
             >
             </model-viewer>
             
-            {/* iOS AR Quick Look кнопка как прямая ссылка */}
-            <a
-              href={`${window.location.origin}/api/models/${model.id}/download-glb`}
-              rel="ar"
+            {/* iOS AR Quick Look - используем model-viewer для ВСЕХ iOS браузеров */}
+            <button
               className="ar-button"
-              onClick={(e) => {
-                // Для Chrome на iOS: предотвращаем стандартное поведение и открываем через window.location
-                if (isChrome) {
-                  e.preventDefault();
-                  // Используем прямой переход вместо скачивания
-                  const arUrl = `${window.location.origin}/api/models/${model.id}/download-glb`;
-                  window.location.href = arUrl;
+              onClick={() => {
+                const modelViewer = modelViewerRef.current;
+                if (modelViewer) {
+                  // Принудительно активируем AR
+                  console.log('🎯 Активация AR для iOS...');
+                  console.log('📱 Model viewer AR modes:', modelViewer.arModes);
+                  console.log('📱 Can activate AR:', modelViewer.canActivateAR);
+                  
+                  if (modelViewer.canActivateAR) {
+                    modelViewer.activateAR();
+                  } else {
+                    // Fallback: открываем GLB напрямую
+                    const glbUrl = `${window.location.origin}/api/models/${model.id}/download-glb`;
+                    console.log('⚠️ AR не доступен, открываем GLB:', glbUrl);
+                    window.open(glbUrl, '_blank');
+                  }
                 }
-                // Для Safari - оставляем стандартное поведение rel="ar"
               }}
               style={{
                 position: 'absolute',
@@ -495,6 +505,7 @@ const ARView = () => {
                 background: 'linear-gradient(135deg, #5744e2 0%, #8b5cf6 100%)',
                 color: 'white',
                 textDecoration: 'none',
+                border: 'none',
                 borderRadius: '12px',
                 fontSize: '1rem',
                 fontWeight: '600',
@@ -506,13 +517,7 @@ const ARView = () => {
               }}
             >
               <span>📱 Открыть в AR</span>
-              {/* Скрытое изображение для AR Quick Look */}
-              <img 
-                src={model.previewImageUrl || model.originalImageUrl} 
-                alt="" 
-                style={{ display: 'none' }}
-              />
-            </a>
+            </button>
           </>
         ) : (
           <model-viewer

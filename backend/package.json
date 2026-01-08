@@ -1,6 +1,6 @@
 {
   "name": "photo-to-3d-backend",
-  "version": "3.7.1",
+  "version": "3.7.2",
   "description": "Backend для генерации 3D моделей из фотографий",
   "main": "server.js",
   "scripts": {
