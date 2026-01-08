@@ -23,6 +23,9 @@ const ARView = () => {
   useEffect(() => {
     const modelViewer = modelViewerRef.current;
     if (modelViewer && model) {
+      // Проверка iOS внутри useEffect
+      const isIOSDevice = /iPhone|iPad|iPod/.test(navigator.userAgent);
+      
       // Принудительно устанавливаем src через setAttribute
       // Используем полный абсолютный URL для iOS
       const fullModelUrl = model.modelUrl.startsWith('http') 
@@ -31,14 +34,21 @@ const ARView = () => {
       
       console.log('🎨 Setting model src:', fullModelUrl);
       console.log('📱 User agent:', navigator.userAgent);
-      console.log('🍎 Is iOS:', /iPhone|iPad|iPod/.test(navigator.userAgent));
+      console.log('🍎 Is iOS:', isIOSDevice);
       
       modelViewer.setAttribute('src', fullModelUrl);
       
       const title = model.name || '3D Model';
       modelViewer.setAttribute('alt', title);
       
-      console.log('📱 AR Mode:', isIOS ? 'iOS Quick Look' : 'Android Scene Viewer / WebXR');
+      // Для iOS Safari явно устанавливаем ios-src
+      if (isIOSDevice) {
+        const iosSrc = `${window.location.origin}/api/models/${model.id}/download-glb`;
+        modelViewer.setAttribute('ios-src', iosSrc);
+        console.log('🍎 iOS Quick Look src:', iosSrc);
+      }
+      
+      console.log('📱 AR Mode:', isIOSDevice ? 'iOS Quick Look' : 'Android Scene Viewer / WebXR');
       console.log('📱 GLB URL:', fullModelUrl);
       
       // Настраиваем WebXR DOM Overlay
@@ -333,7 +343,8 @@ const ARView = () => {
 
   // Проверка браузера для iOS
   const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-  const isChrome = navigator.userAgent.includes('CriOS');
+  // Chrome на iOS содержит 'CriOS', Safari не содержит
+  const isChrome = isIOS && navigator.userAgent.includes('CriOS');
 
   if (error || !model) {
     return (
@@ -496,45 +507,96 @@ const ARView = () => {
           </div>
         )}
 
-        <model-viewer
-          ref={modelViewerRef}
-          ar
-          ar-modes="webxr quick-look"
-          camera-controls
-          touch-action="pan-y"
-          auto-rotate
-          auto-rotate-delay="0"
-          rotation-per-second="30deg"
-          shadow-intensity="1"
-          environment-image="neutral"
-          exposure="2"
-          ar-placement="floor"
-          ios-src={`${window.location.origin}/api/models/${model.id}/download-glb`}
-          loading="eager"
-          reveal="auto"
-          camera-orbit="45deg 75deg 2m"
-          field-of-view="45deg"
-          min-camera-orbit="auto auto auto"
-          max-camera-orbit="auto auto auto"
-          interpolation-decay="100"
-          alt={model.name || '3D Model'}
-        >
-          <button
-            slot="ar-button"
-            className="ar-button"
+        {/* Для iOS используем прямую ссылку с rel="ar" */}
+        {isIOS ? (
+          <>
+            <model-viewer
+              ref={modelViewerRef}
+              camera-controls
+              touch-action="pan-y"
+              auto-rotate
+              auto-rotate-delay="0"
+              rotation-per-second="30deg"
+              shadow-intensity="1"
+              environment-image="neutral"
+              exposure="2"
+              loading="eager"
+              reveal="auto"
+              camera-orbit="45deg 75deg 2m"
+              field-of-view="45deg"
+              min-camera-orbit="auto auto auto"
+              max-camera-orbit="auto auto auto"
+              interpolation-decay="100"
+              alt={model.name || '3D Model'}
+            >
+            </model-viewer>
+            
+            {/* iOS AR Quick Look кнопка как прямая ссылка */}
+            <a
+              href={`${window.location.origin}/api/models/${model.id}/download-glb`}
+              rel="ar"
+              className="ar-button"
+              style={{
+                position: 'absolute',
+                bottom: '20px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 100,
+                padding: '1rem 2rem',
+                background: 'linear-gradient(135deg, #5744e2 0%, #8b5cf6 100%)',
+                color: 'white',
+                textDecoration: 'none',
+                borderRadius: '12px',
+                fontSize: '1rem',
+                fontWeight: '600',
+                boxShadow: '0 4px 20px rgba(87, 68, 226, 0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              <span>📱 Открыть в AR</span>
+            </a>
+          </>
+        ) : (
+          <model-viewer
+            ref={modelViewerRef}
+            ar
+            ar-modes="webxr scene-viewer"
+            camera-controls
+            touch-action="pan-y"
+            auto-rotate
+            auto-rotate-delay="0"
+            rotation-per-second="30deg"
+            shadow-intensity="1"
+            environment-image="neutral"
+            exposure="2"
+            ar-placement="floor"
+            loading="eager"
+            reveal="auto"
+            camera-orbit="45deg 75deg 2m"
+            field-of-view="45deg"
+            min-camera-orbit="auto auto auto"
+            max-camera-orbit="auto auto auto"
+            interpolation-decay="100"
+            alt={model.name || '3D Model'}
           >
-            {isIOS ? '📱 Открыть в AR' : '🏠 Примерить в комнате'}
-          </button>
+            <button
+              slot="ar-button"
+              className="ar-button"
+            >
+              🏠 Примерить в комнате
+            </button>
           
-          <div className="ar-prompt" slot="ar-prompt">
-            <div className="ar-prompt-content">
-              <div className="ar-icon">📱</div>
-              <h2>Просмотр в дополненной реальности</h2>
-              <p>Нажмите кнопку ниже, чтобы увидеть модель в вашем пространстве</p>
+            <div className="ar-prompt" slot="ar-prompt">
+              <div className="ar-prompt-content">
+                <div className="ar-icon">📱</div>
+                <h2>Просмотр в дополненной реальности</h2>
+                <p>Нажмите кнопку ниже, чтобы увидеть модель в вашем пространстве</p>
+              </div>
             </div>
-          </div>
-
-        </model-viewer>
+          </model-viewer>
+        )}
         
         {/* Floating AR info - для WebXR режима */}
         <div id="ar-scale-info" style={{
