@@ -446,7 +446,7 @@ const ARView = () => {
           </div>
         )}
 
-        {/* Для iOS используем model-viewer БЕЗ ios-src - model-viewer сам конвертирует GLB→USDZ */}
+        {/* Для iOS используем model-viewer с ios-src для USDZ */}
         {isIOS ? (
           <model-viewer
             ref={modelViewerRef}
@@ -462,6 +462,7 @@ const ARView = () => {
             environment-image="neutral"
             exposure="2"
             ar-placement="floor"
+            ios-src={`${window.location.origin}/api/models/${model.id}/download-usdz`}
             loading="eager"
             reveal="auto"
             camera-orbit="45deg 75deg 2m"
@@ -471,7 +472,7 @@ const ARView = () => {
             interpolation-decay="100"
             alt={model.name || '3D Model'}
           >
-            {/* iOS AR Quick Look - slot="ar-button" активирует AR автоматически */}
+            {/* iOS AR Quick Look - slot="ar-button" использует ios-src для USDZ */}
             <button
               slot="ar-button"
               className="ar-button"

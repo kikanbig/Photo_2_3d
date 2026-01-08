@@ -1,0 +1,17 @@
+# Python USDZ Converter Service
+# GLB → USDZ для iOS AR Quick Look
+
+fastapi==0.109.0
+uvicorn==0.27.0
+python-multipart==0.0.6
+aiofiles==23.2.1
+httpx==0.26.0
+
+# USD конвертация
+trimesh==4.0.8
+pygltflib==1.16.1
+numpy==1.26.3
+
+# Для USDZ создания
+usd-core==24.3
+
