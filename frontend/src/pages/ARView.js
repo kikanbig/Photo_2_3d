@@ -446,13 +446,13 @@ const ARView = () => {
           </div>
         )}
 
-        {/* Для iOS используем model-viewer с activateAR() */}
+        {/* Для iOS используем model-viewer БЕЗ ios-src - model-viewer сам конвертирует GLB→USDZ */}
         {isIOS ? (
           <model-viewer
             ref={modelViewerRef}
             src={model.modelUrl}
             ar
-            ar-modes="quick-look"
+            ar-modes="quick-look webxr"
             camera-controls
             touch-action="pan-y"
             auto-rotate
@@ -462,7 +462,6 @@ const ARView = () => {
             environment-image="neutral"
             exposure="2"
             ar-placement="floor"
-            ios-src={`${window.location.origin}/api/models/${model.id}/download-glb`}
             loading="eager"
             reveal="auto"
             camera-orbit="45deg 75deg 2m"
@@ -472,16 +471,10 @@ const ARView = () => {
             interpolation-decay="100"
             alt={model.name || '3D Model'}
           >
-            {/* iOS AR Quick Look - используем activateAR() API */}
+            {/* iOS AR Quick Look - slot="ar-button" активирует AR автоматически */}
             <button
               slot="ar-button"
               className="ar-button"
-              onClick={() => {
-                if (modelViewerRef.current) {
-                  console.log('📱 Activating AR for iOS via model-viewer API');
-                  modelViewerRef.current.activateAR();
-                }
-              }}
               style={{
                 position: 'absolute',
                 bottom: '20px',
