@@ -475,6 +475,16 @@ const ARView = () => {
               href={`${window.location.origin}/api/models/${model.id}/download-glb`}
               rel="ar"
               className="ar-button"
+              onClick={(e) => {
+                // Для Chrome на iOS: предотвращаем стандартное поведение и открываем через window.location
+                if (isChrome) {
+                  e.preventDefault();
+                  // Используем прямой переход вместо скачивания
+                  const arUrl = `${window.location.origin}/api/models/${model.id}/download-glb`;
+                  window.location.href = arUrl;
+                }
+                // Для Safari - оставляем стандартное поведение rel="ar"
+              }}
               style={{
                 position: 'absolute',
                 bottom: '20px',
@@ -491,10 +501,17 @@ const ARView = () => {
                 boxShadow: '0 4px 20px rgba(87, 68, 226, 0.4)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.5rem'
+                gap: '0.5rem',
+                cursor: 'pointer'
               }}
             >
               <span>📱 Открыть в AR</span>
+              {/* Скрытое изображение для AR Quick Look */}
+              <img 
+                src={model.previewImageUrl || model.originalImageUrl} 
+                alt="" 
+                style={{ display: 'none' }}
+              />
             </a>
           </>
         ) : (
