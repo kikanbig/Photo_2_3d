@@ -318,26 +318,48 @@ const ARView = () => {
   const loadModel = async () => {
     try {
       setLoading(true);
-      console.log('Загрузка модели:', modelId);
+      console.log('🔍 Загрузка модели:', modelId);
+      console.log('📱 User Agent:', navigator.userAgent);
+      console.log('🌐 Browser:', navigator.userAgent.includes('Chrome') ? 'Chrome' : 
+                                   navigator.userAgent.includes('Safari') ? 'Safari' : 'Other');
+      console.log('🍎 iOS:', /iPhone|iPad|iPod/.test(navigator.userAgent));
       
       const data = await getModel(modelId);
-      console.log('Модель загружена:', data);
+      console.log('✅ Модель загружена:', data);
       console.log('📊 ДЕТАЛЬНАЯ ИНФОРМАЦИЯ О МОДЕЛИ:');
       console.log('  - id:', data?.id);
       console.log('  - name:', data?.name);
       console.log('  - modelUrl:', data?.modelUrl);
       console.log('  - dimensions:', data?.dimensions);
       console.log('  - taskId:', data?.taskId);
+      console.log('  - status:', data?.status);
       console.log('  - metadata:', data?.metadata);
       
       if (!data || !data.modelUrl) {
-        throw new Error('URL модели не найден');
+        throw new Error('URL модели не найден в ответе сервера');
       }
       
       setModel(data);
     } catch (err) {
-      console.error('Ошибка загрузки модели:', err);
-      setError(`Модель не найдена: ${err.message}`);
+      console.error('❌ Ошибка загрузки модели:', err);
+      console.error('❌ Детали ошибки:', {
+        message: err.message,
+        status: err.response?.status,
+        statusText: err.response?.statusText,
+        data: err.response?.data
+      });
+      
+      // Более понятное сообщение об ошибке
+      let errorMessage = 'Модель не найдена';
+      if (err.message.includes('404')) {
+        errorMessage = 'Модель не найдена или недоступна. Убедитесь, что модель была сохранена и имеет статус "активна".';
+      } else if (err.message.includes('Network')) {
+        errorMessage = 'Ошибка сети. Проверьте подключение к интернету.';
+      } else {
+        errorMessage = `Не удалось загрузить модель: ${err.message}`;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -358,16 +380,39 @@ const ARView = () => {
     );
   }
 
+  // Проверка браузера для iOS
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const isChrome = navigator.userAgent.includes('CriOS');
+
   if (error || !model) {
     return (
       <div className="ar-view-page error">
         <div className="ar-error">
           <h2>❌ {error || 'Модель не найдена'}</h2>
+          
+          {/* Предупреждение для Chrome на iOS */}
+          {isIOS && isChrome && (
+            <div style={{
+              background: 'rgba(255, 165, 0, 0.1)',
+              border: '2px solid rgba(255, 165, 0, 0.5)',
+              borderRadius: '12px',
+              padding: '1rem',
+              marginBottom: '1.5rem'
+            }}>
+              <h3 style={{ margin: '0 0 0.5rem 0', color: '#ff9500' }}>⚠️ Используйте Safari</h3>
+              <p style={{ margin: 0, fontSize: '0.9rem' }}>
+                Chrome на iOS не поддерживает AR просмотр. 
+                Пожалуйста, откройте эту ссылку в Safari для полного функционала.
+              </p>
+            </div>
+          )}
+          
           <p>Возможные причины:</p>
           <ul style={{ textAlign: 'left', marginBottom: '1.5rem' }}>
-            <li>Модель еще не сохранена в базе данных</li>
+            <li>Модель не сохранена или имеет статус "неактивна"</li>
             <li>Неверный ID модели в QR коде</li>
-            <li>База данных не подключена</li>
+            <li>Ошибка подключения к серверу</li>
+            {isIOS && isChrome && <li><strong>Chrome на iOS не поддерживает AR (используйте Safari)</strong></li>}
           </ul>
           <p style={{ fontSize: '0.9rem', marginBottom: '2rem' }}>
             ID модели: <code style={{ 
@@ -377,6 +422,30 @@ const ARView = () => {
               fontSize: '0.85rem'
             }}>{modelId}</code>
           </p>
+          
+          {/* Кнопка "Открыть в Safari" для iOS Chrome */}
+          {isIOS && isChrome && (
+            <button 
+              className="btn"
+              onClick={() => {
+                // Копируем ссылку для открытия в Safari
+                const currentUrl = window.location.href;
+                navigator.clipboard.writeText(currentUrl).then(() => {
+                  alert('✅ Ссылка скопирована!\n\n1. Откройте Safari\n2. Вставьте ссылку в адресную строку\n3. Модель откроется с поддержкой AR');
+                });
+              }}
+              style={{
+                background: 'linear-gradient(135deg, #ff9500 0%, #ff6b00 100%)',
+                color: 'white',
+                border: 'none',
+                padding: '0.875rem 1.5rem',
+                marginBottom: '1rem'
+              }}
+            >
+              📋 Скопировать ссылку для Safari
+            </button>
+          )}
+          
           <button 
             className="btn" 
             onClick={() => navigate('/')}
@@ -413,6 +482,45 @@ const ARView = () => {
           <p className="ar-dimensions">
             {model.dimensions.width} × {model.dimensions.height} × {model.dimensions.length} {model.dimensions.unit}
           </p>
+        )}
+        
+        {/* Предупреждение для Chrome на iOS */}
+        {isIOS && isChrome && (
+          <div style={{
+            background: 'rgba(255, 165, 0, 0.15)',
+            border: '2px solid rgba(255, 165, 0, 0.6)',
+            borderRadius: '12px',
+            padding: '1rem',
+            marginTop: '1rem',
+            textAlign: 'center'
+          }}>
+            <h3 style={{ margin: '0 0 0.5rem 0', color: '#ff9500', fontSize: '1rem' }}>
+              ⚠️ Ограниченная функциональность
+            </h3>
+            <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.9 }}>
+              Chrome на iOS не поддерживает AR просмотр. Для полного функционала откройте эту страницу в Safari.
+            </p>
+            <button 
+              onClick={() => {
+                const currentUrl = window.location.href;
+                navigator.clipboard.writeText(currentUrl).then(() => {
+                  alert('✅ Ссылка скопирована! Откройте Safari и вставьте ссылку.');
+                });
+              }}
+              style={{
+                background: '#ff9500',
+                color: 'white',
+                border: 'none',
+                padding: '0.5rem 1rem',
+                borderRadius: '8px',
+                fontSize: '0.85rem',
+                marginTop: '0.75rem',
+                cursor: 'pointer'
+              }}
+            >
+              📋 Скопировать ссылку
+            </button>
+          </div>
         )}
       </div>
 
