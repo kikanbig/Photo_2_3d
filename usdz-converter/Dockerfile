@@ -7,11 +7,12 @@ WORKDIR /app
 
 # Установка системных зависимостей для USD
 RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
+    libgl1 \
+    libglx-mesa0 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
-    libxrender-dev \
+    libxrender1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Копируем requirements и устанавливаем зависимости
