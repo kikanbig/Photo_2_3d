@@ -94,53 +94,106 @@ def convert_glb_to_usdz_trimesh(glb_data: bytes) -> bytes:
 
 def convert_glb_to_usdz_pxr(glb_data: bytes) -> bytes:
     """
-    Конвертирует GLB в USDZ используя Pixar USD напрямую
-    Fallback если trimesh не работает
+    Конвертирует GLB в USDZ используя trimesh для загрузки и pxr для экспорта
     """
+    import trimesh
+    import zipfile
+    import numpy as np
+    
     try:
-        from pxr import Usd, UsdGeom, UsdShade, Gf
-        import struct
-        import json
-        import zipfile
+        from pxr import Usd, UsdGeom, Vt, Gf
+    except ImportError as e:
+        logger.error(f"❌ pxr не доступен: {e}")
+        raise
+    
+    # Загружаем GLB через trimesh
+    with tempfile.NamedTemporaryFile(suffix='.glb', delete=False) as glb_file:
+        glb_file.write(glb_data)
+        glb_path = glb_file.name
+    
+    usda_path = None
+    try:
+        logger.info(f"📦 Загрузка GLB через trimesh: {len(glb_data)} байт")
+        scene = trimesh.load(glb_path)
         
-        # Парсим GLB
-        logger.info(f"📦 Парсинг GLB: {len(glb_data)} байт")
+        # Получаем все меши из сцены
+        if isinstance(scene, trimesh.Scene):
+            meshes = list(scene.geometry.values())
+            logger.info(f"📊 Сцена содержит {len(meshes)} мешей")
+        else:
+            meshes = [scene]
+            logger.info(f"📊 Загружен один меш")
         
-        # GLB header
-        magic = struct.unpack('<I', glb_data[0:4])[0]
-        if magic != 0x46546C67:  # "glTF"
-            raise ValueError("Невалидный GLB файл")
-        
-        # Создаём временный USD stage
+        # Создаём USD stage
         with tempfile.NamedTemporaryFile(suffix='.usda', delete=False) as usda_file:
             usda_path = usda_file.name
         
         stage = Usd.Stage.CreateNew(usda_path)
         UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.y)
+        UsdGeom.SetStageMetersPerUnit(stage, 1.0)
         
-        # Создаём простой куб как placeholder
-        # TODO: Полный парсинг GLB и создание геометрии
-        xform = UsdGeom.Xform.Define(stage, '/Model')
-        mesh = UsdGeom.Mesh.Define(stage, '/Model/Mesh')
+        # Корневой xform
+        root_xform = UsdGeom.Xform.Define(stage, '/Model')
+        
+        total_vertices = 0
+        total_faces = 0
+        
+        # Добавляем каждый меш
+        for i, mesh in enumerate(meshes):
+            if not hasattr(mesh, 'vertices') or not hasattr(mesh, 'faces'):
+                logger.warning(f"⚠️ Меш {i} не имеет vertices/faces, пропускаем")
+                continue
+            
+            mesh_path = f'/Model/Mesh_{i}'
+            usd_mesh = UsdGeom.Mesh.Define(stage, mesh_path)
+            
+            # Вершины
+            vertices = mesh.vertices.tolist()
+            usd_mesh.GetPointsAttr().Set(Vt.Vec3fArray([Gf.Vec3f(*v) for v in vertices]))
+            
+            # Грани (face vertex counts и indices)
+            faces = mesh.faces
+            face_vertex_counts = [3] * len(faces)  # Все грани - треугольники
+            face_vertex_indices = faces.flatten().tolist()
+            
+            usd_mesh.GetFaceVertexCountsAttr().Set(Vt.IntArray(face_vertex_counts))
+            usd_mesh.GetFaceVertexIndicesAttr().Set(Vt.IntArray(face_vertex_indices))
+            
+            # Нормали (если есть)
+            if hasattr(mesh, 'vertex_normals') and mesh.vertex_normals is not None:
+                normals = mesh.vertex_normals.tolist()
+                usd_mesh.GetNormalsAttr().Set(Vt.Vec3fArray([Gf.Vec3f(*n) for n in normals]))
+                usd_mesh.SetNormalsInterpolation(UsdGeom.Tokens.vertex)
+            
+            total_vertices += len(vertices)
+            total_faces += len(faces)
+            
+            logger.info(f"  Меш {i}: {len(vertices)} вершин, {len(faces)} граней")
         
         stage.Save()
+        logger.info(f"✅ USD создан: {total_vertices} вершин, {total_faces} граней")
         
-        # Создаём USDZ (ZIP архив с USD)
+        # Читаем USD файл
+        with open(usda_path, 'rb') as f:
+            usda_data = f.read()
+        
+        logger.info(f"📦 USDA размер: {len(usda_data)} байт")
+        
+        # Создаём USDZ (ZIP архив без сжатия для iOS)
         usdz_buffer = io.BytesIO()
-        with zipfile.ZipFile(usdz_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
-            with open(usda_path, 'r') as f:
-                zf.writestr('model.usda', f.read())
-        
-        os.unlink(usda_path)
+        with zipfile.ZipFile(usdz_buffer, 'w', zipfile.ZIP_STORED) as zf:
+            zf.writestr('model.usda', usda_data)
         
         usdz_data = usdz_buffer.getvalue()
         logger.info(f"✅ USDZ создан (pxr): {len(usdz_data)} байт")
         
         return usdz_data
         
-    except ImportError as e:
-        logger.error(f"❌ pxr не доступен: {e}")
-        raise
+    finally:
+        if os.path.exists(glb_path):
+            os.unlink(glb_path)
+        if usda_path and os.path.exists(usda_path):
+            os.unlink(usda_path)
 
 
 def convert_glb_to_usdz(glb_data: bytes) -> bytes:
