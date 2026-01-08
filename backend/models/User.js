@@ -30,9 +30,9 @@ const User = sequelize.define('User', {
   },
   credits: {
     type: DataTypes.INTEGER,
-    defaultValue: 100,
+    defaultValue: 5000,
     allowNull: false,
-    comment: 'Количество кредитов пользователя (стартовые 100, генерация стоит 50)'
+    comment: '🎁 Количество кредитов пользователя (стартовые 5000, генерация стоит 50)'
   },
   status: {
     type: DataTypes.ENUM('active', 'suspended', 'banned'),
