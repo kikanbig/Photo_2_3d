@@ -38,14 +38,17 @@ app.add_middleware(
 
 def convert_glb_to_usdz_trimesh(glb_data: bytes) -> bytes:
     """
-    Конвертирует GLB в USDZ используя trimesh + USD
+    Конвертирует GLB в USDZ используя trimesh
+    USDZ = ZIP архив с USDC файлом внутри
     """
     import trimesh
+    import zipfile
     
     with tempfile.NamedTemporaryFile(suffix='.glb', delete=False) as glb_file:
         glb_file.write(glb_data)
         glb_path = glb_file.name
     
+    usdc_path = None
     try:
         # Загружаем GLB
         logger.info(f"📦 Загрузка GLB: {len(glb_data)} байт")
@@ -57,22 +60,36 @@ def convert_glb_to_usdz_trimesh(glb_data: bytes) -> bytes:
         else:
             logger.info(f"📊 Загружен mesh: {type(scene)}")
         
-        # Экспортируем в USDZ
-        with tempfile.NamedTemporaryFile(suffix='.usdz', delete=False) as usdz_file:
-            usdz_path = usdz_file.name
+        # Экспортируем в USDC (бинарный USD)
+        with tempfile.NamedTemporaryFile(suffix='.usdc', delete=False) as usdc_file:
+            usdc_path = usdc_file.name
         
-        scene.export(usdz_path, file_type='usdz')
+        scene.export(usdc_path, file_type='usdc')
+        logger.info(f"✅ USDC создан: {usdc_path}")
         
-        with open(usdz_path, 'rb') as f:
-            usdz_data = f.read()
+        # Читаем USDC файл
+        with open(usdc_path, 'rb') as f:
+            usdc_data = f.read()
         
-        os.unlink(usdz_path)
+        logger.info(f"📦 USDC размер: {len(usdc_data)} байт")
+        
+        # Создаём USDZ (ZIP архив с USDC внутри)
+        # USDZ должен быть без сжатия (ZIP_STORED) для iOS
+        usdz_buffer = io.BytesIO()
+        with zipfile.ZipFile(usdz_buffer, 'w', zipfile.ZIP_STORED) as zf:
+            # Главный файл должен называться model.usdc
+            zf.writestr('model.usdc', usdc_data)
+        
+        usdz_data = usdz_buffer.getvalue()
         logger.info(f"✅ USDZ создан: {len(usdz_data)} байт")
         
         return usdz_data
         
     finally:
-        os.unlink(glb_path)
+        if os.path.exists(glb_path):
+            os.unlink(glb_path)
+        if usdc_path and os.path.exists(usdc_path):
+            os.unlink(usdc_path)
 
 
 def convert_glb_to_usdz_pxr(glb_data: bytes) -> bytes:
