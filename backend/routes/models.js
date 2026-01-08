@@ -331,6 +331,76 @@ router.get('/:id/download-glb', async (req, res) => {
   }
 });
 
+// Скачивание USDZ файла модели (для iOS AR Quick Look)
+router.get('/:id/download-usdz', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Сначала пытаемся найти по ID модели, если не нашли - по taskId (для обратной совместимости)
+    let model = await Model3D.findOne({
+      where: { id: id, status: 'active' },
+      attributes: ['usdzFile', 'name', 'id', 'updatedAt']
+    });
+
+    if (!model) {
+      // Для обратной совместимости - ищем по taskId
+      model = await Model3D.findOne({
+        where: { taskId: id, status: 'active' },
+        attributes: ['usdzFile', 'name', 'id', 'updatedAt']
+      });
+    }
+
+    if (!model || !model.usdzFile) {
+      return res.status(404).send('USDZ файл не найден. Модель может быть создана до внедрения поддержки iOS AR.');
+    }
+
+    // Очистка имени файла от специальных символов
+    const cleanFileName = (model.name || 'model')
+      .replace(/[^a-zA-Z0-9\-_\.\s]/g, '')
+      .replace(/\s+/g, '_')
+      .substring(0, 50);
+
+    const fileSize = model.usdzFile.length;
+    const range = req.headers.range;
+
+    // Заголовки для iOS AR Quick Look
+    res.setHeader('Content-Type', 'model/vnd.usdz+zip');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type, Accept');
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges');
+    res.setHeader('Accept-Ranges', 'bytes');
+    res.setHeader('Content-Disposition', `inline; filename="${cleanFileName}.usdz"`);
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.setHeader('ETag', `"${model.id}-${model.updatedAt?.getTime() || Date.now()}"`);
+
+    // Обработка Range requests для iOS Safari
+    if (range) {
+      const parts = range.replace(/bytes=/, '').split('-');
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      const chunkSize = (end - start) + 1;
+      const chunk = model.usdzFile.slice(start, end + 1);
+
+      res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
+      res.status(206); // Partial Content
+
+      console.log(`📱 Отдаем часть USDZ файла "${model.name || 'без имени'}" (${start}-${end}/${fileSize} байт) для iOS`);
+      res.send(chunk);
+    } else {
+      // Полный файл
+      res.setHeader('Content-Length', fileSize);
+      console.log(`📱 Отдаем полный USDZ файл "${model.name || 'без имени'}" (${fileSize} байт) для iOS AR`);
+      res.send(model.usdzFile);
+    }
+    
+    console.log(`📤 USDZ файл отдан из БД: ${id}`);
+  } catch (error) {
+    console.error('Ошибка скачивания USDZ:', error);
+    res.status(500).send('Ошибка скачивания файла');
+  }
+});
+
 // Создать новую модель (сохранить)
 router.post('/', async (req, res) => {
   try {

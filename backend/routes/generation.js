@@ -5,6 +5,7 @@ const fs = require('fs-extra');
 const { v4: uuidv4 } = require('uuid');
 const GenAPIService = require('../services/genapi');
 const { scaleGLB } = require('../services/glb-scaler');
+const { convertGLBtoUSDZ } = require('../services/usdz-converter');
 const { authenticateToken } = require('./auth');
 const User = require('../models/User');
 const Model3D = require('../models/Model3D');
@@ -337,10 +338,22 @@ async function generate3DModelAsync(taskId, imagePath) {
       const Model3D = require('../models/Model3D');
       const task = tasks.get(taskId);
       console.log(`[Задача ${taskId}] Сохраняем originalImageUrl: /uploads/input/${path.basename(task.imagePath)}`);
+      // 🔄 Конвертируем GLB → USDZ для iOS
+      let usdzBuffer = null;
+      try {
+        console.log('🔄 Конвертация GLB → USDZ для iOS AR...');
+        usdzBuffer = await convertGLBtoUSDZ(scaledGLBBuffer);
+        console.log(`✅ USDZ создан: ${(usdzBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+      } catch (usdzError) {
+        console.error('⚠️ Ошибка конвертации USDZ (продолжаем без USDZ):', usdzError.message);
+        // Продолжаем без USDZ - не критичная ошибка
+      }
+
       await Model3D.create({
         name: `Model ${taskId}`,
         modelUrl: `/api/models/${taskId}/download-glb`,
         glbFile: scaledGLBBuffer,  // Используем масштабированный буфер!
+        usdzFile: usdzBuffer,      // USDZ для iOS AR Quick Look
         previewImageUrl: previewImageUrl, // Добавляем превью
         originalImageUrl: `/uploads/input/${path.basename(task.imagePath)}`, // Сохраняем путь к исходному изображению
         taskId: taskId,
@@ -348,6 +361,9 @@ async function generate3DModelAsync(taskId, imagePath) {
         status: 'active'
       });
       console.log(`💾 Масштабированный GLB сохранён в БД для задачи: ${taskId}`);
+      if (usdzBuffer) {
+        console.log(`📱 USDZ для iOS сохранён в БД для задачи: ${taskId}`);
+      }
 
       // Списываем кредиты ТОЛЬКО после успешного сохранения модели
       const User = require('../models/User');
@@ -436,16 +452,31 @@ async function generate3DModelAsync(taskId, imagePath) {
 
           const Model3D = require('../models/Model3D');
           const task = tasks.get(taskId);
+          
+          // 🔄 Конвертируем GLB → USDZ для iOS
+          let usdzBuffer = null;
+          try {
+            console.log('🔄 Конвертация GLB → USDZ для iOS AR...');
+            usdzBuffer = await convertGLBtoUSDZ(scaledGLBBuffer);
+            console.log(`✅ USDZ создан: ${(usdzBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+          } catch (usdzError) {
+            console.error('⚠️ Ошибка конвертации USDZ (продолжаем без USDZ):', usdzError.message);
+          }
+          
           await Model3D.create({
             name: `Model ${taskId}`,
             modelUrl: `/api/models/${taskId}/download-glb`,
             glbFile: scaledGLBBuffer,  // Используем масштабированный буфер!
+            usdzFile: usdzBuffer,      // USDZ для iOS AR Quick Look
             originalImageUrl: task.imagePath ? `/uploads/input/${path.basename(task.imagePath)}` : null, // Сохраняем путь к исходному изображению
             taskId: taskId,
             userId: task.userId, // Привязываем к пользователю
             status: 'active'
           });
           console.log(`💾 Масштабированный GLB сохранён в БД для задачи: ${taskId}`);
+          if (usdzBuffer) {
+            console.log(`📱 USDZ для iOS сохранён в БД для задачи: ${taskId}`);
+          }
 
           // Списываем кредиты ТОЛЬКО после успешного сохранения модели
           const User = require('../models/User');
@@ -584,10 +615,21 @@ async function pollTaskStatus(taskId, requestId) {
           }
 
           const Model3D = require('../models/Model3D');
+          // 🔄 Конвертируем GLB → USDZ для iOS
+          let usdzBuffer = null;
+          try {
+            console.log('🔄 Конвертация GLB → USDZ для iOS AR...');
+            usdzBuffer = await convertGLBtoUSDZ(scaledGLBBuffer);
+            console.log(`✅ USDZ создан: ${(usdzBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+          } catch (usdzError) {
+            console.error('⚠️ Ошибка конвертации USDZ (продолжаем без USDZ):', usdzError.message);
+          }
+          
           await Model3D.create({
             name: `Model ${taskId}`,
             modelUrl: `/api/models/${taskId}/download-glb`,
             glbFile: scaledGLBBuffer,  // Используем масштабированный буфер!
+            usdzFile: usdzBuffer,      // USDZ для iOS AR Quick Look
             previewImageUrl: previewImageUrl, // Добавляем превью
             originalImageUrl: currentTask.imagePath ? `/uploads/input/${path.basename(currentTask.imagePath)}` : null, // Сохраняем путь к исходному изображению
             taskId: taskId,
@@ -595,6 +637,9 @@ async function pollTaskStatus(taskId, requestId) {
             status: 'active'
           });
           console.log(`💾 Масштабированный GLB сохранён в БД для задачи: ${taskId}`);
+          if (usdzBuffer) {
+            console.log(`📱 USDZ для iOS сохранён в БД для задачи: ${taskId}`);
+          }
 
           // Списываем кредиты ТОЛЬКО после успешного сохранения модели
           const User = require('../models/User');

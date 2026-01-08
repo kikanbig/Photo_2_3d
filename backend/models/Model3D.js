@@ -27,6 +27,12 @@ const Model3D = sequelize.define('Model3D', {
     allowNull: true,
     comment: 'Бинарный GLB файл'
   },
+  // USDZ файл для iOS AR Quick Look
+  usdzFile: {
+    type: DataTypes.BLOB('long'), // До 4GB
+    allowNull: true,
+    comment: 'Бинарный USDZ файл для iOS AR'
+  },
   // URL превью изображения
   previewImageUrl: {
     type: DataTypes.TEXT,
