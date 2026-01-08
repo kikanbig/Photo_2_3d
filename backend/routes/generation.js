@@ -639,40 +639,49 @@ async function pollTaskStatus(taskId, requestId) {
         }
       } else if (statusResponse.status === 'failed' || statusResponse.status === 'error') {
         // Задача завершена с ошибкой
-        currentTask.status = 'failed';
-        currentTask.error = statusResponse.error || 'Неизвестная ошибка генерации';
-        tasks.set(taskId, currentTask);
-        saveTasks(); // Сохраняем в файл
+        const task = tasks.get(taskId);
+        if (task) {
+          task.status = 'failed';
+          task.error = statusResponse.error || 'Неизвестная ошибка генерации';
+          tasks.set(taskId, task);
+          saveTasks(); // Сохраняем в файл
 
-        console.log(`Задача ${taskId} завершена с ошибкой: ${currentTask.error}`);
+          console.log(`Задача ${taskId} завершена с ошибкой: ${task.error}`);
+        }
       } else if (statusResponse.status === 'processing') {
         // Задача еще выполняется
         if (attempts < maxAttempts) {
           setTimeout(() => poll(currentTask), 5000); // Повторяем через 5 секунд
         } else {
           // Превышено время ожидания
-          currentTask.status = 'timeout';
-          currentTask.error = 'Превышено время ожидания генерации';
-          tasks.set(taskId, currentTask);
+          const task = tasks.get(taskId);
+          if (task) {
+            task.status = 'timeout';
+            task.error = 'Превышено время ожидания генерации';
+            tasks.set(taskId, task);
 
-          console.log(`Задача ${taskId} превысила время ожидания`);
+            console.log(`Задача ${taskId} превысила время ожидания`);
+          }
         }
       }
     } catch (error) {
       console.error(`Ошибка опроса статуса для задачи ${taskId}:`, error);
-      
+
       if (attempts < maxAttempts) {
         setTimeout(() => poll(currentTask), 5000);
       } else {
-        currentTask.status = 'failed';
-        currentTask.error = error.message;
-        tasks.set(taskId, currentTask);
+        const task = tasks.get(taskId);
+        if (task) {
+          task.status = 'failed';
+          task.error = error.message;
+          tasks.set(taskId, task);
+        }
       }
     }
   };
 
   // Начинаем опрос через 5 секунд
-  setTimeout(() => poll(task), 5000);
+  setTimeout(() => poll(tasks.get(taskId)), 5000);
 }
 
 module.exports = router;
