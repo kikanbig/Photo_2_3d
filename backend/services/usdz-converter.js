@@ -1,7 +1,18 @@
 const fs = require('fs-extra');
 const path = require('path');
-const { GLTFLoader } = require('three/examples/jsm/loaders/GLTFLoader');
-const { USDZExporter } = require('three/examples/jsm/exporters/USDZExporter');
+const THREE = require('three');
+
+// Динамический импорт ES модулей
+let GLTFLoader, USDZExporter;
+
+async function loadThreeModules() {
+  if (!GLTFLoader || !USDZExporter) {
+    const gltfModule = await import('three/examples/jsm/loaders/GLTFLoader.js');
+    const usdzModule = await import('three/examples/jsm/exporters/USDZExporter.js');
+    GLTFLoader = gltfModule.GLTFLoader;
+    USDZExporter = usdzModule.USDZExporter;
+  }
+}
 
 /**
  * Конвертер GLB → USDZ для iOS AR Quick Look
@@ -10,8 +21,18 @@ const { USDZExporter } = require('three/examples/jsm/exporters/USDZExporter');
  */
 class USDZConverter {
   constructor() {
-    this.loader = new GLTFLoader();
-    this.exporter = new USDZExporter();
+    this.loader = null;
+    this.exporter = null;
+    this.initialized = false;
+  }
+
+  async init() {
+    if (!this.initialized) {
+      await loadThreeModules();
+      this.loader = new GLTFLoader();
+      this.exporter = new USDZExporter();
+      this.initialized = true;
+    }
   }
 
   /**
@@ -23,6 +44,9 @@ class USDZConverter {
    */
   async convertGLBtoUSDZ(glbInput, outputPath = null) {
     try {
+      // Инициализация three.js модулей
+      await this.init();
+      
       console.log('🔄 Начало конвертации GLB → USDZ');
       const startTime = Date.now();
 
