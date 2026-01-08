@@ -448,41 +448,34 @@ const ARView = () => {
 
         {/* Для iOS используем model-viewer с AR поддержкой */}
         {isIOS ? (
-          <>
-            <model-viewer
-              ref={modelViewerRef}
-              ar
-              ar-modes="quick-look"
-              camera-controls
-              touch-action="pan-y"
-              auto-rotate
-              auto-rotate-delay="0"
-              rotation-per-second="30deg"
-              shadow-intensity="1"
-              environment-image="neutral"
-              exposure="2"
-              ar-placement="floor"
-              ios-src={`${window.location.origin}/api/models/${model.id}/download-glb`}
-              loading="eager"
-              reveal="auto"
-              camera-orbit="45deg 75deg 2m"
-              field-of-view="45deg"
-              min-camera-orbit="auto auto auto"
-              max-camera-orbit="auto auto auto"
-              interpolation-decay="100"
-              alt={model.name || '3D Model'}
-            >
-            </model-viewer>
-            
-            {/* iOS AR Quick Look - открываем HTML страницу с rel="ar" */}
+          <model-viewer
+            ref={modelViewerRef}
+            src={model.modelUrl}
+            ar
+            ar-modes="quick-look"
+            camera-controls
+            touch-action="pan-y"
+            auto-rotate
+            auto-rotate-delay="0"
+            rotation-per-second="30deg"
+            shadow-intensity="1"
+            environment-image="neutral"
+            exposure="2"
+            ar-placement="floor"
+            ios-src={`${window.location.origin}/api/models/${model.id}/download-glb`}
+            loading="eager"
+            reveal="auto"
+            camera-orbit="45deg 75deg 2m"
+            field-of-view="45deg"
+            min-camera-orbit="auto auto auto"
+            max-camera-orbit="auto auto auto"
+            interpolation-decay="100"
+            alt={model.name || '3D Model'}
+          >
+            {/* iOS AR Quick Look - используем встроенную кнопку model-viewer */}
             <button
+              slot="ar-button"
               className="ar-button"
-              onClick={() => {
-                // Открываем специальную HTML страницу для iOS AR Quick Look
-                const arQuickLookUrl = `${window.location.origin}/api/models/${model.id}/ar-quick-look`;
-                console.log('🎯 Открываем AR Quick Look страницу:', arQuickLookUrl);
-                window.location.href = arQuickLookUrl;
-              }}
               style={{
                 position: 'absolute',
                 bottom: '20px',
@@ -506,10 +499,11 @@ const ARView = () => {
             >
               <span>📱 Открыть в AR</span>
             </button>
-          </>
+          </model-viewer>
         ) : (
           <model-viewer
             ref={modelViewerRef}
+            src={model.modelUrl}
             ar
             ar-modes="webxr scene-viewer"
             camera-controls
