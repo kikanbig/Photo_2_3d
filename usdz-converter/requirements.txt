@@ -13,9 +13,6 @@ pygltflib==1.16.1
 numpy==1.26.3
 scipy==1.12.0
 
-# Google gltf2usd конвертер
-gltf2usd==1.0.0
-
 # Для USDZ создания
 usd-core==24.3
 

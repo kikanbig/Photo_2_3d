@@ -1,5 +1,6 @@
 # USDZ Converter Microservice
 # Python сервис для конвертации GLB → USDZ
+# Cache bust: v2
 
 FROM python:3.11-slim
 
@@ -14,6 +15,9 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxrender1 \
     && rm -rf /var/lib/apt/lists/*
+
+# Cache invalidation - change this to force rebuild
+ARG CACHEBUST=2
 
 # Копируем requirements и устанавливаем зависимости
 COPY requirements.txt .
