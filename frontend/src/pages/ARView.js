@@ -342,8 +342,6 @@ const ARView = () => {
 
   // Проверка браузера для iOS
   const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-  // Chrome на iOS содержит 'CriOS', Safari не содержит
-  const isChrome = isIOS && navigator.userAgent.includes('CriOS');
 
   if (error || !model) {
     return (
