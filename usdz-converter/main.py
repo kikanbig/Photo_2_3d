@@ -111,7 +111,7 @@ def convert_glb_to_usdz_pxr(glb_data: bytes) -> bytes:
         glb_file.write(glb_data)
         glb_path = glb_file.name
     
-    usda_path = None
+    usdc_path = None
     try:
         logger.info(f"📦 Загрузка GLB через trimesh: {len(glb_data)} байт")
         scene = trimesh.load(glb_path)
@@ -124,16 +124,20 @@ def convert_glb_to_usdz_pxr(glb_data: bytes) -> bytes:
             meshes = [scene]
             logger.info(f"📊 Загружен один меш")
         
-        # Создаём USD stage
-        with tempfile.NamedTemporaryFile(suffix='.usda', delete=False) as usda_file:
-            usda_path = usda_file.name
+        # Создаём USD stage (USDC - бинарный формат для iOS AR Quick Look)
+        with tempfile.NamedTemporaryFile(suffix='.usdc', delete=False) as usdc_file:
+            usdc_path = usdc_file.name
         
-        stage = Usd.Stage.CreateNew(usda_path)
+        stage = Usd.Stage.CreateNew(usdc_path)
         UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.y)
         UsdGeom.SetStageMetersPerUnit(stage, 1.0)
         
-        # Корневой xform
-        root_xform = UsdGeom.Xform.Define(stage, '/Model')
+        # Устанавливаем default prim для AR Quick Look
+        root_prim = stage.DefinePrim('/Model', 'Xform')
+        stage.SetDefaultPrim(root_prim)
+        
+        # Корневой xform (уже создан выше как default prim)
+        root_xform = UsdGeom.Xform.Get(stage, '/Model')
         
         total_vertices = 0
         total_faces = 0
@@ -173,27 +177,28 @@ def convert_glb_to_usdz_pxr(glb_data: bytes) -> bytes:
         stage.Save()
         logger.info(f"✅ USD создан: {total_vertices} вершин, {total_faces} граней")
         
-        # Читаем USD файл
-        with open(usda_path, 'rb') as f:
-            usda_data = f.read()
+        # Читаем USDC файл (бинарный)
+        with open(usdc_path, 'rb') as f:
+            usdc_data = f.read()
         
-        logger.info(f"📦 USDA размер: {len(usda_data)} байт")
+        logger.info(f"📦 USDC размер: {len(usdc_data)} байт")
         
-        # Создаём USDZ (ZIP архив без сжатия для iOS)
+        # Создаём USDZ (ZIP архив без сжатия для iOS AR Quick Look)
+        # ВАЖНО: файл внутри должен быть .usdc для бинарного формата
         usdz_buffer = io.BytesIO()
         with zipfile.ZipFile(usdz_buffer, 'w', zipfile.ZIP_STORED) as zf:
-            zf.writestr('model.usda', usda_data)
+            zf.writestr('model.usdc', usdc_data)
         
         usdz_data = usdz_buffer.getvalue()
-        logger.info(f"✅ USDZ создан (pxr): {len(usdz_data)} байт")
+        logger.info(f"✅ USDZ создан (pxr/usdc): {len(usdz_data)} байт")
         
         return usdz_data
         
     finally:
         if os.path.exists(glb_path):
             os.unlink(glb_path)
-        if usda_path and os.path.exists(usda_path):
-            os.unlink(usda_path)
+        if usdc_path and os.path.exists(usdc_path):
+            os.unlink(usdc_path)
 
 
 def convert_glb_to_usdz(glb_data: bytes) -> bytes:
