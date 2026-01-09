@@ -41,11 +41,10 @@ const ARView = () => {
       const title = model.name || '3D Model';
       modelViewer.setAttribute('alt', title);
       
-      // Для iOS Safari явно устанавливаем ios-src на USDZ файл
+      // Для iOS - model-viewer сам конвертирует GLB в USDZ на клиенте
+      // НЕ используем ios-src - пусть model-viewer разбирается сам
       if (isIOSDevice) {
-        const iosSrc = `${window.location.origin}/api/models/${model.id}/download-usdz`;
-        modelViewer.setAttribute('ios-src', iosSrc);
-        console.log('🍎 iOS Quick Look USDZ src:', iosSrc);
+        console.log('🍎 iOS: model-viewer будет конвертировать GLB в USDZ автоматически');
       }
       
       console.log('📱 AR Mode:', isIOSDevice ? 'iOS Quick Look' : 'Android Scene Viewer / WebXR');
@@ -446,7 +445,7 @@ const ARView = () => {
           </div>
         )}
 
-        {/* Для iOS используем model-viewer с ios-src для USDZ */}
+        {/* model-viewer с AR поддержкой для всех платформ */}
         {isIOS ? (
           <model-viewer
             ref={modelViewerRef}
@@ -462,7 +461,6 @@ const ARView = () => {
             environment-image="neutral"
             exposure="2"
             ar-placement="floor"
-            ios-src={`${window.location.origin}/api/models/${model.id}/download-usdz`}
             loading="eager"
             reveal="auto"
             camera-orbit="45deg 75deg 2m"
@@ -472,7 +470,7 @@ const ARView = () => {
             interpolation-decay="100"
             alt={model.name || '3D Model'}
           >
-            {/* iOS AR Quick Look - slot="ar-button" использует ios-src для USDZ */}
+            {/* iOS AR Quick Look - model-viewer сам конвертирует GLB в USDZ */}
             <button
               slot="ar-button"
               className="ar-button"

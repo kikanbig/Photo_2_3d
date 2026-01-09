@@ -236,55 +236,6 @@ def convert_glb_to_usdz_pxr(glb_data: bytes) -> bytes:
             os.unlink(usdz_path)
 
 
-def convert_glb_to_usdz_gltf2usd(glb_data: bytes) -> bytes:
-    """
-    Конвертирует GLB в USDZ используя Google gltf2usd
-    Это официальный инструмент для конвертации glTF → USD
-    """
-    import subprocess
-    
-    glb_path = None
-    usdz_path = None
-    
-    try:
-        # Создаём временные файлы
-        with tempfile.NamedTemporaryFile(suffix='.glb', delete=False) as f:
-            f.write(glb_data)
-            glb_path = f.name
-        
-        usdz_path = glb_path.replace('.glb', '.usdz')
-        
-        logger.info(f"📦 Конвертация через gltf2usd: {len(glb_data)} байт")
-        
-        # Запускаем gltf2usd
-        result = subprocess.run(
-            ['gltf2usd', '-i', glb_path, '-o', usdz_path],
-            capture_output=True,
-            text=True,
-            timeout=120
-        )
-        
-        if result.returncode != 0:
-            logger.error(f"❌ gltf2usd ошибка: {result.stderr}")
-            raise Exception(f"gltf2usd вернул код {result.returncode}: {result.stderr}")
-        
-        logger.info(f"✅ gltf2usd: {result.stdout}")
-        
-        # Читаем результат
-        with open(usdz_path, 'rb') as f:
-            usdz_data = f.read()
-        
-        logger.info(f"✅ USDZ создан (gltf2usd): {len(usdz_data)} байт ({len(usdz_data)/1024/1024:.2f} MB)")
-        
-        return usdz_data
-        
-    finally:
-        if glb_path and os.path.exists(glb_path):
-            os.unlink(glb_path)
-        if usdz_path and os.path.exists(usdz_path):
-            os.unlink(usdz_path)
-
-
 def convert_glb_to_usdz(glb_data: bytes) -> bytes:
     """
     Главная функция конвертации GLB → USDZ
@@ -292,21 +243,14 @@ def convert_glb_to_usdz(glb_data: bytes) -> bytes:
     """
     errors = []
     
-    # Метод 1: gltf2usd (Google, предпочтительный)
-    try:
-        return convert_glb_to_usdz_gltf2usd(glb_data)
-    except Exception as e:
-        logger.warning(f"⚠️ gltf2usd метод не сработал: {e}")
-        errors.append(f"gltf2usd: {e}")
-    
-    # Метод 2: trimesh
+    # Метод 1: trimesh
     try:
         return convert_glb_to_usdz_trimesh(glb_data)
     except Exception as e:
         logger.warning(f"⚠️ trimesh метод не сработал: {e}")
         errors.append(f"trimesh: {e}")
     
-    # Метод 3: pxr напрямую
+    # Метод 2: pxr напрямую
     try:
         return convert_glb_to_usdz_pxr(glb_data)
     except Exception as e:
