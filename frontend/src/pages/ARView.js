@@ -41,11 +41,11 @@ const ARView = () => {
       const title = model.name || '3D Model';
       modelViewer.setAttribute('alt', title);
       
-      // Для iOS Safari явно устанавливаем ios-src
+      // Для iOS Safari явно устанавливаем ios-src на USDZ файл
       if (isIOSDevice) {
-        const iosSrc = `${window.location.origin}/api/models/${model.id}/download-glb`;
+        const iosSrc = `${window.location.origin}/api/models/${model.id}/download-usdz`;
         modelViewer.setAttribute('ios-src', iosSrc);
-        console.log('🍎 iOS Quick Look src:', iosSrc);
+        console.log('🍎 iOS Quick Look USDZ src:', iosSrc);
       }
       
       console.log('📱 AR Mode:', isIOSDevice ? 'iOS Quick Look' : 'Android Scene Viewer / WebXR');
