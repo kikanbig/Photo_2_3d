@@ -1,6 +1,7 @@
 {
   "name": "photo-to-3d",
   "version": "4.0.0",
+  "old_version": "4.0.0",
   "description": "Генерация 3D моделей из фотографий с помощью ИИ",
   "main": "backend/server.js",
   "scripts": {

@@ -404,24 +404,6 @@ const ARView = () => {
           </p>
         )}
         
-        {/* Информация для Chrome на iOS - AR работает, но может попросить открыть в Safari */}
-        {isIOS && isChrome && (
-          <div style={{
-            background: 'rgba(33, 150, 243, 0.1)',
-            border: '2px solid rgba(33, 150, 243, 0.3)',
-            borderRadius: '12px',
-            padding: '1rem',
-            marginTop: '1rem',
-            textAlign: 'center'
-          }}>
-            <h3 style={{ margin: '0 0 0.5rem 0', color: '#2196F3', fontSize: '1rem' }}>
-              ℹ️ Chrome на iOS
-            </h3>
-            <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.9 }}>
-              AR работает в Chrome на iOS! При клике на кнопку AR система может предложить открыть в Safari - это нормально.
-            </p>
-          </div>
-        )}
       </div>
 
       <div className="ar-viewer-container">
