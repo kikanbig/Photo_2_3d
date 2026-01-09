@@ -95,13 +95,13 @@ def convert_glb_to_usdz_trimesh(glb_data: bytes) -> bytes:
 def convert_glb_to_usdz_pxr(glb_data: bytes) -> bytes:
     """
     Конвертирует GLB в USDZ используя trimesh для загрузки и pxr для экспорта
+    С материалами и правильной упаковкой для iOS AR Quick Look
     """
     import trimesh
-    import zipfile
     import numpy as np
     
     try:
-        from pxr import Usd, UsdGeom, Vt, Gf
+        from pxr import Usd, UsdGeom, UsdShade, Vt, Gf, Sdf, UsdUtils
     except ImportError as e:
         logger.error(f"❌ pxr не доступен: {e}")
         raise
@@ -112,6 +112,7 @@ def convert_glb_to_usdz_pxr(glb_data: bytes) -> bytes:
         glb_path = glb_file.name
     
     usdc_path = None
+    usdz_path = None
     try:
         logger.info(f"📦 Загрузка GLB через trimesh: {len(glb_data)} байт")
         scene = trimesh.load(glb_path)
@@ -124,20 +125,36 @@ def convert_glb_to_usdz_pxr(glb_data: bytes) -> bytes:
             meshes = [scene]
             logger.info(f"📊 Загружен один меш")
         
-        # Создаём USD stage (USDC - бинарный формат для iOS AR Quick Look)
-        with tempfile.NamedTemporaryFile(suffix='.usdc', delete=False) as usdc_file:
-            usdc_path = usdc_file.name
+        # Создаём временные файлы
+        with tempfile.NamedTemporaryFile(suffix='.usdc', delete=False) as f:
+            usdc_path = f.name
+        with tempfile.NamedTemporaryFile(suffix='.usdz', delete=False) as f:
+            usdz_path = f.name
         
+        # Создаём USD stage
         stage = Usd.Stage.CreateNew(usdc_path)
         UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.y)
         UsdGeom.SetStageMetersPerUnit(stage, 1.0)
         
-        # Устанавливаем default prim для AR Quick Look
-        root_prim = stage.DefinePrim('/Model', 'Xform')
-        stage.SetDefaultPrim(root_prim)
+        # Создаём корневой xform и устанавливаем как default prim
+        root_xform = UsdGeom.Xform.Define(stage, '/Root')
+        stage.SetDefaultPrim(root_xform.GetPrim())
         
-        # Корневой xform (уже создан выше как default prim)
-        root_xform = UsdGeom.Xform.Get(stage, '/Model')
+        # Создаём базовый PBR материал для всех мешей
+        material_path = '/Root/Material'
+        material = UsdShade.Material.Define(stage, material_path)
+        
+        # PBR Surface shader
+        shader = UsdShade.Shader.Define(stage, f'{material_path}/PBRShader')
+        shader.CreateIdAttr('UsdPreviewSurface')
+        
+        # Базовый серый цвет (нейтральный)
+        shader.CreateInput('diffuseColor', Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(0.7, 0.7, 0.7))
+        shader.CreateInput('roughness', Sdf.ValueTypeNames.Float).Set(0.5)
+        shader.CreateInput('metallic', Sdf.ValueTypeNames.Float).Set(0.0)
+        
+        # Связываем shader с материалом
+        material.CreateSurfaceOutput().ConnectToSource(shader.ConnectableAPI(), 'surface')
         
         total_vertices = 0
         total_faces = 0
@@ -148,26 +165,41 @@ def convert_glb_to_usdz_pxr(glb_data: bytes) -> bytes:
                 logger.warning(f"⚠️ Меш {i} не имеет vertices/faces, пропускаем")
                 continue
             
-            mesh_path = f'/Model/Mesh_{i}'
+            mesh_path = f'/Root/Mesh_{i}'
             usd_mesh = UsdGeom.Mesh.Define(stage, mesh_path)
             
             # Вершины
             vertices = mesh.vertices.tolist()
-            usd_mesh.GetPointsAttr().Set(Vt.Vec3fArray([Gf.Vec3f(*v) for v in vertices]))
+            points = Vt.Vec3fArray([Gf.Vec3f(float(v[0]), float(v[1]), float(v[2])) for v in vertices])
+            usd_mesh.GetPointsAttr().Set(points)
             
-            # Грани (face vertex counts и indices)
+            # Грани
             faces = mesh.faces
-            face_vertex_counts = [3] * len(faces)  # Все грани - треугольники
-            face_vertex_indices = faces.flatten().tolist()
+            face_vertex_counts = Vt.IntArray([3] * len(faces))
+            face_vertex_indices = Vt.IntArray(faces.flatten().tolist())
             
-            usd_mesh.GetFaceVertexCountsAttr().Set(Vt.IntArray(face_vertex_counts))
-            usd_mesh.GetFaceVertexIndicesAttr().Set(Vt.IntArray(face_vertex_indices))
+            usd_mesh.GetFaceVertexCountsAttr().Set(face_vertex_counts)
+            usd_mesh.GetFaceVertexIndicesAttr().Set(face_vertex_indices)
             
-            # Нормали (если есть)
+            # Нормали
             if hasattr(mesh, 'vertex_normals') and mesh.vertex_normals is not None:
                 normals = mesh.vertex_normals.tolist()
-                usd_mesh.GetNormalsAttr().Set(Vt.Vec3fArray([Gf.Vec3f(*n) for n in normals]))
+                normal_array = Vt.Vec3fArray([Gf.Vec3f(float(n[0]), float(n[1]), float(n[2])) for n in normals])
+                usd_mesh.GetNormalsAttr().Set(normal_array)
                 usd_mesh.SetNormalsInterpolation(UsdGeom.Tokens.vertex)
+            
+            # Привязываем материал к мешу
+            UsdShade.MaterialBindingAPI(usd_mesh).Bind(material)
+            
+            # Цвет вершин (если есть) - для визуализации
+            if hasattr(mesh, 'visual') and hasattr(mesh.visual, 'vertex_colors'):
+                try:
+                    colors = mesh.visual.vertex_colors[:, :3] / 255.0  # RGB, нормализуем
+                    color_array = Vt.Vec3fArray([Gf.Vec3f(float(c[0]), float(c[1]), float(c[2])) for c in colors])
+                    usd_mesh.GetDisplayColorAttr().Set(color_array)
+                    logger.info(f"  Меш {i}: добавлены vertex colors")
+                except Exception as e:
+                    logger.warning(f"  Меш {i}: не удалось добавить vertex colors: {e}")
             
             total_vertices += len(vertices)
             total_faces += len(faces)
@@ -175,22 +207,23 @@ def convert_glb_to_usdz_pxr(glb_data: bytes) -> bytes:
             logger.info(f"  Меш {i}: {len(vertices)} вершин, {len(faces)} граней")
         
         stage.Save()
-        logger.info(f"✅ USD создан: {total_vertices} вершин, {total_faces} граней")
+        logger.info(f"✅ USDC создан: {total_vertices} вершин, {total_faces} граней")
         
-        # Читаем USDC файл (бинарный)
-        with open(usdc_path, 'rb') as f:
-            usdc_data = f.read()
+        # Используем официальную функцию для создания USDZ
+        # Это гарантирует правильный формат для iOS AR Quick Look
+        success = UsdUtils.CreateNewUsdzPackage(
+            Sdf.AssetPath(usdc_path),
+            usdz_path
+        )
         
-        logger.info(f"📦 USDC размер: {len(usdc_data)} байт")
+        if not success:
+            raise Exception("UsdUtils.CreateNewUsdzPackage вернул False")
         
-        # Создаём USDZ (ZIP архив без сжатия для iOS AR Quick Look)
-        # ВАЖНО: файл внутри должен быть .usdc для бинарного формата
-        usdz_buffer = io.BytesIO()
-        with zipfile.ZipFile(usdz_buffer, 'w', zipfile.ZIP_STORED) as zf:
-            zf.writestr('model.usdc', usdc_data)
+        # Читаем готовый USDZ
+        with open(usdz_path, 'rb') as f:
+            usdz_data = f.read()
         
-        usdz_data = usdz_buffer.getvalue()
-        logger.info(f"✅ USDZ создан (pxr/usdc): {len(usdz_data)} байт")
+        logger.info(f"✅ USDZ создан (UsdUtils): {len(usdz_data)} байт ({len(usdz_data)/1024/1024:.2f} MB)")
         
         return usdz_data
         
@@ -199,6 +232,8 @@ def convert_glb_to_usdz_pxr(glb_data: bytes) -> bytes:
             os.unlink(glb_path)
         if usdc_path and os.path.exists(usdc_path):
             os.unlink(usdc_path)
+        if usdz_path and os.path.exists(usdz_path):
+            os.unlink(usdz_path)
 
 
 def convert_glb_to_usdz(glb_data: bytes) -> bytes:
