@@ -29,12 +29,28 @@ router.get('/', authenticateToken, async (req, res) => {
       }
     });
 
-    // Добавляем imageUrl для обратной совместимости
+    // Добавляем imageUrl для обратной совместимости и делаем пути абсолютными
     const modelsWithImageUrl = models.map(model => {
       const modelData = model.toJSON();
+      const baseUrl = process.env.RAILWAY_PUBLIC_DOMAIN 
+        ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+        : '';
+      
+      // Формируем абсолютный URL для изображения
+      let imageUrl = modelData.previewImageUrl || modelData.originalImageUrl;
+      if (imageUrl && !imageUrl.startsWith('http')) {
+        imageUrl = baseUrl + imageUrl;
+      }
+      
       return {
         ...modelData,
-        imageUrl: modelData.originalImageUrl || modelData.previewImageUrl
+        imageUrl: imageUrl,
+        originalImageUrl: modelData.originalImageUrl && !modelData.originalImageUrl.startsWith('http') 
+          ? baseUrl + modelData.originalImageUrl 
+          : modelData.originalImageUrl,
+        previewImageUrl: modelData.previewImageUrl && !modelData.previewImageUrl.startsWith('http')
+          ? baseUrl + modelData.previewImageUrl
+          : modelData.previewImageUrl
       };
     });
 
@@ -101,11 +117,27 @@ router.get('/:id', async (req, res) => {
 
     console.log(`✅ Модель ${id} найдена: ${model.name || 'без имени'}`);
 
-    // Добавляем imageUrl для обратной совместимости
+    // Добавляем imageUrl для обратной совместимости и делаем пути абсолютными
     const modelData = model.toJSON();
+    const baseUrl = process.env.RAILWAY_PUBLIC_DOMAIN 
+      ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+      : '';
+    
+    // Формируем абсолютный URL для изображения
+    let imageUrl = modelData.previewImageUrl || modelData.originalImageUrl;
+    if (imageUrl && !imageUrl.startsWith('http')) {
+      imageUrl = baseUrl + imageUrl;
+    }
+    
     const data = {
       ...modelData,
-      imageUrl: modelData.originalImageUrl || modelData.previewImageUrl,
+      imageUrl: imageUrl,
+      originalImageUrl: modelData.originalImageUrl && !modelData.originalImageUrl.startsWith('http') 
+        ? baseUrl + modelData.originalImageUrl 
+        : modelData.originalImageUrl,
+      previewImageUrl: modelData.previewImageUrl && !modelData.previewImageUrl.startsWith('http')
+        ? baseUrl + modelData.previewImageUrl
+        : modelData.previewImageUrl,
       glbFile: undefined // Не отправляем бинарные данные
     };
 
