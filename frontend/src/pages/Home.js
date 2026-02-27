@@ -45,13 +45,6 @@ const Home = () => {
       return;
     }
 
-    // Проверяем авторизацию
-    const token = getAuthToken();
-    if (!token) {
-      setError('Для генерации 3D модели необходимо войти в систему');
-      return;
-    }
-
     setIsGenerating(true);
     setError(null);
 
@@ -64,8 +57,9 @@ const Home = () => {
       }
 
       const apiUrl = process.env.REACT_APP_BACKEND_URL || window.location.origin;
+      // Получить токен для аутентификации
+      const token = getAuthToken();
       console.log('🔐 Токен для генерации:', token ? 'присутствует' : 'отсутствует');
-      console.log('🌐 API URL:', apiUrl);
 
       const response = await fetch(`${apiUrl}/api/generation/upload`, {
         method: 'POST',
@@ -91,15 +85,7 @@ const Home = () => {
         throw new Error(data.error || 'Ошибка при загрузке изображения');
       }
     } catch (err) {
-      console.error('❌ Ошибка генерации:', err);
-      // Улучшенная обработка ошибок
-      let errorMessage = err.message;
-      if (err.message === 'Failed to fetch') {
-        errorMessage = 'Ошибка сети. Проверьте подключение к интернету и попробуйте снова.';
-      } else if (err.name === 'TypeError') {
-        errorMessage = 'Ошибка запроса. Убедитесь, что вы авторизованы.';
-      }
-      setError(errorMessage);
+      setError(err.message);
       setIsGenerating(false);
     }
   };
